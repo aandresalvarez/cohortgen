@@ -1,50 +1,38 @@
-cohortgen
+# Flujo Project
 
-Python project managed with `uv` (fast package/dependency manager). Includes a simple CLI and a
-Makefile for common tasks.
+Welcome! This project is scaffolded for use with Flujo.
 
-Prerequisites
-- Install `uv`: https://docs.astral.sh/uv/getting-started/installation/
-- Python: this project targets `>=3.11`. `uv` will install/manage it for you.
+## Getting Started
 
-Quick Start
-- Bootstrap environment and install deps: `make install`
-- Run the CLI: `uv run python -m cohortgen`
-- Run tests: `make test`
-- Lint and type-check: `make lint`
-- Format: `make format`
+- Setup environment: `make install` (creates `.venv` and installs deps with uv)
+- Initialize a Flujo project in this repo: `uv run flujo init`
+- Run the default YAML pipeline: `uv run flujo run`
+- Generate a pipeline with the AI Architect:
+  - `uv run flujo create --goal "Fetch a webpage and summarize it"`
+- Validate your pipeline:
+  - `uv run flujo dev validate --strict`
 
-Daily Usage
-- Add a runtime dependency: `uv add <package>`
-- Add a dev-only tool: `uv add --group dev <package>`
-- Re-sync after edits to deps or Python version: `uv sync`
+## Architect Defaults
 
-CLI
-- Module entrypoint: `python -m cohortgen`
-- Help: `python -m cohortgen --help`
+This project enables the agentic Architect (state machine) by default via `flujo.toml`:
 
-Project Layout
-- Source code: `src/cohortgen/`
-- Tests: `tests/`
-- Virtual environment: `.venv/` (managed by `uv`)
+```
+[architect]
+state_machine_default = true
+```
 
-Dependency Policy
-- Reproducibility: External Git dependency `flujo` is pinned to an exact commit via
-  `[tool.uv.sources]` in `pyproject.toml`.
-- To update `flujo` to a newer revision:
-  1) Pick the desired commit SHA (or tag) from https://github.com/aandresalvarez/flujo
-  2) Edit `pyproject.toml` and change:
-     `flujo = { git = "https://github.com/aandresalvarez/flujo.git", rev = "<NEW_SHA>" }`
-  3) Run `uv sync`
-  4) Run `make test`
+- To disable by default, set `state_machine_default = false` or remove the section.
+- Per-run overrides:
+  - Force agentic: `FLUJO_ARCHITECT_STATE_MACHINE=1`
+  - Force minimal: `FLUJO_ARCHITECT_MINIMAL=1`
+- CLI override on the create command:
+  - `uv run flujo create --agentic --goal "..."`
+  - `uv run flujo create --no-agentic --goal "..."`
 
-Notes
-- You do not need to manually activate the `.venv`; prefer `uv run <cmd>` which runs inside it.
-- `uv.lock` captures full resolution for reproducible installs.
+## Notes
 
-Automation
-- A scheduled GitHub Action keeps `flujo` up to date:
-  - Workflow: `.github/workflows/auto-update-flujo.yml`
-  - Runs weekly (Mon 06:00 UTC) and on manual trigger.
-  - Steps: update the pinned commit via `scripts/update_flujo.py`, run `uv sync` and tests, open a PR if green.
-  - Adjust the cron or disable as needed.
+- Use `uv run <cmd>` to run commands inside the project virtualenv.
+- Skills live under `skills/`; register new tools there or via entry points.
+- Budgets and execution limits can be configured in `flujo.toml` under `[budgets]`.
+- For persistent state, set `state_uri = "sqlite:///.flujo/state.db"` in `flujo.toml`.
+- See docs for more: https://aandresalvarez.github.io/flujo/

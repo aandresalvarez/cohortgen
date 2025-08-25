@@ -1,0 +1,9 @@
+version: "0.1"
+name: "welcome_pipeline"
+steps:
+  - kind: step
+    name: welcome_message
+    agent:
+      id: flujo.builtins.welcome_agent
+      params:
+        name: "Developer"

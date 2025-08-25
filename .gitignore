@@ -23,3 +23,7 @@ htmlcov/
 
 # uv
 # Keep uv.lock committed for reproducibility
+
+# Flujo
+.flujo/
+flujo_ops.db

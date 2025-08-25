@@ -1,0 +1,23 @@
+# Flujo project configuration template
+
+# Use an in-memory state backend by default for new projects
+state_uri = "memory://"
+
+[settings]
+# default_solution_model = "gpt-4o-mini"
+# reflection_enabled = true
+
+# Centralized budgets (optional)
+[budgets]
+# [budgets.default]
+# total_cost_usd_limit = 5.0
+# total_tokens_limit = 100000
+
+# Architect defaults
+[architect]
+# Enable the agentic Architect state machine by default for this project
+state_machine_default = true
+# To disable by default, set to false or remove this section.
+# Per-run overrides:
+#   - Force agentic: export FLUJO_ARCHITECT_STATE_MACHINE=1
+#   - Force minimal: export FLUJO_ARCHITECT_MINIMAL=1
