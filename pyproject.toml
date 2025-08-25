@@ -29,3 +29,6 @@ package = true
 
 [tool.uv.sources]
 flujo = { git = "https://github.com/aandresalvarez/flujo.git", rev = "085d1b5896af8da5c87c39c0b72e1288427fd6e7" }
+
+[project.scripts]
+cohortgen = "cohortgen.cli:main"
