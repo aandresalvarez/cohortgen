@@ -23,12 +23,15 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cohortgen"]
+# Ensure top-level sitecustomize.py is included in wheels
+[tool.hatch.build.targets.wheel.force-include]
+"src/sitecustomize.py" = "sitecustomize.py"
 
 [tool.uv]
 package = true
 
 [tool.uv.sources]
-flujo = { git = "https://github.com/aandresalvarez/flujo.git", rev = "085d1b5896af8da5c87c39c0b72e1288427fd6e7" }
+flujo = { git = "https://github.com/aandresalvarez/flujo.git", rev = "da07f1ea64190482cae6d47edfff784707f58bb0" }
 
 [project.scripts]
 cohortgen = "cohortgen.cli:main"

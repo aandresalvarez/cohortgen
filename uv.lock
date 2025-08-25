@@ -416,7 +416,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "flujo", git = "https://github.com/aandresalvarez/flujo.git?rev=085d1b5896af8da5c87c39c0b72e1288427fd6e7" }]
+requires-dist = [{ name = "flujo", git = "https://github.com/aandresalvarez/flujo.git?rev=da07f1ea64190482cae6d47edfff784707f58bb0" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -515,7 +515,7 @@ wheels = [
 [[package]]
 name = "flujo"
 version = "0.4.37"
-source = { git = "https://github.com/aandresalvarez/flujo.git?rev=085d1b5896af8da5c87c39c0b72e1288427fd6e7#085d1b5896af8da5c87c39c0b72e1288427fd6e7" }
+source = { git = "https://github.com/aandresalvarez/flujo.git?rev=da07f1ea64190482cae6d47edfff784707f58bb0#da07f1ea64190482cae6d47edfff784707f58bb0" }
 dependencies = [
     { name = "aiosqlite" },
     { name = "blake3" },
