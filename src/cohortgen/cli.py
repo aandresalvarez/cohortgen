@@ -13,7 +13,14 @@ PROJECTS_DIR = ROOT / "projects"
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> int:
-    return subprocess.call(cmd, cwd=str(cwd) if cwd else None)
+    env = os.environ.copy()
+    if cwd is not None:
+        # Ensure project-local Python packages (e.g., skills/) are importable
+        pp = env.get("PYTHONPATH")
+        env["PYTHONPATH"] = (
+            str(cwd) if not pp else f"{str(cwd)}{os.pathsep}{pp}"
+        )
+    return subprocess.call(cmd, cwd=str(cwd) if cwd else None, env=env)
 
 
 def cmd_list(_: argparse.Namespace) -> int:
@@ -38,7 +45,7 @@ def cmd_init(ns: argparse.Namespace) -> int:
     PROJECTS_DIR.mkdir(exist_ok=True)
     target = PROJECTS_DIR / name
     target.mkdir(parents=True, exist_ok=True)
-    rc = _run([sys.executable, "-m", "flujo", "init"], cwd=target)
+    rc = _run(["flujo", "init"], cwd=target)
     return rc
 
 
@@ -53,7 +60,7 @@ def cmd_run(ns: argparse.Namespace) -> int:
         return 2
     # Pass through additional args after --
     extra = ns.args or []
-    cmd = [sys.executable, "-m", "flujo", "run", *extra]
+    cmd = ["flujo", "run", *extra]
     return _run(cmd, cwd=target)
 
 
