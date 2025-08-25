@@ -36,3 +36,15 @@ state_machine_default = true
 - Budgets and execution limits can be configured in `flujo.toml` under `[budgets]`.
 - For persistent state, set `state_uri = "sqlite:///.flujo/state.db"` in `flujo.toml`.
 - See docs for more: https://aandresalvarez.github.io/flujo/
+
+## Multiple Flujo projects
+
+- Projects live under `projects/<name>/`. Each is an independent Flujo project.
+- Initialize a new project: `uv run cohortgen init <name>`
+- List projects: `uv run cohortgen list`
+- Run a project: `uv run cohortgen run <name>`
+
+You can still use the Flujo CLI directly by changing into a project directory:
+
+- `cd projects/<name>`
+- `uv run flujo run`
