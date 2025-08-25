@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  statuses: write
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -34,4 +38,3 @@ jobs:
             -X POST \
             "https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}" \
             -d '{"state":"'"$STATE"'","context":"tests","description":"pytest","target_url":"'"${{ github.server_url }}"'/'"${{ github.repository }}"'/actions/runs/'"${{ github.run_id }}"'"}'
-
