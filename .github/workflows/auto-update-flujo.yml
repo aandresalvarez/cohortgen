@@ -1,0 +1,46 @@
+name: Auto-update flujo
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Mondays at 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-flujo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Update flujo revision
+        run: |
+          python scripts/update_flujo.py
+        shell: bash
+
+      - name: Install and test
+        run: |
+          uv sync --python 3.11
+          uv run pytest -q
+
+      - name: Create Pull Request
+        if: ${{ success() }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: chore/update-flujo
+          commit-message: "chore(deps): bump flujo rev"
+          title: "chore(deps): bump flujo rev"
+          body: |
+            Automated update of the `flujo` Git dependency to the latest commit on `main`.
+
+            - Updated `pyproject.toml` with new `rev`
+            - Ran `uv sync` and tests successfully
+          signoff: false
+          delete-branch: true
+

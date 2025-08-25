@@ -1,0 +1,31 @@
+[project]
+name = "cohortgen"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "flujo",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.5",
+    "mypy>=1.10",
+    "black>=24",
+    "ipython",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cohortgen"]
+
+[tool.uv]
+package = true
+
+[tool.uv.sources]
+flujo = { git = "https://github.com/aandresalvarez/flujo.git", rev = "085d1b5896af8da5c87c39c0b72e1288427fd6e7" }

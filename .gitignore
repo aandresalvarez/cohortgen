@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.build/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage*
+htmlcov/
+
+# Environments
+.venv/
+.env
+.env.*
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# uv
+# Keep uv.lock committed for reproducibility
