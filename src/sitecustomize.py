@@ -8,6 +8,7 @@ We detect if the current shell directory looks like a Flujo project (has
 This makes `import skills` work when users run `flujo` directly inside a
 project directory, without needing to set PYTHONPATH manually.
 """
+
 from __future__ import annotations
 
 import os
@@ -43,4 +44,3 @@ try:
 except Exception:
     # Never block interpreter startup due to path helper issues.
     pass
-
