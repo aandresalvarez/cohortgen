@@ -68,9 +68,12 @@ steps:
       Output ONLY a JSON object that matches the required schema.
 
   - kind: step
+    name: prepare_athena_plan
+    uses: "skills.custom_tools:ensure_concept_plan_dict"
+
+  - kind: step
     name: search_athena
     uses: "skills.athena_tools:athena_search_for_concept_plan"
-    input: "{{ steps.decompose_concept_sets.output | tojson }}"
     updates_context: true
 
   - kind: step
