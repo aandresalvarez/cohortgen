@@ -1,0 +1,156 @@
+# 📂 flujo project/pipeline.yaml (Final Corrected Version)
+
+version: "0.1"
+name: "zero_boilerplate_conversation"
+
+pipeline_config:
+  conversation_mode: true
+
+agents:
+  clarification_agent:
+    model: "openai:gpt-5-mini"
+    model_settings:
+      openai_reasoning_effort: "low"       # low | medium | high
+    timeout: 120
+    max_retries: 1
+    system_prompt: |
+      You are an expert clinical data analyst. Use the conversation history and current input to drive a slot-filling clarification.
+      - Required slots: metric (e.g., count, rate), cohort/population (who to include), time window (e.g., year or dates), grouping/dimensions (e.g., age, sex, location), and any filters/exclusions.
+      - Maintain a running slots map from prior turns; never re-ask for a slot that has already been answered in history. Assume short replies answer your most recent question unless contradicted.
+      - Ask ONE clarifying question at a time that explicitly mentions the initial goal phrase found in the history.
+      - Only return {"action":"finish"} when all required slots are sufficiently specified OR the user explicitly says they are done (e.g., "finish", "done", "go ahead", "that's all").
+      - Output schema must be respected exactly: {"action":"ask","question":"..."} or {"action":"finish"}.
+    output_schema:
+      type: object
+      properties:
+        action: { type: string, enum: [ask, finish] }
+        question: { type: string }
+      required: [action]
+
+  cohort_definer:
+    model: "openai:gpt-5-mini"
+    model_settings:
+      openai_reasoning_effort: "medium"
+    timeout: 120
+    max_retries: 1
+    system_prompt: |
+      You are an expert clinical researcher and OMOP CDM cohort designer.
+      Write a strong, unambiguous plain‑text cohort definition to be implemented later in ATLAS (no SQL, no JSON).
+      Use the initial goal, the full clarification Q/A, and the synthesized slots. Resolve ambiguity by proposing explicit, conservative defaults and label them as "Assumption:" when necessary. Avoid medical advice.
+
+      Produce a single cohesive section titled "Final Cohort Definition" with a concise, numbered outline covering:
+      1) Index event: domain (condition/drug/procedure/measurement/visit/observation), concept set intent, standard concepts only, include descendants yes/no.
+      2) Entry criteria: first-ever vs first-in-window, washout days, minimum prior observation.
+      3) Population constraints: age at index, sex, any additional inclusion filters.
+      4) Visit/setting restrictions: inpatient/outpatient/ED, if applicable.
+      5) Time window for index: date/years allowed for index.
+      6) Exclusions: prior conditions/exposures/procedures, pregnancy, etc., if specified.
+      7) Cohort exit: end-of-observation or fixed window, and any episode/deduplication rules.
+      8) Notes/assumptions: clearly list any assumptions made to remove ambiguity.
+
+      Requirements:
+      - Write in precise, implementation-ready language suitable for ATLAS configuration.
+      - Do not ask questions. Do not include code or SQL.
+      - If a detail is unspecified but important, choose a standard default and mark it under "Assumptions".
+    output_schema: { type: string }
+
+steps:
+  - kind: hitl
+    name: get_initial_goal
+    message: "What would you like to accomplish?"
+    # This correctly tells Flujo to capture the first user turn.
+    updates_context: true
+
+  - kind: loop
+    name: clarification_loop
+    loop:
+      conversation: true
+      history_management:
+        # Keep more context so the agent stops repeating.
+        # Prefer token-based truncation for stability across longer clarifications.
+        strategy: truncate_tokens
+        max_tokens: 4000
+      # Make sure assistant questions from the agent are captured as assistant turns,
+      # and user answers from HITL are captured as user turns.
+      ai_turn_source: named_steps
+      user_turn_sources: ["hitl"]
+      named_steps: ["check_if_more_info_needed"]
+      history_template: |
+        --- Task Context ---
+        Initial goal: {{history.0.content}}
+        Recent turns:
+        {{#each history}}{{ this.role }}: {{ this.content }}
+        {{/each}}
+        Instruction: 
+          Ask ONE clarifying question that explicitly adress the initial goal  {{history.0.content}}. 
+          If the goal is already clear, output exactly {"action":"finish"}.
+          If the user indicates they are done (e.g., says "finish", "done", "go ahead", "that's all"), output exactly: { "action": "finish" }.
+      body:
+        - kind: step
+          name: check_if_more_info_needed
+          uses: agents.clarification_agent
+          # Provide initial goal and a clear directive to reference it in each question.
+          input: |
+            --- Conversation So Far ---
+            {{#each context.hitl_history}}
+            assistant: {{ this.message_to_human }}
+            user: {{ this.human_response }}
+            {{/each}}
+
+            --- Instruction ---
+            Initial goal: {{ steps.get_initial_goal.output }}
+            Task: Ask ONE clarifying question that explicitly references the initial goal and the conversation so far.
+            - Do not ask again for any slot already answered in the conversation above.
+            - If all required slots are filled, output {"action":"finish"}.
+
+        - kind: conditional
+          name: ask_question_if_needed
+          condition_expression: "previous_step.action == 'ask'"
+          branches:
+            true:
+              - kind: hitl
+                name: ask_user_for_clarification
+                message: "{{ steps.check_if_more_info_needed.output.question }}"
+                # --- THE KEY FIX IS HERE ---
+                # This tells Flujo to capture the user's answer as a "user" turn
+                # and add it to the conversation_history.
+                updates_context: true
+            false:
+              - kind: step
+                name: passthrough
+                agent: "flujo.builtins.passthrough"
+
+      # Exit when the agent declares completion, or the human explicitly says they are done.
+      exit_expression: |
+        (
+          steps['check_if_more_info_needed'] and
+          steps['check_if_more_info_needed'].action == 'finish'
+        ) or (
+          'finish' in steps.get('ask_user_for_clarification', '').lower() or
+          'done' in steps.get('ask_user_for_clarification', '').lower() or
+          'go ahead' in steps.get('ask_user_for_clarification', '').lower() or
+          "that's all" in steps.get('ask_user_for_clarification', '').lower()
+        )
+      max_loops: 4
+
+  - kind: step
+    name: synthesize_slots
+    uses: "flujo.helpers.slot_synthesis:synthesize_slots"
+    updates_context: true
+
+  - kind: step
+    name: generate_cohort_definition
+    uses: agents.cohort_definer
+    input: |
+      Initial goal: {{ steps.get_initial_goal.output }}
+
+      Clarifications (chronological):
+      {{#each context.hitl_history}}
+      Q: {{ this.message_to_human }}
+      A: {{ this.human_response }}
+      {{/each}}
+
+      Synthesized slots:
+      {{ context.scratchpad.slots | tojson }}
+
+      Task: Produce the Final Cohort Definition per your system instructions. If any critical detail is missing, choose a standard, conservative default and list it under "Assumptions". Do not ask further questions.

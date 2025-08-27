@@ -17,9 +17,7 @@ def _run(cmd: list[str], cwd: Path | None = None) -> int:
     if cwd is not None:
         # Ensure project-local Python packages (e.g., skills/) are importable
         pp = env.get("PYTHONPATH")
-        env["PYTHONPATH"] = (
-            str(cwd) if not pp else f"{str(cwd)}{os.pathsep}{pp}"
-        )
+        env["PYTHONPATH"] = str(cwd) if not pp else f"{str(cwd)}{os.pathsep}{pp}"
     return subprocess.call(cmd, cwd=str(cwd) if cwd else None, env=env)
 
 
