@@ -176,12 +176,40 @@ wheels = [
 ]
 
 [[package]]
+name = "athena-client"
+version = "1.0.27"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "backoff" },
+    { name = "click" },
+    { name = "httpx" },
+    { name = "orjson" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "requests" },
+    { name = "rich" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/71/b9/bf5c399668403abdc31ac52d0c41835148a6d25cd02c4c11c459d9555164/athena_client-1.0.27.tar.gz", hash = "sha256:9eb7df423dc97f15a3fdc4491b64d068707900551d746544d32441f1c95752a6", size = 80989, upload-time = "2025-07-21T20:37:35.635Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0e/ef/c16f7ea1951600c4a205c90e71f5bcc6fa74eb12cd82b8c955cbd6257662/athena_client-1.0.27-py3-none-any.whl", hash = "sha256:90f336aae5696bf692a39361470838001d8f0986b3378694e73c8049afce5278", size = 50477, upload-time = "2025-07-21T20:37:34.146Z" },
+]
+
+[[package]]
 name = "attrs"
 version = "25.3.0"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/5a/b0/1367933a8532ee6ff8d63537de4f1177af4bff9f3e829baf7331f595bb24/attrs-25.3.0.tar.gz", hash = "sha256:75d7cefc7fb576747b2c81b4442d4d4a1ce0900973527c011d1030fd3bf4af1b", size = 812032, upload-time = "2025-03-13T11:10:22.779Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/77/06/bb80f5f86020c4551da315d78b3ab75e8228f89f0162f2c3a819e407941a/attrs-25.3.0-py3-none-any.whl", hash = "sha256:427318ce031701fea540783410126f03899a97ffc6f61596ad581ac2e40e3bc3", size = 63815, upload-time = "2025-03-13T11:10:21.14Z" },
+]
+
+[[package]]
+name = "backoff"
+version = "2.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/d7/5bbeb12c44d7c4f2fb5b56abce497eb5ed9f34d85701de869acedd602619/backoff-2.2.1.tar.gz", hash = "sha256:03f829f5bb1923180821643f8753b0502c3b682293992485b0eef2807afa5cba", size = 17001, upload-time = "2022-10-05T19:19:32.061Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/df/73/b6e24bd22e6720ca8ee9a85a0c4a2971af8497d8f3193fa05390cbd46e09/backoff-2.2.1-py3-none-any.whl", hash = "sha256:63579f9a0628e06278f7e47b7d7d5b6ce20dc65c5e96a6f3ca99a6adca0396e8", size = 15148, upload-time = "2022-10-05T19:19:30.546Z" },
 ]
 
 [[package]]
@@ -404,6 +432,7 @@ name = "cohortgen"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "athena-client" },
     { name = "flujo" },
 ]
 
@@ -417,7 +446,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "flujo", git = "https://github.com/aandresalvarez/flujo.git?rev=281edbd1d876e978e7c65dea6a75a9386c6740f1" }]
+requires-dist = [
+    { name = "athena-client", specifier = "==1.0.27" },
+    { name = "flujo", git = "https://github.com/aandresalvarez/flujo.git?rev=281edbd1d876e978e7c65dea6a75a9386c6740f1" },
+]
 
 [package.metadata.requires-dev]
 dev = [

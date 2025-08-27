@@ -1,0 +1,89 @@
+version: "0.1"
+name: "concept_discovery_pipeline"
+
+pipeline_config:
+  conversation_mode: true
+
+agents:
+  concept_decomposer:
+    model: "openai:gpt-5-mini"
+    model_settings:
+      openai_reasoning_effort: "medium"
+    timeout: 120
+    max_retries: 1
+    system_prompt: |
+      You are an expert OMOP/ATLAS cohort designer.
+      Task: Read the cohort definition and produce a structured plan of concept sets to build in ATHENA.
+      - Focus only on concept sets that are needed to implement the cohort (index events, inclusion/exclusion conditions, exposures, procedures, measurements, observations, visits).
+      - Prefer standard concepts only (standard_concept = 'S') unless the definition explicitly needs non-standard.
+      - Suggest domain restrictions and vocabulary preferences when clear (e.g., SNOMED for conditions, RxNorm for drugs, CPT/HCPCS for procedures, LOINC for labs), but do not overconstrain if unclear.
+      - Include whether to include descendants for each set (true by default for intent-based concept sets).
+      - Generate multiple query terms per set when helpful to capture synonyms.
+      Output ONLY a valid JSON object that adheres to the schema.
+    output_schema:
+      type: object
+      properties:
+        concept_sets:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              intent: { type: string, description: "short description of purpose" }
+              domain: { type: string, description: "OMOP DomainId like Condition, Drug, Procedure, Measurement, Observation, Visit" }
+              vocabulary: { type: array, items: { type: string }, description: "Optional vocabulary hints like SNOMED, RxNorm, LOINC" }
+              include_descendants: { type: boolean, default: true }
+              standard_only: { type: boolean, default: true }
+              queries: { type: array, items: { type: string } }
+            required: [name, queries]
+
+  concept_summarizer:
+    model: "openai:gpt-5-mini"
+    model_settings:
+      openai_reasoning_effort: "low"
+    timeout: 120
+    max_retries: 1
+    system_prompt: |
+      You are an expert OMOP/ATLAS cohort implementer.
+      Combine the concept plan and Athena search results into a final JSON spec of concept sets for ATLAS.
+      - Include, for each concept set: name, concept_ids, include_descendants, standard_only, and any notes/assumptions.
+      - Do not invent concept IDs; only use those returned by the Athena search results.
+      - If a concept set has zero candidates, add a note under assumptions to revisit the queries.
+      Output ONLY JSON. No commentary.
+    output_schema: { type: string }
+
+steps:
+  - kind: hitl
+    name: get_cohort_definition
+    message: "Paste the cohort definition (plain text from your study protocol or a prior clarification)."
+    updates_context: true
+
+  - kind: step
+    name: decompose_concept_sets
+    uses: agents.concept_decomposer
+    input: |
+      Cohort definition:
+      {{ steps.get_cohort_definition.output }}
+
+      Output ONLY a JSON object that matches the required schema.
+
+  - kind: step
+    name: search_athena
+    uses: "skills.athena_tools:athena_search_for_concept_plan"
+    input: "{{ steps.decompose_concept_sets.output | tojson }}"
+    updates_context: true
+
+  - kind: step
+    name: summarize_concept_sets
+    uses: agents.concept_summarizer
+    input: |
+      Initial cohort definition:
+      {{ steps.get_cohort_definition.output }}
+
+      Concept plan (from decomposer):
+      {{ steps.decompose_concept_sets.output | tojson }}
+
+      Athena search results:
+      {{ steps.search_athena.output | tojson }}
+
+      Output ONLY the final JSON spec with fields: concept_sets:[{name, concept_ids, include_descendants, standard_only}], assumptions:[...].
