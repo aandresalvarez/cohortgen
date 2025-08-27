@@ -10,7 +10,7 @@ __pycache__/
 .ruff_cache/
 .coverage*
 htmlcov/
-
+extract.py
 # Environments
 .venv/
 .env
