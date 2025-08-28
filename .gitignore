@@ -29,3 +29,4 @@ extract.py
 flujo_ops.db
 # Concept discovery debug artifacts
 projects/concept_discovery/debug/*.json
+service_account.json

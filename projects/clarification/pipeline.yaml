@@ -154,3 +154,10 @@ steps:
       {{ context.scratchpad.slots | tojson }}
 
       Task: Produce the Final Cohort Definition per your system instructions. If any critical detail is missing, choose a standard, conservative default and list it under "Assumptions". Do not ask further questions.
+
+  - kind: step
+    name: store_cohort_definition
+    uses: "skills.custom_tools:wrap_in_scratchpad"
+    input: |
+      {{ {"data": steps.generate_cohort_definition.output, "key": "cohort_definition"} | tojson }}
+    updates_context: true

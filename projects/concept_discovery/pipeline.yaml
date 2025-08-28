@@ -88,28 +88,49 @@ agents:
     output_schema: { type: string }
 
 steps:
-  - kind: hitl
-    name: get_cohort_definition
-    message: "Paste the cohort definition (plain text from your study protocol or a prior clarification)."
-    updates_context: true
+  - kind: conditional
+    name: resolve_cohort_definition
+    condition_expression: "(not context.initial_prompt) and (context.scratchpad.get('status') != 'paused')"
+    branches:
+      true:
+        - kind: hitl
+          name: get_cohort_definition
+          message: "Paste the cohort definition (plain text from your study protocol or a prior clarification)."
+          updates_context: true
+      false:
+        - kind: step
+          name: get_cohort_definition
+          agent: "flujo.builtins.passthrough"
+          input: "{{ context.initial_prompt }}"
+          updates_context: true
 
-  - kind: step
-    name: decompose_concept_sets
-    uses: agents.concept_decomposer
-    input: |
-      Cohort definition:
-      {{ steps.get_cohort_definition.output }}
+  - kind: conditional
+    name: stop_if_parent_paused
+    condition_expression: "context.scratchpad.get('status') == 'paused'"
+    branches:
+      true:
+        - kind: step
+          name: noop_concept_discovery
+          agent: "flujo.builtins.passthrough"
+          input: "parent_paused"
+      false:
+        - kind: step
+          name: decompose_concept_sets
+          uses: agents.concept_decomposer
+          input: |
+            Cohort definition:
+            {{ steps.get_cohort_definition.output }}
 
-      Output ONLY a JSON object that matches the required schema.
+            Output ONLY a JSON object that matches the required schema.
 
-  - kind: step
-    name: prepare_athena_plan
-    uses: "skills.custom_tools:ensure_concept_plan_dict"
+        - kind: step
+          name: prepare_athena_plan
+          uses: "skills.custom_tools:ensure_concept_plan_dict"
 
-  - kind: step
-    name: search_athena
-    uses: "skills.athena_tools:athena_search_for_concept_plan"
-    updates_context: true
+        - kind: step
+          name: search_athena
+          uses: "skills.athena_tools:athena_search_for_concept_plan"
+          updates_context: true
 
   - kind: step
     name: refine_to_standard_concepts
@@ -137,11 +158,11 @@ steps:
       Initial cohort definition:
       {{ steps.get_cohort_definition.output }}
 
-      Concept plan (from decomposer):
-      {{ steps.decompose_concept_sets.output | tojson }}
+            Concept plan (from decomposer):
+            {{ steps.decompose_concept_sets.output | tojson }}
 
-      Athena search results:
-      {{ steps.search_athena.output | tojson }}
+            Athena search results:
+            {{ steps.search_athena.output | tojson }}
 
       Refined standard concepts (from explorer):
       {{ steps.refine_to_standard_concepts.output | tojson }}
@@ -158,3 +179,4 @@ steps:
           }
         ]
       - assumptions: [...]
+

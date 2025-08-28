@@ -3,6 +3,10 @@
 # Use an in-memory state backend by default for new projects
 state_uri = "memory://"
 
+# Load environment variables (API keys, etc.) from this file.
+# Copy `.env.example` to `.env`, fill your keys, or change this path.
+env_file = ".env"
+
 [settings]
 # default_solution_model = "gpt-4o-mini"
 # reflection_enabled = true
