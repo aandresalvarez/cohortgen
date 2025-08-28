@@ -150,9 +150,13 @@ def athena_search_for_concept_plan(
             try:
                 raw = results.top(max(top_k * 3, 10))
                 raw_list = (
+<<<<<<< HEAD
                     raw
                     if isinstance(raw, list)
                     else getattr(results, "all", lambda: [])()
+=======
+                    raw if isinstance(raw, list) else getattr(raw, "all", lambda: [])()
+>>>>>>> 35a74d4 (feat(query_builder): add BigQuery dry-run validator, SQL generator+fixer pipeline; lock OMOP dataset; deps for bigquery\n\n- Add skills/bq_tools.py for BigQuery dry runs using service account\n- Add JSON normalize helper\n- Implement pipeline with dry-run and up to 2 auto-fixes\n- Set dataset to bigquery-public-data.cms_synthetic_patient_data_omop\n- Add google-cloud-bigquery and sqlalchemy-bigquery deps\n- Update docs and env examples\n- Run format/lint/typecheck)
                 )
             except Exception:
                 # Fallback, try to materialize results via .all()
@@ -216,6 +220,7 @@ def athena_search_for_concept_plan(
         )
 
     return {"concept_sets": out_sets}
+<<<<<<< HEAD
 
 
 # --- Agent-friendly thin wrappers over Athena client ---
@@ -370,3 +375,5 @@ def athena_graph(concept_id: int, depth: int = 3) -> Dict[str, Any]:
         }
     except Exception as e:
         return {"error": f"graph failed: {e}", "concept_id": concept_id, "depth": depth}
+=======
+>>>>>>> 35a74d4 (feat(query_builder): add BigQuery dry-run validator, SQL generator+fixer pipeline; lock OMOP dataset; deps for bigquery\n\n- Add skills/bq_tools.py for BigQuery dry runs using service account\n- Add JSON normalize helper\n- Implement pipeline with dry-run and up to 2 auto-fixes\n- Set dataset to bigquery-public-data.cms_synthetic_patient_data_omop\n- Add google-cloud-bigquery and sqlalchemy-bigquery deps\n- Update docs and env examples\n- Run format/lint/typecheck)
