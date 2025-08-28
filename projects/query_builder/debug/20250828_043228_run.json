@@ -1,0 +1,126 @@
+{
+  "exported_at": "2025-08-28T04:32:28.798041Z",
+  "pipeline_name": "pipeline",
+  "run_id": null,
+  "env": {
+    "FLUJO_DEBUG": null,
+    "FLUJO_DEBUG_PROMPTS": null,
+    "FLUJO_TRACE_PREVIEW_LEN": null
+  },
+  "trace_tree": {
+    "name": "pipeline_run",
+    "status": "completed",
+    "start_time": 682541.717991041,
+    "end_time": 682541.72059175,
+    "attributes": {
+      "flujo.input": "",
+      "flujo.run_id": "run_92f8412024b049ef9adf2b007c0a2e83",
+      "flujo.pipeline.name": "unnamed_20250827_213010",
+      "flujo.pipeline.version": "latest"
+    },
+    "events": [],
+    "children": [
+      {
+        "name": "get_cohort_definition",
+        "status": "running",
+        "start_time": 682541.718104583,
+        "end_time": null,
+        "attributes": {
+          "flujo.step.type": "HumanInTheLoopStep",
+          "step_input": "",
+          "flujo.step.policy": "DefaultHitlStepExecutor",
+          "flujo.cache.hit": false
+        },
+        "events": [
+          {
+            "name": "flujo.resumed",
+            "attributes": {
+              "human_input": "patients with flu between in the last 10 years order by age"
+            }
+          }
+        ],
+        "children": [
+          {
+            "name": "get_concept_sets",
+            "status": "running",
+            "start_time": 682568.190211041,
+            "end_time": null,
+            "attributes": {
+              "flujo.step.type": "HumanInTheLoopStep",
+              "step_input": "patients with flu between in the last 10 years order by age",
+              "flujo.step.policy": "DefaultHitlStepExecutor",
+              "flujo.cache.hit": false
+            },
+            "events": [],
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "result": {
+    "total_cost_usd": 0.0,
+    "total_tokens": 0,
+    "step_history": [
+      {
+        "name": "get_cohort_definition",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.0,
+        "token_counts": 0,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": "patients with flu between in the last 10 years order by age",
+        "metadata": {},
+        "step_history": []
+      }
+    ]
+  },
+  "final_context": {
+    "run_id": "run_92f8412024b049ef9adf2b007c0a2e83",
+    "initial_prompt": "",
+    "scratchpad": {
+      "status": "paused",
+      "last_state_update": 682568.190422,
+      "hitl_message": "Paste the concept sets JSON from the previous step (concept_discovery). Example:\n{\"concept_sets\": [{\"name\":\"Heart failure\",\"concept_ids\":[...],\"include_descendants\":true,\"standard_only\":true}]}\n",
+      "hitl_data": "patients with flu between in the last 10 years order by age",
+      "pause_message": "Paste the concept sets JSON from the previous step (concept_discovery). Example:\n{\"concept_sets\": [{\"name\":\"Heart failure\",\"concept_ids\":[...],\"include_descendants\":true,\"standard_only\":true}]}\n",
+      "steps": {
+        "get_cohort_definition": "patients with flu between in the last 10 years order by age"
+      },
+      "paused_step_input": {
+        "type": "ask_human",
+        "question": "Paste the concept sets JSON from the previous step (concept_discovery). Example:\n{\"concept_sets\": [{\"name\":\"Heart failure\",\"concept_ids\":[...],\"include_descendants\":true,\"standard_only\":true}]}\n"
+      }
+    },
+    "hitl_history": [
+      {
+        "message_to_human": "Paste the finalized cohort definition (plain text).",
+        "human_response": "patients with flu between in the last 10 years order by age",
+        "timestamp": "2025-08-28T04:30:37.002643+00:00"
+      }
+    ],
+    "command_log": [
+      {
+        "turn": 1,
+        "generated_command": {
+          "type": "ask_human",
+          "question": "Paste the finalized cohort definition (plain text)."
+        },
+        "execution_result": "patients with flu between in the last 10 years order by age",
+        "timestamp": "2025-08-28T04:30:37.002800+00:00"
+      }
+    ],
+    "conversation_history": [
+      {
+        "role": "assistant",
+        "content": "Paste the finalized cohort definition (plain text)."
+      },
+      {
+        "role": "assistant",
+        "content": "Paste the concept sets JSON from the previous step (concept_discovery). Example:\n{\"concept_sets\": [{\"name\":\"Heart failure\",\"concept_ids\":[...],\"include_descendants\":true,\"standard_only\":true}]}\n"
+      }
+    ],
+    "call_count": 0
+  }
+}

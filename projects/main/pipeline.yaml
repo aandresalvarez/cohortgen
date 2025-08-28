@@ -1,0 +1,31 @@
+version: "0.1"
+name: "cohort_orchestrator"
+
+imports:
+  clarification: "../clarification/pipeline.yaml"
+  concept_discovery: "../concept_discovery/pipeline.yaml"
+  query_builder: "../query_builder/pipeline.yaml"
+
+steps:
+  # 1) Clarification conversation: collects initial goal and returns Final Cohort Definition
+  - kind: step
+    name: clarification
+    uses: imports.clarification
+
+  # 2) Concept discovery: consumes the clarified cohort definition and prepares concept sets
+  - kind: step
+    name: concept_discovery
+    uses: imports.concept_discovery
+    input: "{{ context.scratchpad.cohort_definition }}"
+
+  # 3) Query builder: uses cohort definition + discovered concept sets to emit SQL
+  - kind: step
+    name: query_builder
+    uses: imports.query_builder
+    input: "{{ context.scratchpad.cohort_definition }}"
+
+  # 4) Final output passthrough for convenience when running this orchestrator directly
+  - kind: step
+    name: final_sql
+    agent: "flujo.builtins.passthrough"
+    input: "{{ context.scratchpad.final_sql }}"
