@@ -169,6 +169,7 @@ steps:
   - kind: step
     name: generate_cohort_definition
     uses: agents.cohort_definer
+    updates_context: true
     input: |
       Initial goal: {{ steps.get_initial_goal.output }}
 
@@ -194,6 +195,7 @@ steps:
     name: status_definition_ready
     agent:
       id: "flujo.builtins.stringify"
+    updates_context: true
     input: |
       ✅ Definition ready
 
@@ -235,6 +237,7 @@ steps:
     name: normalize_concept_sets
     uses: "skills.custom_tools:ensure_dict"
     input: "{{ steps.summarize_concept_sets.output }}"
+    updates_context: true
 
   - kind: conditional
     name: ensure_nonempty_concepts
@@ -304,6 +307,7 @@ steps:
   - kind: step
     name: resolve_bq_project_id
     uses: "skills.custom_tools:get_env_value"
+    updates_context: true
     input: |
       {{ {"name": "BIGQUERY_PROJECT_ID", "default": ""} | tojson }}
 
@@ -401,6 +405,7 @@ steps:
   - kind: step
     name: final_sql
     agent: "flujo.builtins.passthrough"
+    updates_context: true
     input: |
       {{ steps.fix_sql_2.output or steps.fix_sql_1.output or steps.generate_sql.output }}
 
