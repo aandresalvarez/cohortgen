@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, Dict
+import os
 
 
 # Example custom tool function
@@ -121,3 +122,21 @@ async def default_influenza_concept_plan() -> Dict[str, Any]:
             }
         ]
     }
+
+
+async def get_env_value(payload: Dict[str, Any] | str) -> str:
+    """Return an environment variable value, with optional default.
+
+    Accepts either a plain string (env var name) or a JSON/dict payload
+    with keys {"name": str, "default": Optional[str]}.
+    """
+    name: str
+    default: str | None = None
+    if isinstance(payload, dict):
+        name = str(payload.get("name") or "").strip()
+        default = payload.get("default")
+    else:
+        name = str(payload or "").strip()
+    if not name:
+        return default or ""
+    return os.getenv(name, default or "")

@@ -290,9 +290,22 @@ steps:
 
   # 3) Query builder (LLM + BigQuery dry-run with fixes)
   - kind: step
-    name: omop_dataset_id
-    agent: "flujo.builtins.passthrough"
-    input: "bigquery-public-data.cms_synthetic_patient_data_omop"
+    name: resolve_omop_dataset_id
+    uses: "skills.custom_tools:get_env_value"
+    input: |
+      {{ {"name": "OMOP_DATASET_ID", "default": "bigquery-public-data.cms_synthetic_patient_data_omop"} | tojson }}
+
+  - kind: step
+    name: resolve_bq_location
+    uses: "skills.custom_tools:get_env_value"
+    input: |
+      {{ {"name": "BIGQUERY_LOCATION", "default": "US"} | tojson }}
+
+  - kind: step
+    name: resolve_bq_project_id
+    uses: "skills.custom_tools:get_env_value"
+    input: |
+      {{ {"name": "BIGQUERY_PROJECT_ID", "default": ""} | tojson }}
 
   - kind: step
     name: generate_sql
@@ -305,7 +318,7 @@ steps:
       {{ context.scratchpad.concept_sets | tojson }}
 
       BigQuery OMOP prefix:
-      {{ steps.omop_dataset_id.output }}
+      {{ steps.resolve_omop_dataset_id.output }}
 
       Output ONLY SQL.
 
@@ -315,8 +328,9 @@ steps:
     input: |
       {{ {
         "sql": steps.generate_sql.output,
-        "default_dataset": steps.omop_dataset_id.output,
-        "location": "US"
+        "project_id": steps.resolve_bq_project_id.output,
+        "default_dataset": steps.resolve_omop_dataset_id.output,
+        "location": (steps.resolve_bq_location.output or "US")
       } | tojson }}
     updates_context: true
 
@@ -343,8 +357,9 @@ steps:
           input: |
             {{ {
               "sql": steps.fix_sql_1.output,
-              "default_dataset": steps.omop_dataset_id.output,
-              "location": "US"
+              "project_id": steps.resolve_bq_project_id.output,
+              "default_dataset": steps.resolve_omop_dataset_id.output,
+              "location": (steps.resolve_bq_location.output or "US")
             } | tojson }}
 
         - kind: conditional
@@ -370,8 +385,9 @@ steps:
                 input: |
                   {{ {
                     "sql": steps.fix_sql_2.output,
-                    "default_dataset": steps.omop_dataset_id.output,
-                    "location": "US"
+                    "project_id": steps.resolve_bq_project_id.output,
+                    "default_dataset": steps.resolve_omop_dataset_id.output,
+                    "location": (steps.resolve_bq_location.output or "US")
                   } | tojson }}
             false:
               - kind: step

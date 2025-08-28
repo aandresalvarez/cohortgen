@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, Dict, Optional
+import os
 
 try:
     from google.cloud import bigquery  # type: ignore
@@ -11,7 +12,8 @@ except Exception:  # pragma: no cover - import-time safety
     BadRequest = Exception  # type: ignore
 
 
-DEFAULT_SA_PATH = "projects/query_builder/skills/service_account.json"
+# Prefer env var if set; otherwise fall back to ADC
+DEFAULT_SA_PATH: Optional[str] = None
 
 
 def _ensure_client(
@@ -22,10 +24,17 @@ def _ensure_client(
         raise RuntimeError(
             "google-cloud-bigquery is not installed. Please install it to use BigQuery skills."
         )
-    credentials_path = credentials_path or DEFAULT_SA_PATH
-    return bigquery.Client.from_service_account_json(
-        credentials_path, project=project_id
+    # Choose explicit credentials if provided; else env var; else ADC
+    candidate_path = (
+        credentials_path
+        or os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        or DEFAULT_SA_PATH
     )
+    if candidate_path:
+        return bigquery.Client.from_service_account_json(
+            candidate_path, project=project_id
+        )
+    return bigquery.Client(project=project_id)
 
 
 def bq_dry_run(payload: str | Dict[str, Any]) -> Dict[str, Any]:
@@ -41,10 +50,10 @@ def bq_dry_run(payload: str | Dict[str, Any]) -> Dict[str, Any]:
     if not sql:
         return {"success": False, "errors": ["Empty SQL"], "total_bytes_processed": 0}
 
-    project_id: Optional[str] = cfg.get("project_id")
-    credentials_path: Optional[str] = cfg.get("credentials_path") or DEFAULT_SA_PATH
-    default_dataset: Optional[str] = cfg.get("default_dataset")
-    location: Optional[str] = cfg.get("location")
+    project_id: Optional[str] = cfg.get("project_id") or os.getenv("BIGQUERY_PROJECT_ID")
+    credentials_path: Optional[str] = cfg.get("credentials_path") or None
+    default_dataset: Optional[str] = cfg.get("default_dataset") or os.getenv("OMOP_DATASET_ID")
+    location: Optional[str] = cfg.get("location") or os.getenv("BIGQUERY_LOCATION")
 
     client = _ensure_client(project_id=project_id, credentials_path=credentials_path)
 

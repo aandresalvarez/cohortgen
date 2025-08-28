@@ -34,3 +34,20 @@ state_machine_default = true
 - Skills live under `skills/`; register new tools there or via entry points.
 - Budgets and execution limits can be configured in `flujo.toml` under `[budgets]`.
 - See docs for more: https://aandresalvarez.github.io/flujo/
+
+## Env-Driven BigQuery/OMOP Configuration
+
+This project reads environment variables (loaded via `.env` per `flujo.toml`) to configure BigQuery and the OMOP dataset:
+
+- `GOOGLE_APPLICATION_CREDENTIALS`: Path to a GCP service account JSON. If unset, Application Default Credentials (ADC) are used.
+- `BIGQUERY_PROJECT_ID`: GCP project ID to use for queries/dry-runs.
+- `OMOP_DATASET_ID`: BigQuery dataset prefix for OMOP tables (e.g., `bigquery-public-data.cms_synthetic_patient_data_omop`).
+- `BIGQUERY_LOCATION`: Region for BigQuery jobs (e.g., `US`).
+
+Defaults:
+- If `OMOP_DATASET_ID` is not set, the pipeline defaults to `bigquery-public-data.cms_synthetic_patient_data_omop`.
+- If `BIGQUERY_LOCATION` is not set, it defaults to `US`.
+
+Where used:
+- The pipeline step `resolve_omop_dataset_id` pulls `OMOP_DATASET_ID` (with default) for SQL generation.
+- BigQuery dry-run uses `BIGQUERY_PROJECT_ID` and `BIGQUERY_LOCATION` if provided.
