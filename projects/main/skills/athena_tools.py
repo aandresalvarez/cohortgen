@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, Dict, List, Union
+import re
 
 try:
     from athena_client import Athena  # type: ignore
@@ -59,9 +60,36 @@ def athena_search_for_concept_plan(
     client = _safe_athena()
     out_sets: List[Dict[str, Any]] = []
 
+    def _simplify_terms(q: str) -> List[str]:
+        q = (q or "").strip()
+        if not q:
+            return []
+        # Prefer quoted phrase if present
+        m = re.findall(r"['\"]([^'\"]{2,})['\"]", q)
+        if m:
+            return [t.strip() for t in m if t.strip()]
+        # Fallback: extract tokens, drop common stop-words
+        stop = {
+            "include", "includes", "including", "standard", "concept", "concepts", "select",
+            "descendant", "descendants", "true", "false", "and", "or", "with", "without",
+            "the", "a", "an", "of", "for", "use", "using", "maps", "mapped", "source",
+            "codes", "code", "via", "rather", "than", "hard", "coding", "hard-coding",
+            "not", "restrict", "by", "visit", "type", "age", "sex", "prior", "observation",
+            "attribute", "provider", "id", "if", "present", "else", "linked", "classify",
+            "unknown", "cohort", "end", "date", "window", "past", "year", "days", "set",
+        }
+        tokens = re.findall(r"[A-Za-z][A-Za-z0-9\-]{1,}", q)
+        terms = [t for t in tokens if t.lower() not in stop]
+        # Return top 1-3 distinctive terms
+        if not terms:
+            return [q]
+        # prefer longest unique terms first
+        terms = sorted(set(terms), key=lambda s: (-len(s), s.lower()))
+        return terms[:3]
+
     for item in concept_sets:
         name = item.get("name") or "unnamed_set"
-        queries: List[str] = list(item.get("queries") or [])
+        raw_queries: List[str] = list(item.get("queries") or [])
         domain = _normalize_domain(item.get("domain"))
         vocab_prefs: List[str] = list(item.get("vocabulary") or [])
         include_desc = bool(item.get("include_descendants", True))
@@ -70,22 +98,25 @@ def athena_search_for_concept_plan(
         seen: set[int] = set()
         candidates: List[Dict[str, Any]] = []
 
-        for q in queries:
+        # Normalize queries and add simplified terms
+        expanded_queries: List[str] = []
+        for q in raw_queries:
             q = (q or "").strip()
             if not q:
                 continue
+            expanded_queries.append(q)
+            for term in _simplify_terms(q):
+                if term and term.lower() not in {t.lower() for t in expanded_queries}:
+                    expanded_queries.append(term)
+
+        if not expanded_queries and name:
+            expanded_queries = [name]
+
+        for q in expanded_queries:
             try:
                 results = client.search(q)
             except Exception as e:
-                out_sets.append(
-                    {
-                        "name": name,
-                        "candidates": [],
-                        "include_descendants": include_desc,
-                        "standard_only": standard_only,
-                        "notes": f"Search failed for query '{q}': {e}",
-                    }
-                )
+                # capture the error note but continue with other terms
                 continue
 
             try:

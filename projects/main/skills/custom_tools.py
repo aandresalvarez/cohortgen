@@ -20,6 +20,14 @@ async def ensure_concept_plan_dict(
     if plan is None:
         return {}
     if isinstance(plan, dict):
+        # Unwrap common wrapper {"value": "{...json...}"}
+        val = plan.get("value") if isinstance(plan, dict) else None
+        if isinstance(val, str):
+            try:
+                loaded = json.loads(val)
+                return loaded if isinstance(loaded, dict) else {"data": loaded}
+            except Exception:
+                return {"data": val}
         return plan
     try:
         # pydantic v2 model support via model_dump/model_dump_json if present
@@ -51,6 +59,14 @@ async def ensure_dict(data: Dict[str, Any] | str | object) -> Dict[str, Any]:
     if data is None:
         return {}
     if isinstance(data, dict):
+        # Unwrap common wrapper {"value": "{...json...}"}
+        val = data.get("value") if isinstance(data, dict) else None
+        if isinstance(val, str):
+            try:
+                loaded = json.loads(val)
+                return loaded if isinstance(loaded, dict) else {"data": loaded}
+            except Exception:
+                return {"data": val}
         return data
     if isinstance(data, str):
         try:
@@ -86,7 +102,19 @@ async def store_as_concept_sets(data: Dict[str, Any] | str | object) -> Dict[str
     if data is None:
         parsed = {"concept_sets": []}
     elif isinstance(data, dict):
-        parsed = data
+        # Unwrap {"value": "{...json...}"} or pass-through dicts
+        if "concept_sets" in data:
+            parsed = data
+        else:
+            val = data.get("value")
+            if isinstance(val, str):
+                try:
+                    loaded = json.loads(val)
+                    parsed = loaded if isinstance(loaded, dict) else {"concept_sets": []}
+                except Exception:
+                    parsed = {"concept_sets": []}
+            else:
+                parsed = {"concept_sets": []}
     elif isinstance(data, str):
         try:
             loaded = json.loads(data)
@@ -136,7 +164,17 @@ async def get_env_value(payload: Dict[str, Any] | str) -> str:
         name = str(payload.get("name") or "").strip()
         default = payload.get("default")
     else:
-        name = str(payload or "").strip()
+        # Accept either a raw env var name or a JSON string with {"name":..., "default":...}
+        raw = str(payload or "").strip()
+        if raw.startswith("{") and raw.endswith("}"):
+            try:
+                obj = json.loads(raw)
+                name = str(obj.get("name") or "").strip()
+                default = obj.get("default")
+            except Exception:
+                name = raw
+        else:
+            name = raw
     if not name:
         return default or ""
     return os.getenv(name, default or "")
