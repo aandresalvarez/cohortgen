@@ -36,6 +36,43 @@ def _safe_athena() -> Any:
     return Athena()
 
 
+def _normalize_vocab_prefs(vlist: List[str] | None) -> List[str]:
+    """Map noisy vocabulary hints to canonical OMOP vocabulary_ids.
+
+    Accepts free-text like "SNOMED CT (standard concepts)", "ICD-10", "loinc",
+    and returns a deduplicated list of canonical IDs: ["SNOMED", "ICD10CM", "LOINC"].
+    Unknown entries are dropped to avoid over-filtering.
+    """
+    if not vlist:
+        return []
+    out: List[str] = []
+    for raw in vlist:
+        if not raw:
+            continue
+        s = str(raw).strip().lower()
+        val: str | None = None
+        if "snomed" in s:
+            val = "SNOMED"
+        elif "rxnorm" in s:
+            val = "RxNorm"
+        elif "loinc" in s:
+            val = "LOINC"
+        elif "icd-10" in s or "icd10" in s:
+            val = "ICD10CM"
+        elif "icd-9" in s or "icd9" in s:
+            val = "ICD9CM"
+        elif re.search(r"\bcpt\b|cpt-?4", s):
+            val = "CPT4"
+        elif "hcpcs" in s:
+            val = "HCPCS"
+        elif "atc" in s:
+            val = "ATC"
+        # Ignore pseudo hints like 'OMOP measurement.result_concept_id'
+        if val and val not in out:
+            out.append(val)
+    return out
+
+
 def athena_search_for_concept_plan(
     plan: Union[str, Dict[str, Any]],
     top_k: int = 10,
@@ -91,7 +128,7 @@ def athena_search_for_concept_plan(
         name = item.get("name") or "unnamed_set"
         raw_queries: List[str] = list(item.get("queries") or [])
         domain = _normalize_domain(item.get("domain"))
-        vocab_prefs: List[str] = list(item.get("vocabulary") or [])
+        vocab_prefs: List[str] = _normalize_vocab_prefs(item.get("vocabulary"))
         include_desc = bool(item.get("include_descendants", True))
         standard_only = bool(item.get("standard_only", True))
 
