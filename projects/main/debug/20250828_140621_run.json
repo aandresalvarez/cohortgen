@@ -1,0 +1,557 @@
+{
+  "exported_at": "2025-08-28T14:06:21.529949Z",
+  "pipeline_name": "pipeline",
+  "run_id": null,
+  "env": {
+    "FLUJO_DEBUG": null,
+    "FLUJO_DEBUG_PROMPTS": null,
+    "FLUJO_TRACE_PREVIEW_LEN": null
+  },
+  "trace_tree": {
+    "name": "pipeline_run",
+    "status": "completed",
+    "start_time": 692297.557071416,
+    "end_time": 692297.612918291,
+    "attributes": {
+      "flujo.input": "",
+      "flujo.run_id": "run_cc3a4b784dcd417099535f676323b938",
+      "flujo.pipeline.name": "unnamed_20250828_070611",
+      "flujo.pipeline.version": "latest"
+    },
+    "events": [],
+    "children": [
+      {
+        "name": "clarification",
+        "status": "completed",
+        "start_time": 692297.55717325,
+        "end_time": 692297.573209,
+        "attributes": {
+          "flujo.step.type": "Step",
+          "step_input": "",
+          "flujo.step.policy": "DefaultAgentStepExecutor",
+          "flujo.cache.hit": false,
+          "success": true,
+          "latency_s": 0.00809625,
+          "flujo.budget.actual_cost_usd": 0.0,
+          "flujo.budget.actual_tokens": 0
+        },
+        "events": [],
+        "children": []
+      },
+      {
+        "name": "concept_discovery",
+        "status": "completed",
+        "start_time": 692297.575659083,
+        "end_time": 692297.584773791,
+        "attributes": {
+          "flujo.step.type": "Step",
+          "step_input": "step_history=[] total_cost_usd=0.0 total_tokens=0 final_pipeline_context=PipelineContext(run_id='run_ce8ea3db818c4d2497c54e6b83347374', initial_prompt='', scratchpad={'status': 'paused', 'last_state_update': 692297.568913916, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'paused_step_input': AskHumanCommand(type='ask_human', question='What would you like to accomplish?'), 'pause_message': 'What would you like to accomplish?'}, hitl_history=[], command_log=[], conversation_history=[ConversationTurn(role=<ConversationRole.assistant: 'assistant'>, content='What would you like to accomplish?')], call_count=0) trace_tree=Span(span_id='811cdeee-ba32-473c-8f30-1af5425bb807', name='pipeline_run', start_time=692297.56872225, end_time=692297.571352166, parent_span_id=None, attributes={'flujo.input': '', 'flujo.run_id': 'run_ce8ea3db818c4d2497c54e6b83347374', 'flujo.pipeline.name': 'unnamed_20250828_070611', 'flujo.pipeline.version': 'latest'}, children=[Span(span_id='5b031f3e-cea3-416b-b967-e7a40b10649d', name='get_initial_goal', start_time=692297.568827333, end_time=None, parent_span_id='811cdeee-ba32-473c-8f30-1af5425bb807', attributes={'flujo.step.type': 'HumanInTheLoopStep', 'step_input': '', 'flujo.step.policy': 'DefaultHitlStepExecutor', 'flujo.cache.hit': False}, children=[], events=[], status='running')], events=[], status='completed')",
+          "flujo.step.policy": "DefaultAgentStepExecutor",
+          "flujo.cache.hit": false,
+          "success": true,
+          "latency_s": 0.007505291,
+          "flujo.budget.actual_cost_usd": 0.0,
+          "flujo.budget.actual_tokens": 0
+        },
+        "events": [],
+        "children": []
+      },
+      {
+        "name": "query_builder",
+        "status": "completed",
+        "start_time": 692297.587977833,
+        "end_time": 692297.596879375,
+        "attributes": {
+          "flujo.step.type": "Step",
+          "step_input": "step_history=[] total_cost_usd=0.0 total_tokens=0 final_pipeline_context=PipelineContext(run_id='run_760f10cfdab64dbbb7032b161fbc1634', initial_prompt='', scratchpad={'status': 'paused', 'last_state_update': 692297.568913916, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'paused_step_input': {'type': 'ask_human', 'question': 'What would you like to accomplish?'}, 'pause_message': 'Paste the cohort definition (plain text from your study protocol or a prior clarification).', 'steps': {'clarification': {'step_history': [], 'total_cost_usd': 0.0, 'total_tokens': 0, 'final_pipeline_context': {'run_id': 'run_ce8ea3db818c4d2497c54e6b83347374', 'initial_prompt': '', 'scratchpad': {'status': 'paused', 'last_state_update': 692297.568913916, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'paused_step_input': {'type': 'ask_human', 'question': 'What would you like to accomplish?'}, 'pause_message': 'What would you like to accomplish?'}, 'hitl_history': [], 'command_log': [], 'conversation_history': [{'role': 'assistant', 'content': 'What would you like to accomplish?'}], 'call_count': 0}, 'trace_tree': {'span_id': '811cdeee-ba32-473c-8f30-1af5425bb807', 'name': 'pipeline_run', 'start_time': 692297.56872225, 'end_time': 692297.571352166, 'parent_span_id': None, 'attributes': {'flujo.input': '', 'flujo.run_id': 'run_ce8ea3db818c4d2497c54e6b83347374', 'flujo.pipeline.name': 'unnamed_20250828_070611', 'flujo.pipeline.version': 'latest'}, 'children': [{'span_id': '5b031f3e-cea3-416b-b967-e7a40b10649d', 'name': 'get_initial_goal', 'start_time': 692297.568827333, 'end_time': None, 'parent_span_id': '811cdeee-ba32-473c-8f30-1af5425bb807', 'attributes': {'flujo.step.type': 'HumanInTheLoopStep', 'step_input': '', 'flujo.step.policy': 'DefaultHitlStepExecutor', 'flujo.cache.hit': False}, 'children': [], 'events': [], 'status': 'running'}], 'events': [], 'status': 'completed'}}}}, hitl_history=[], command_log=[], conversation_history=[{'role': 'assistant', 'content': 'What would you like to accomplish?'}], call_count=0) trace_tree=Span(span_id='a406a254-c37c-45ba-ad9b-874e0172c6b3', name='pipeline_run', start_time=692297.581504208, end_time=692297.584483083, parent_span_id=None, attributes={'flujo.input': '', 'flujo.run_id': 'run_760f10cfdab64dbbb7032b161fbc1634', 'flujo.pipeline.name': 'unnamed_20250828_070611', 'flujo.pipeline.version': 'latest'}, children=[Span(span_id='78a8aa72-47a1-46a9-98b6-23eec8ddf8d6', name='resolve_cohort_definition', start_time=692297.581595833, end_time=None, parent_span_id='a406a254-c37c-45ba-ad9b-874e0172c6b3', attributes={'flujo.step.type': 'ConditionalStep', 'step_input': '', 'flujo.step.policy': 'DefaultConditionalStepExecutor', 'flujo.cache.hit': False}, children=[], events=[], status='running')], events=[], status='completed')",
+          "flujo.step.policy": "DefaultAgentStepExecutor",
+          "flujo.cache.hit": false,
+          "success": true,
+          "latency_s": 0.007490333,
+          "flujo.budget.actual_cost_usd": 0.0,
+          "flujo.budget.actual_tokens": 0
+        },
+        "events": [],
+        "children": []
+      },
+      {
+        "name": "final_sql",
+        "status": "completed",
+        "start_time": 692297.600295833,
+        "end_time": 692297.601838166,
+        "attributes": {
+          "flujo.step.type": "Step",
+          "step_input": "step_history=[] total_cost_usd=0.0 total_tokens=0 final_pipeline_context=PipelineContext(run_id='run_1bc42c9bf38c451ba284a22d8aa68acc', initial_prompt='', scratchpad={'status': 'paused', 'last_state_update': 692297.568913916, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'paused_step_input': {'type': 'ask_human', 'question': 'What would you like to accomplish?'}, 'pause_message': 'Paste the finalized cohort definition (plain text).', 'steps': {'clarification': {'step_history': [], 'total_cost_usd': 0.0, 'total_tokens': 0, 'final_pipeline_context': {'run_id': 'run_ce8ea3db818c4d2497c54e6b83347374', 'initial_prompt': '', 'scratchpad': {'status': 'paused', 'last_state_update': 692297.568913916, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'paused_step_input': {'type': 'ask_human', 'question': 'What would you like to accomplish?'}, 'pause_message': 'What would you like to accomplish?'}, 'hitl_history': [], 'command_log': [], 'conversation_history': [{'role': 'assistant', 'content': 'What would you like to accomplish?'}], 'call_count': 0}, 'trace_tree': {'span_id': '811cdeee-ba32-473c-8f30-1af5425bb807', 'name': 'pipeline_run', 'start_time': 692297.56872225, 'end_time': 692297.571352166, 'parent_span_id': None, 'attributes': {'flujo.input': '', 'flujo.run_id': 'run_ce8ea3db818c4d2497c54e6b83347374', 'flujo.pipeline.name': 'unnamed_20250828_070611', 'flujo.pipeline.version': 'latest'}, 'children': [{'span_id': '5b031f3e-cea3-416b-b967-e7a40b10649d', 'name': 'get_initial_goal', 'start_time': 692297.568827333, 'end_time': None, 'parent_span_id': '811cdeee-ba32-473c-8f30-1af5425bb807', 'attributes': {'flujo.step.type': 'HumanInTheLoopStep', 'step_input': '', 'flujo.step.policy': 'DefaultHitlStepExecutor', 'flujo.cache.hit': False}, 'children': [], 'events': [], 'status': 'running'}], 'events': [], 'status': 'completed'}}}}, hitl_history=[], command_log=[], conversation_history=[{'role': 'assistant', 'content': 'What would you like to accomplish?'}], call_count=0) trace_tree=Span(span_id='ce52c98f-51e0-4ca7-bfd8-8ae4573313eb', name='pipeline_run', start_time=692297.593500916, end_time=692297.596486708, parent_span_id=None, attributes={'flujo.input': '', 'flujo.run_id': 'run_1bc42c9bf38c451ba284a22d8aa68acc', 'flujo.pipeline.name': 'unnamed_20250828_070611', 'flujo.pipeline.version': 'latest'}, children=[Span(span_id='a6c4e5dc-05e4-4e47-926a-7be13437fec8', name='resolve_cohort_definition', start_time=692297.593611166, end_time=None, parent_span_id='ce52c98f-51e0-4ca7-bfd8-8ae4573313eb', attributes={'flujo.step.type': 'ConditionalStep', 'step_input': '', 'flujo.step.policy': 'DefaultConditionalStepExecutor', 'flujo.cache.hit': False}, children=[], events=[], status='running')], events=[], status='completed')",
+          "flujo.step.policy": "DefaultAgentStepExecutor",
+          "flujo.cache.hit": false,
+          "success": true,
+          "latency_s": 0.000138875,
+          "flujo.budget.actual_cost_usd": 0.0,
+          "flujo.budget.actual_tokens": 1
+        },
+        "events": [],
+        "children": []
+      }
+    ]
+  },
+  "result": {
+    "total_cost_usd": 0.0,
+    "total_tokens": 1,
+    "step_history": [
+      {
+        "name": "clarification",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.00809625,
+        "token_counts": 0,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": {
+          "step_history": [],
+          "total_cost_usd": 0.0,
+          "total_tokens": 0,
+          "final_pipeline_context": {
+            "run_id": "run_ce8ea3db818c4d2497c54e6b83347374",
+            "initial_prompt": "",
+            "scratchpad": {
+              "status": "paused",
+              "last_state_update": 692297.568913916,
+              "hitl_message": "What would you like to accomplish?",
+              "hitl_data": "",
+              "paused_step_input": {
+                "type": "ask_human",
+                "question": "What would you like to accomplish?"
+              },
+              "pause_message": "What would you like to accomplish?"
+            },
+            "hitl_history": [],
+            "command_log": [],
+            "conversation_history": [
+              {
+                "role": "assistant",
+                "content": "What would you like to accomplish?"
+              }
+            ],
+            "call_count": 0
+          },
+          "trace_tree": {
+            "span_id": "811cdeee-ba32-473c-8f30-1af5425bb807",
+            "name": "pipeline_run",
+            "start_time": 692297.56872225,
+            "end_time": 692297.571352166,
+            "parent_span_id": null,
+            "attributes": {
+              "flujo.input": "",
+              "flujo.run_id": "run_ce8ea3db818c4d2497c54e6b83347374",
+              "flujo.pipeline.name": "unnamed_20250828_070611",
+              "flujo.pipeline.version": "latest"
+            },
+            "children": [
+              {
+                "span_id": "5b031f3e-cea3-416b-b967-e7a40b10649d",
+                "name": "get_initial_goal",
+                "start_time": 692297.568827333,
+                "end_time": null,
+                "parent_span_id": "811cdeee-ba32-473c-8f30-1af5425bb807",
+                "attributes": {
+                  "flujo.step.type": "HumanInTheLoopStep",
+                  "step_input": "",
+                  "flujo.step.policy": "DefaultHitlStepExecutor",
+                  "flujo.cache.hit": false
+                },
+                "children": [],
+                "events": [],
+                "status": "running"
+              }
+            ],
+            "events": [],
+            "status": "completed"
+          }
+        },
+        "metadata": {
+          "nested_usage_aggregated": true
+        },
+        "step_history": []
+      },
+      {
+        "name": "concept_discovery",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.007505291,
+        "token_counts": 0,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": {
+          "step_history": [],
+          "total_cost_usd": 0.0,
+          "total_tokens": 0,
+          "final_pipeline_context": {
+            "run_id": "run_760f10cfdab64dbbb7032b161fbc1634",
+            "initial_prompt": "",
+            "scratchpad": {
+              "status": "paused",
+              "last_state_update": 692297.568913916,
+              "hitl_message": "What would you like to accomplish?",
+              "hitl_data": "",
+              "paused_step_input": {
+                "type": "ask_human",
+                "question": "What would you like to accomplish?"
+              },
+              "pause_message": "Paste the cohort definition (plain text from your study protocol or a prior clarification).",
+              "steps": {
+                "clarification": {
+                  "step_history": [],
+                  "total_cost_usd": 0.0,
+                  "total_tokens": 0,
+                  "final_pipeline_context": {
+                    "run_id": "run_ce8ea3db818c4d2497c54e6b83347374",
+                    "initial_prompt": "",
+                    "scratchpad": {
+                      "status": "paused",
+                      "last_state_update": 692297.568913916,
+                      "hitl_message": "What would you like to accomplish?",
+                      "hitl_data": "",
+                      "paused_step_input": {
+                        "type": "ask_human",
+                        "question": "What would you like to accomplish?"
+                      },
+                      "pause_message": "What would you like to accomplish?"
+                    },
+                    "hitl_history": [],
+                    "command_log": [],
+                    "conversation_history": [
+                      {
+                        "role": "assistant",
+                        "content": "What would you like to accomplish?"
+                      }
+                    ],
+                    "call_count": 0
+                  },
+                  "trace_tree": {
+                    "span_id": "811cdeee-ba32-473c-8f30-1af5425bb807",
+                    "name": "pipeline_run",
+                    "start_time": 692297.56872225,
+                    "end_time": 692297.571352166,
+                    "parent_span_id": null,
+                    "attributes": {
+                      "flujo.input": "",
+                      "flujo.run_id": "run_ce8ea3db818c4d2497c54e6b83347374",
+                      "flujo.pipeline.name": "unnamed_20250828_070611",
+                      "flujo.pipeline.version": "latest"
+                    },
+                    "children": [
+                      {
+                        "span_id": "5b031f3e-cea3-416b-b967-e7a40b10649d",
+                        "name": "get_initial_goal",
+                        "start_time": 692297.568827333,
+                        "end_time": null,
+                        "parent_span_id": "811cdeee-ba32-473c-8f30-1af5425bb807",
+                        "attributes": {
+                          "flujo.step.type": "HumanInTheLoopStep",
+                          "step_input": "",
+                          "flujo.step.policy": "DefaultHitlStepExecutor",
+                          "flujo.cache.hit": false
+                        },
+                        "children": [],
+                        "events": [],
+                        "status": "running"
+                      }
+                    ],
+                    "events": [],
+                    "status": "completed"
+                  }
+                }
+              }
+            },
+            "hitl_history": [],
+            "command_log": [],
+            "conversation_history": [
+              {
+                "role": "assistant",
+                "content": "What would you like to accomplish?"
+              }
+            ],
+            "call_count": 0
+          },
+          "trace_tree": {
+            "span_id": "a406a254-c37c-45ba-ad9b-874e0172c6b3",
+            "name": "pipeline_run",
+            "start_time": 692297.581504208,
+            "end_time": 692297.584483083,
+            "parent_span_id": null,
+            "attributes": {
+              "flujo.input": "",
+              "flujo.run_id": "run_760f10cfdab64dbbb7032b161fbc1634",
+              "flujo.pipeline.name": "unnamed_20250828_070611",
+              "flujo.pipeline.version": "latest"
+            },
+            "children": [
+              {
+                "span_id": "78a8aa72-47a1-46a9-98b6-23eec8ddf8d6",
+                "name": "resolve_cohort_definition",
+                "start_time": 692297.581595833,
+                "end_time": null,
+                "parent_span_id": "a406a254-c37c-45ba-ad9b-874e0172c6b3",
+                "attributes": {
+                  "flujo.step.type": "ConditionalStep",
+                  "step_input": "",
+                  "flujo.step.policy": "DefaultConditionalStepExecutor",
+                  "flujo.cache.hit": false
+                },
+                "children": [],
+                "events": [],
+                "status": "running"
+              }
+            ],
+            "events": [],
+            "status": "completed"
+          }
+        },
+        "metadata": {
+          "nested_usage_aggregated": true
+        },
+        "step_history": []
+      },
+      {
+        "name": "query_builder",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.007490333,
+        "token_counts": 0,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": {
+          "step_history": [],
+          "total_cost_usd": 0.0,
+          "total_tokens": 0,
+          "final_pipeline_context": {
+            "run_id": "run_1bc42c9bf38c451ba284a22d8aa68acc",
+            "initial_prompt": "",
+            "scratchpad": {
+              "status": "paused",
+              "last_state_update": 692297.568913916,
+              "hitl_message": "What would you like to accomplish?",
+              "hitl_data": "",
+              "paused_step_input": {
+                "type": "ask_human",
+                "question": "What would you like to accomplish?"
+              },
+              "pause_message": "Paste the finalized cohort definition (plain text).",
+              "steps": {
+                "clarification": {
+                  "step_history": [],
+                  "total_cost_usd": 0.0,
+                  "total_tokens": 0,
+                  "final_pipeline_context": {
+                    "run_id": "run_ce8ea3db818c4d2497c54e6b83347374",
+                    "initial_prompt": "",
+                    "scratchpad": {
+                      "status": "paused",
+                      "last_state_update": 692297.568913916,
+                      "hitl_message": "What would you like to accomplish?",
+                      "hitl_data": "",
+                      "paused_step_input": {
+                        "type": "ask_human",
+                        "question": "What would you like to accomplish?"
+                      },
+                      "pause_message": "What would you like to accomplish?"
+                    },
+                    "hitl_history": [],
+                    "command_log": [],
+                    "conversation_history": [
+                      {
+                        "role": "assistant",
+                        "content": "What would you like to accomplish?"
+                      }
+                    ],
+                    "call_count": 0
+                  },
+                  "trace_tree": {
+                    "span_id": "811cdeee-ba32-473c-8f30-1af5425bb807",
+                    "name": "pipeline_run",
+                    "start_time": 692297.56872225,
+                    "end_time": 692297.571352166,
+                    "parent_span_id": null,
+                    "attributes": {
+                      "flujo.input": "",
+                      "flujo.run_id": "run_ce8ea3db818c4d2497c54e6b83347374",
+                      "flujo.pipeline.name": "unnamed_20250828_070611",
+                      "flujo.pipeline.version": "latest"
+                    },
+                    "children": [
+                      {
+                        "span_id": "5b031f3e-cea3-416b-b967-e7a40b10649d",
+                        "name": "get_initial_goal",
+                        "start_time": 692297.568827333,
+                        "end_time": null,
+                        "parent_span_id": "811cdeee-ba32-473c-8f30-1af5425bb807",
+                        "attributes": {
+                          "flujo.step.type": "HumanInTheLoopStep",
+                          "step_input": "",
+                          "flujo.step.policy": "DefaultHitlStepExecutor",
+                          "flujo.cache.hit": false
+                        },
+                        "children": [],
+                        "events": [],
+                        "status": "running"
+                      }
+                    ],
+                    "events": [],
+                    "status": "completed"
+                  }
+                }
+              }
+            },
+            "hitl_history": [],
+            "command_log": [],
+            "conversation_history": [
+              {
+                "role": "assistant",
+                "content": "What would you like to accomplish?"
+              }
+            ],
+            "call_count": 0
+          },
+          "trace_tree": {
+            "span_id": "ce52c98f-51e0-4ca7-bfd8-8ae4573313eb",
+            "name": "pipeline_run",
+            "start_time": 692297.593500916,
+            "end_time": 692297.596486708,
+            "parent_span_id": null,
+            "attributes": {
+              "flujo.input": "",
+              "flujo.run_id": "run_1bc42c9bf38c451ba284a22d8aa68acc",
+              "flujo.pipeline.name": "unnamed_20250828_070611",
+              "flujo.pipeline.version": "latest"
+            },
+            "children": [
+              {
+                "span_id": "a6c4e5dc-05e4-4e47-926a-7be13437fec8",
+                "name": "resolve_cohort_definition",
+                "start_time": 692297.593611166,
+                "end_time": null,
+                "parent_span_id": "ce52c98f-51e0-4ca7-bfd8-8ae4573313eb",
+                "attributes": {
+                  "flujo.step.type": "ConditionalStep",
+                  "step_input": "",
+                  "flujo.step.policy": "DefaultConditionalStepExecutor",
+                  "flujo.cache.hit": false
+                },
+                "children": [],
+                "events": [],
+                "status": "running"
+              }
+            ],
+            "events": [],
+            "status": "completed"
+          }
+        },
+        "metadata": {
+          "nested_usage_aggregated": true
+        },
+        "step_history": []
+      },
+      {
+        "name": "final_sql",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.000138875,
+        "token_counts": 1,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": "",
+        "metadata": {},
+        "step_history": []
+      }
+    ]
+  },
+  "final_context": {
+    "run_id": "run_1bc42c9bf38c451ba284a22d8aa68acc",
+    "initial_prompt": "",
+    "scratchpad": {
+      "status": "paused",
+      "last_state_update": 692297.568913916,
+      "hitl_message": "What would you like to accomplish?",
+      "hitl_data": "",
+      "paused_step_input": {
+        "type": "ask_human",
+        "question": "What would you like to accomplish?"
+      },
+      "pause_message": "Paste the finalized cohort definition (plain text).",
+      "steps": {
+        "clarification": {
+          "step_history": [],
+          "total_cost_usd": 0.0,
+          "total_tokens": 0,
+          "final_pipeline_context": {
+            "run_id": "run_ce8ea3db818c4d2497c54e6b83347374",
+            "initial_prompt": "",
+            "scratchpad": {
+              "status": "paused",
+              "last_state_update": 692297.568913916,
+              "hitl_message": "What would you like to accomplish?",
+              "hitl_data": "",
+              "paused_step_input": {
+                "type": "ask_human",
+                "question": "What would you like to accomplish?"
+              },
+              "pause_message": "What would you like to accomplish?"
+            },
+            "hitl_history": [],
+            "command_log": [],
+            "conversation_history": [
+              {
+                "role": "assistant",
+                "content": "What would you like to accomplish?"
+              }
+            ],
+            "call_count": 0
+          },
+          "trace_tree": {
+            "span_id": "811cdeee-ba32-473c-8f30-1af5425bb807",
+            "name": "pipeline_run",
+            "start_time": 692297.56872225,
+            "end_time": 692297.571352166,
+            "parent_span_id": null,
+            "attributes": {
+              "flujo.input": "",
+              "flujo.run_id": "run_ce8ea3db818c4d2497c54e6b83347374",
+              "flujo.pipeline.name": "unnamed_20250828_070611",
+              "flujo.pipeline.version": "latest"
+            },
+            "children": [
+              {
+                "span_id": "5b031f3e-cea3-416b-b967-e7a40b10649d",
+                "name": "get_initial_goal",
+                "start_time": 692297.568827333,
+                "end_time": null,
+                "parent_span_id": "811cdeee-ba32-473c-8f30-1af5425bb807",
+                "attributes": {
+                  "flujo.step.type": "HumanInTheLoopStep",
+                  "step_input": "",
+                  "flujo.step.policy": "DefaultHitlStepExecutor",
+                  "flujo.cache.hit": false
+                },
+                "children": [],
+                "events": [],
+                "status": "running"
+              }
+            ],
+            "events": [],
+            "status": "completed"
+          }
+        },
+        "final_sql": ""
+      }
+    },
+    "hitl_history": [],
+    "command_log": [],
+    "conversation_history": [
+      {
+        "role": "assistant",
+        "content": "What would you like to accomplish?"
+      }
+    ],
+    "call_count": 0
+  }
+}

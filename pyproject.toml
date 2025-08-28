@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "flujo",
+    # Pin to a version that still provides openai.resources.chat.Chat
+    "openai==1.99.9",
     "athena-client==1.0.27",
     "google-cloud-bigquery>=3.19.0,<4.0.0",
     "sqlalchemy-bigquery>=1.10.0,<2.0.0",
@@ -14,6 +16,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=8",
+    "pytest-asyncio>=0.23",
     "ruff>=0.5",
     "mypy>=1.10",
     "black>=24",
@@ -34,7 +37,7 @@ packages = ["src/cohortgen"]
 package = true
 
 [tool.uv.sources]
-flujo = { git = "https://github.com/aandresalvarez/flujo.git", rev = "519919f0cf6a519f33a9c77bb2ad36b81f925d7e" }
+flujo = { git = "https://github.com/aandresalvarez/flujo.git", rev = "b8db12cb3175656c21d4e0601c4a3cc3f0155356" }
 
 [project.scripts]
 cohortgen = "cohortgen.cli:main"

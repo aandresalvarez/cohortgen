@@ -40,7 +40,7 @@ agents:
 steps:
   - kind: conditional
     name: resolve_cohort_definition
-    condition_expression: "(not context.initial_prompt) and (context.scratchpad.get('status') != 'paused')"
+    condition_expression: "not (context.scratchpad.get('cohort_definition') or context.initial_prompt)"
     branches:
       true:
         - kind: hitl
@@ -51,7 +51,7 @@ steps:
         - kind: step
           name: get_cohort_definition
           agent: "flujo.builtins.passthrough"
-          input: "{{ context.initial_prompt }}"
+          input: "{{ context.scratchpad.cohort_definition or context.initial_prompt }}"
           updates_context: true
 
   - kind: conditional
@@ -118,26 +118,26 @@ steps:
         "default_dataset": steps.omop_dataset_id.output,
         "location": "US"
       } | tojson }}
-          updates_context: true
+    updates_context: true
 
-        - kind: conditional
-          name: fix_if_fail_1
-          condition_expression: "not steps['dry_run_1'].success"
-          branches:
-            true:
-              - kind: step
-                name: fix_sql_1
-                uses: agents.sql_fixer
-                input: |
-                  Original SQL:
-                  {{ steps.generate_sql.output }}
+  - kind: conditional
+    name: fix_if_fail_1
+    condition_expression: "not steps['dry_run_1'].success"
+    branches:
+      true:
+        - kind: step
+          name: fix_sql_1
+          uses: agents.sql_fixer
+          input: |
+            Original SQL:
+            {{ steps.generate_sql.output }}
 
-                  BigQuery error (from dry run):
-                  {{ steps.dry_run_1.output | tojson }}
+            BigQuery error (from dry run):
+            {{ steps.dry_run_1.output | tojson }}
 
-                  Output ONLY corrected SQL.
+            Output ONLY corrected SQL.
 
-              - kind: step
+        - kind: step
           name: dry_run_2
           uses: "skills.bq_tools:bq_dry_run"
           input: |
@@ -147,22 +147,22 @@ steps:
               "location": "US"
             } | tojson }}
 
-              - kind: conditional
-                name: fix_if_fail_2
-                condition_expression: "not steps['dry_run_2'].success"
-                branches:
-                  true:
-                    - kind: step
-                      name: fix_sql_2
-                      uses: agents.sql_fixer
-                      input: |
-                        Original SQL:
-                        {{ steps.fix_sql_1.output }}
+        - kind: conditional
+          name: fix_if_fail_2
+          condition_expression: "not steps['dry_run_2'].success"
+          branches:
+            true:
+              - kind: step
+                name: fix_sql_2
+                uses: agents.sql_fixer
+                input: |
+                  Original SQL:
+                  {{ steps.fix_sql_1.output }}
 
-                        BigQuery error (from dry run):
-                        {{ steps.dry_run_2.output | tojson }}
+                  BigQuery error (from dry run):
+                  {{ steps.dry_run_2.output | tojson }}
 
-                        Output ONLY corrected SQL.
+                  Output ONLY corrected SQL.
 
               - kind: step
                 name: dry_run_3
@@ -173,24 +173,25 @@ steps:
                     "default_dataset": steps.omop_dataset_id.output,
                     "location": "US"
                   } | tojson }}
-                  false:
-                    - kind: step
-                      name: passthrough_2
-                      agent: "flujo.builtins.passthrough"
             false:
               - kind: step
-                name: passthrough_1
+                name: passthrough_2
                 agent: "flujo.builtins.passthrough"
-
+      false:
         - kind: step
-          name: final_sql
+          name: passthrough_1
           agent: "flujo.builtins.passthrough"
-          input: |
-            {{ steps.fix_sql_2.output or steps.fix_sql_1.output or steps.generate_sql.output }}
 
-        - kind: step
-          name: store_final_sql
-          uses: "skills.custom_tools:wrap_in_scratchpad"
-          input: |
-            {{ {"data": steps.final_sql.output, "key": "final_sql"} | tojson }}
-          updates_context: true
+  - kind: step
+    name: final_sql
+    agent: "flujo.builtins.passthrough"
+    input: |
+      {{ steps.fix_sql_2.output or steps.fix_sql_1.output or steps.generate_sql.output }}
+    updates_context: true
+
+  - kind: step
+    name: store_final_sql
+    uses: "skills.custom_tools:wrap_in_scratchpad"
+    input: |
+      {{ {"data": steps.final_sql.output, "key": "final_sql"} | tojson }}
+    updates_context: true
