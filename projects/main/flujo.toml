@@ -25,3 +25,16 @@ state_machine_default = true
 # Per-run overrides:
 #   - Force agentic: export FLUJO_ARCHITECT_STATE_MACHINE=1
 #   - Force minimal: export FLUJO_ARCHITECT_MINIMAL=1
+
+# Explicit cost configuration to avoid strict-pricing failures and track spend
+[cost]
+  strict = false
+  [cost.providers]
+    [cost.providers.openai]
+      # Placeholder prices for testing; adjust for your account/models as needed
+      [cost.providers.openai.gpt-5]
+        prompt_tokens_per_1k = 0.010
+        completion_tokens_per_1k = 0.030
+      [cost.providers.openai.gpt-5-mini]
+        prompt_tokens_per_1k = 0.002
+        completion_tokens_per_1k = 0.006

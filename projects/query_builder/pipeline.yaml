@@ -40,7 +40,7 @@ agents:
 steps:
   - kind: conditional
     name: resolve_cohort_definition
-    condition_expression: "(not context.initial_prompt) and (context.scratchpad.get('status') != 'paused')"
+    condition_expression: "not (context.scratchpad.get('cohort_definition') or context.initial_prompt)"
     branches:
       true:
         - kind: hitl
@@ -51,7 +51,7 @@ steps:
         - kind: step
           name: get_cohort_definition
           agent: "flujo.builtins.passthrough"
-          input: "{{ context.initial_prompt }}"
+          input: "{{ context.scratchpad.cohort_definition or context.initial_prompt }}"
           updates_context: true
 
   - kind: conditional

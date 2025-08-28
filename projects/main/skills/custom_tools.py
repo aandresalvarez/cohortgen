@@ -66,3 +66,58 @@ async def ensure_dict(data: Dict[str, Any] | str | object) -> Dict[str, Any]:
 async def wrap_in_scratchpad(data: Any, *, key: str = "value") -> Dict[str, Any]:
     """Wrap arbitrary data under context.scratchpad[key] for updates_context merge."""
     return {"scratchpad": {key: data}}
+
+
+async def store_as_cohort_definition(text: Any) -> Dict[str, Any]:
+    """Store plain-text cohort definition to context.scratchpad.cohort_definition."""
+    if text is None:
+        text = ""
+    return {"scratchpad": {"cohort_definition": text}}
+
+
+async def store_as_concept_sets(data: Dict[str, Any] | str | object) -> Dict[str, Any]:
+    """Store concept sets (parsed) to context.scratchpad.concept_sets.
+
+    Accepts a dict or JSON string and writes the parsed mapping under
+    scratchpad.concept_sets.
+    """
+    parsed: Dict[str, Any]
+    if data is None:
+        parsed = {"concept_sets": []}
+    elif isinstance(data, dict):
+        parsed = data
+    elif isinstance(data, str):
+        try:
+            loaded = json.loads(data)
+            parsed = loaded if isinstance(loaded, dict) else {"concept_sets": []}
+        except Exception:
+            parsed = {"concept_sets": []}
+    else:
+        try:
+            parsed = json.loads(json.dumps(data, default=str))
+            if not isinstance(parsed, dict):
+                parsed = {"concept_sets": []}
+        except Exception:
+            parsed = {"concept_sets": []}
+    return {"scratchpad": {"concept_sets": parsed}}
+
+
+async def default_influenza_concept_plan() -> Dict[str, Any]:
+    """Emit a minimal concept plan for Influenza conditions.
+
+    This plan is consumed by the Athena search tool to look up standard
+    OMOP concepts for Influenza and descendants.
+    """
+    return {
+        "concept_sets": [
+            {
+                "name": "Influenza (diagnosis)",
+                "intent": "diagnosed influenza",
+                "domain": "Condition",
+                "vocabulary": ["SNOMED"],
+                "include_descendants": True,
+                "standard_only": True,
+                "queries": ["Influenza", "Flu", "Influenza virus infection"],
+            }
+        ]
+    }
