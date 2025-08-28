@@ -98,6 +98,14 @@ agents:
       You fix BigQuery Standard SQL queries. Given original SQL and a BigQuery dry-run error, return corrected SQL while preserving project.dataset qualifiers. Output ONLY SQL.
     output_schema: { type: string }
 
+  # Orchestrator tool-backed pseudo-agent to call subpipelines (concept_discovery)
+  subpipeline_runner:
+    model: "flujo:tool-only"
+    tools:
+      - "skills.orchestrator_tools:run_concept_discovery_subpipeline"
+    timeout: 1800
+    max_retries: 0
+
 steps:
   # 0) Capture initial goal at the top-level
   - kind: hitl
@@ -200,6 +208,66 @@ steps:
       ✅ Definition ready
 
   # 2) Concept discovery (LLM + Athena search)
+  - kind: step
+    name: resolve_use_subpipelines
+    uses: "skills.custom_tools:get_env_value"
+    input: |
+      {{ {"name": "USE_SUBPIPELINES", "default": "0"} | tojson }}
+
+  - kind: conditional
+    name: concept_discovery_path
+    condition_expression: "steps['resolve_use_subpipelines'].output == '1'"
+    branches:
+      true:
+        - kind: step
+          name: run_concept_discovery_subpipeline
+          agent: subpipeline_runner
+          input: |
+            {{ context.scratchpad.cohort_definition }}
+          tool_name: "skills.orchestrator_tools:run_concept_discovery_subpipeline"
+          updates_context: true
+        - kind: step
+          name: skip_internal_concept_discovery
+          agent: "flujo.builtins.passthrough"
+          input: "subpipeline_path"
+      false:
+        - kind: step
+          name: decompose_concept_sets
+          uses: agents.concept_decomposer
+          input: |
+            Cohort definition:
+            {{ context.scratchpad.cohort_definition }}
+
+            Output ONLY a JSON object that matches the required schema.
+
+        - kind: step
+          name: prepare_athena_plan
+          uses: "skills.custom_tools:ensure_concept_plan_dict"
+
+        - kind: step
+          name: search_athena
+          uses: "skills.athena_tools:athena_search_for_concept_plan"
+          updates_context: true
+
+        - kind: step
+          name: summarize_concept_sets
+          uses: agents.concept_summarizer
+          input: |
+            Initial cohort definition:
+            {{ context.scratchpad.cohort_definition }}
+
+            Concept plan (from decomposer):
+            {{ steps.decompose_concept_sets.output | tojson }}
+
+            Athena search results:
+            {{ steps.search_athena.output | tojson }}
+
+            Output ONLY the final JSON spec with fields: concept_sets:[{name, concept_ids, include_descendants, standard_only}], assumptions:[...].
+
+        - kind: step
+          name: normalize_concept_sets
+          uses: "skills.custom_tools:ensure_dict"
+          input: "{{ steps.summarize_concept_sets.output }}"
   - kind: step
     name: decompose_concept_sets
     uses: agents.concept_decomposer
