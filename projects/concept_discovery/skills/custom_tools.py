@@ -14,7 +14,9 @@ async def echo_tool(x: str) -> str:
     return x
 
 
-async def ensure_concept_plan_dict(plan: Dict[str, Any] | str | PydanticBaseModel) -> Dict[str, Any]:
+async def ensure_concept_plan_dict(
+    plan: Dict[str, Any] | str | PydanticBaseModel,
+) -> Dict[str, Any]:
     """Normalize a concept plan into a dict[str, Any].
 
     Accepts a pydantic model, plain dict, or JSON string from the decomposer.
