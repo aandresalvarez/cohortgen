@@ -171,6 +171,11 @@ def athena_search_for_concept_plan(
                     continue
                 cid = norm["concept_id"]
 
+                # Standard filter
+                if standard_only and (norm.get("standard_concept") not in ("S", "C")):
+                    # Typically 'S' = Standard, 'C' = Classification (sometimes useful)
+                    continue
+
                 # Domain filter
                 if domain and norm.get("domain_id") != domain:
                     continue
