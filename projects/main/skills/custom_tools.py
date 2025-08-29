@@ -178,3 +178,38 @@ async def get_env_value(payload: Dict[str, Any] | str) -> str:
     if not name:
         return default or ""
     return os.getenv(name, default or "")
+
+
+async def parse_initial_payload(initial: Any) -> Dict[str, Any]:
+    """Parse initial input into scratchpad values for non-interactive runs.
+
+    Accepts either a JSON string or dict with optional keys:
+      - cohort_definition: str
+      - concept_sets: dict or list
+
+    Returns {"scratchpad": {...}} for updates_context merge.
+    """
+    if initial is None:
+        return {"scratchpad": {}}
+    if isinstance(initial, str):
+        try:
+            data = json.loads(initial)
+        except Exception:
+            data = {}
+    elif isinstance(initial, dict):
+        data = initial
+    else:
+        try:
+            data = json.loads(json.dumps(initial, default=str))
+            if not isinstance(data, dict):
+                data = {}
+        except Exception:
+            data = {}
+    out: Dict[str, Any] = {}
+    cd = data.get("cohort_definition")
+    if isinstance(cd, str) and cd.strip():
+        out["cohort_definition"] = cd
+    cs = data.get("concept_sets")
+    if isinstance(cs, (dict, list)):
+        out["concept_sets"] = cs
+    return {"scratchpad": out}
