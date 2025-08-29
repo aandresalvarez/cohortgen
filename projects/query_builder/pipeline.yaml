@@ -38,6 +38,13 @@ agents:
     output_schema: { type: string }
 
 steps:
+  # Optional: non-interactive inputs via JSON
+  - kind: step
+    name: parse_initial_payload
+    uses: "skills.custom_tools:parse_initial_payload"
+    input: "{{ context.initial_prompt }}"
+    updates_context: true
+
   - kind: conditional
     name: resolve_cohort_definition
     condition_expression: "not (context.scratchpad.get('cohort_definition') or context.initial_prompt)"
