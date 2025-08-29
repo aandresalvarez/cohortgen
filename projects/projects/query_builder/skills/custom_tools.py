@@ -21,6 +21,29 @@ def _ensure_dict(data: Any) -> Dict[str, Any]:
         return {"input": str(data)}
 
 
+async def ensure_dict(data: Dict[str, Any] | str | object) -> Dict[str, Any]:
+    """Normalize a JSON-like input into a dict[str, Any]."""
+    if data is None:
+        return {}
+    if isinstance(data, dict):
+        return data
+    if isinstance(data, str):
+        try:
+            loaded = json.loads(data)
+            return loaded if isinstance(loaded, dict) else {"data": loaded}
+        except Exception:
+            return {"data": data}
+    try:
+        return json.loads(json.dumps(data, default=str))
+    except Exception:
+        return {"data": str(data)}
+
+
+async def wrap_in_scratchpad(data: Any, *, key: str = "value") -> Dict[str, Any]:
+    """Wrap arbitrary data under context.scratchpad[key] for updates_context merge."""
+    return {"scratchpad": {key: data}}
+
+
 async def parse_initial_payload(initial: Any) -> Dict[str, Any]:
     """Parse initial input into scratchpad values for non-interactive runs.
 
@@ -39,4 +62,3 @@ async def parse_initial_payload(initial: Any) -> Dict[str, Any]:
     if not out:
         return {"scratchpad": {}}
     return {"scratchpad": out}
-
