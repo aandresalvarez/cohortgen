@@ -81,3 +81,44 @@ async def run_concept_discovery_subpipeline(cohort_definition: str) -> Dict[str,
         concept_sets = _parse_concept_sets_from_debug(debug_file)
     return {"scratchpad": {"concept_sets": concept_sets}}
 
+
+def _parse_final_sql_from_debug(debug_path: Path) -> str:
+    try:
+        data = json.loads(debug_path.read_text())
+    except Exception:
+        return ""
+    # Prefer scratchpad.final_sql if present
+    scratch = (data or {}).get("scratchpad", {})
+    sql = scratch.get("final_sql")
+    if isinstance(sql, str) and sql.strip():
+        return sql
+    # Fallback to steps.final_sql.output.value
+    steps = scratch.get("steps") or {}
+    final = steps.get("final_sql") or {}
+    if isinstance(final, dict):
+        val = final.get("value") or final.get("output") or ""
+        if isinstance(val, str):
+            return val
+    return ""
+
+
+async def run_query_builder_subpipeline(payload: Dict[str, Any] | str) -> Dict[str, Any]:
+    """Run the query_builder pipeline with JSON payload containing cohort_definition and concept_sets.
+
+    Returns {"scratchpad": {"final_sql": str}}.
+    """
+    if isinstance(payload, dict):
+        initial = json.dumps(payload)
+    else:
+        initial = str(payload or "")
+
+    projects = _projects_root()
+    proj_dir = projects / "query_builder"
+    pipeline = proj_dir / "pipeline.yaml"
+    debug_dir = proj_dir / "debug"
+
+    args = ["run", "-p", str(pipeline), "--debug-export", "--input", initial]
+    _ = _run_cli_in(proj_dir, *args, timeout=1800)
+    debug_file = _latest_debug_json(debug_dir)
+    sql = _parse_final_sql_from_debug(debug_file) if debug_file else ""
+    return {"scratchpad": {"final_sql": sql}}
