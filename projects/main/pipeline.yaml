@@ -121,195 +121,37 @@ steps:
     message: "What would you like to accomplish?"
     updates_context: true
 
-  # Choose clarification path: sub-pipeline or internal
+  # Clarification sub-pipeline (always)
   - kind: step
-    name: resolve_use_subpipelines_early
-    uses: "skills.custom_tools:get_env_value"
+    name: run_clarification_subpipeline
+    uses: agents.subpipeline_runner
     input: |
-      {{ {"name": "USE_SUBPIPELINES", "default": "0"} | tojson }}
+      {{ steps.get_initial_goal.output }}
+    tool_name: "skills.orchestrator_tools:run_clarification_subpipeline"
+    updates_context: true
 
-  - kind: conditional
-    name: clarification_path
-    condition_expression: "steps['resolve_use_subpipelines_early'].output == '1'"
-    branches:
-      true:
-        - kind: step
-          name: run_clarification_subpipeline
-          uses: agents.subpipeline_runner
-          input: |
-            {{ steps.get_initial_goal.output }}
-          tool_name: "skills.orchestrator_tools:run_clarification_subpipeline"
-          updates_context: true
-        - kind: step
-          name: status_definition_ready
-          agent:
-            id: "flujo.builtins.stringify"
-          input: |
-            ✅ Definition ready (sub-pipeline)
-      false:
-        - kind: loop
-          name: clarification_loop
-          loop:
-            conversation: true
-            history_management:
-              strategy: truncate_tokens
-              max_tokens: 3000
-            ai_turn_source: named_steps
-            user_turn_sources: ["hitl"]
-            named_steps: ["check_if_more_info_needed"]
-            history_template: |
-              --- Task Context ---
-              Initial goal: {{history.0.content}}
-              Recent turns:
-              {{#each history}}{{ this.role }}: {{ this.content }}
-              {{/each}}
-              Instruction:
-                Ask ONE clarifying question that explicitly references the initial goal {{history.0.content}}.
-                If goal is clear, output {"action":"finish"}.
-            body:
-              - kind: step
-                name: check_if_more_info_needed
-                uses: agents.clarification_agent
-                input: |
-                  --- Conversation So Far ---
-                  {{#each context.hitl_history}}
-                  assistant: {{ this.message_to_human }}
-                  user: {{ this.human_response }}
-                  {{/each}}
-
-                  --- Instruction ---
-                  Initial goal: {{ steps.get_initial_goal.output }}
-                  Ask ONE clarifying question referencing the goal and the conversation. If all slots are filled, output {"action":"finish"}.
-
-              - kind: conditional
-                name: ask_question_if_needed
-                condition_expression: "previous_step.action == 'ask'"
-                branches:
-                  true:
-                    - kind: hitl
-                      name: ask_user_for_clarification
-                      message: "{{ steps.check_if_more_info_needed.output.question }}"
-                      updates_context: true
-                  false:
-                    - kind: step
-                      name: passthrough
-                      agent: "flujo.builtins.passthrough"
-
-          exit_expression: |
-            (
-              steps['check_if_more_info_needed'] and
-              steps['check_if_more_info_needed'].action == 'finish'
-            )
-          max_loops: 6
-
-  - kind: conditional
-    name: ensure_cohort_definition_set
-    condition_expression: "not context.scratchpad.get('cohort_definition')"
-    branches:
-      true:
-        - kind: step
-          name: synthesize_slots
-          uses: "flujo.helpers.slot_synthesis:synthesize_slots"
-          updates_context: true
-
-        - kind: step
-          name: generate_cohort_definition
-          uses: agents.cohort_definer
-          updates_context: true
-          input: |
-            Initial goal: {{ steps.get_initial_goal.output }}
-
-            Clarifications (chronological):
-            {{#each context.hitl_history}}
-            Q: {{ this.message_to_human }}
-            A: {{ this.human_response }}
-            {{/each}}
-
-            Synthesized slots:
-            {{ context.scratchpad.slots | tojson }}
-
-            Task: Produce the Final Cohort Definition per your system instructions. No code or SQL.
-
-        - kind: step
-          name: store_cohort_definition
-          uses: "skills.custom_tools:store_as_cohort_definition"
-          input: "{{ steps.generate_cohort_definition.output }}"
-          updates_context: true
-
-        - kind: step
-          name: status_definition_ready
-          agent:
-            id: "flujo.builtins.stringify"
-          updates_context: true
-          input: |
-            ✅ Definition ready
-      false:
-        - kind: step
-          name: definition_ready_passthrough
-          agent: "flujo.builtins.passthrough"
-          input: "definition_already_set"
-
-  # 2) Concept discovery (LLM + Athena search)
   - kind: step
-    name: resolve_use_subpipelines
-    uses: "skills.custom_tools:get_env_value"
+    name: status_definition_ready
+    agent:
+      id: "flujo.builtins.stringify"
+    updates_context: true
     input: |
-      {{ {"name": "USE_SUBPIPELINES", "default": "0"} | tojson }}
+      ✅ Definition ready (sub-pipeline)
 
-  - kind: conditional
-    name: concept_discovery_path
-    condition_expression: "steps['resolve_use_subpipelines'].output == '1'"
-    branches:
-      true:
-        - kind: step
-          name: run_concept_discovery_subpipeline
-          uses: agents.subpipeline_runner
-          input: |
-            {{ context.scratchpad.cohort_definition }}
-          tool_name: "skills.orchestrator_tools:run_concept_discovery_subpipeline"
-          updates_context: true
-        - kind: step
-          name: normalize_concepts_from_sub
-          uses: "skills.custom_tools:ensure_dict"
-          input: "{{ context.scratchpad.concept_sets | tojson }}"
-      false:
-        - kind: step
-          name: decompose_concept_sets
-          uses: agents.concept_decomposer
-          input: |
-            Cohort definition:
-            {{ context.scratchpad.cohort_definition }}
+  # 2) Concept discovery sub-pipeline (always)
+  - kind: step
+    name: run_concept_discovery_subpipeline
+    uses: agents.subpipeline_runner
+    input: |
+      {{ context.scratchpad.cohort_definition }}
+    tool_name: "skills.orchestrator_tools:run_concept_discovery_subpipeline"
+    updates_context: true
 
-            Output ONLY a JSON object that matches the required schema.
-
-        - kind: step
-          name: prepare_athena_plan
-          uses: "skills.custom_tools:ensure_concept_plan_dict"
-
-        - kind: step
-          name: search_athena
-          uses: "skills.athena_tools:athena_search_for_concept_plan"
-          updates_context: true
-
-        - kind: step
-          name: summarize_concept_sets
-          uses: agents.concept_summarizer
-          input: |
-            Initial cohort definition:
-            {{ context.scratchpad.cohort_definition }}
-
-            Concept plan (from decomposer):
-            {{ steps.decompose_concept_sets.output | tojson }}
-
-            Athena search results:
-            {{ steps.search_athena.output | tojson }}
-
-            Output ONLY the final JSON spec with fields: concept_sets:[{name, concept_ids, include_descendants, standard_only}], assumptions:[...].
-
-        - kind: step
-          name: normalize_concept_sets
-          uses: "skills.custom_tools:ensure_dict"
-          input: "{{ steps.summarize_concept_sets.output }}"
+  - kind: step
+    name: normalize_concepts_from_sub
+    uses: "skills.custom_tools:ensure_dict"
+    input: "{{ context.scratchpad.concept_sets | tojson }}"
+    updates_context: true
   
 
   - kind: conditional
@@ -371,6 +213,7 @@ steps:
     name: normalize_review_input
     uses: "skills.custom_tools:ensure_dict"
     input: "{{ steps.concept_review.output }}"
+    updates_context: true
 
   - kind: conditional
     name: apply_review_if_valid
@@ -393,179 +236,22 @@ steps:
     name: status_concepts_ready
     agent:
       id: "flujo.builtins.stringify"
+    updates_context: true
     input: |
       ✅ Concepts ready
 
-  # 2b) Optionally run query builder as a sub-pipeline and pause internal QB
-  - kind: conditional
-    name: query_builder_subpipeline
-    condition_expression: "steps['resolve_use_subpipelines'] and steps['resolve_use_subpipelines'].output == '1'"
-    branches:
-      true:
-        - kind: step
-          name: run_query_builder_subpipeline
-          uses: agents.subpipeline_runner
-          input: |
-            {{ {"cohort_definition": context.scratchpad.cohort_definition, "concept_sets": context.scratchpad.concept_sets} | tojson }}
-          tool_name: "skills.orchestrator_tools:run_query_builder_subpipeline"
-          updates_context: true
-        - kind: step
-          name: status_sql_validated_sub
-          agent:
-            id: "flujo.builtins.stringify"
-          input: |
-            ✅ SQL validated (sub-pipeline)
-        - kind: step
-          name: pause_internal_qb
-          uses: "skills.custom_tools:wrap_in_scratchpad"
-          input: |
-            {{ {"data": "paused", "key": "status"} | tojson }}
-          updates_context: true
-      false:
-        - kind: step
-          name: qb_passthrough
-          agent: "flujo.builtins.passthrough"
-          input: "continue"
+  # 3) Query builder sub-pipeline (always)
+  - kind: step
+    name: run_query_builder_subpipeline
+    uses: agents.subpipeline_runner
+    input: |
+      {{ {"cohort_definition": context.scratchpad.cohort_definition, "concept_sets": context.scratchpad.concept_sets} | tojson }}
+    tool_name: "skills.orchestrator_tools:run_query_builder_subpipeline"
+    updates_context: true
 
-  # 3) Query builder (LLM + BigQuery dry-run with fixes)
-  - kind: conditional
-    name: stop_if_paused_by_subpipeline
-    condition_expression: "context.scratchpad.get('status') == 'paused'"
-    branches:
-      true:
-        - kind: step
-          name: qb_noop
-          agent: "flujo.builtins.passthrough"
-          input: "subpipeline_completed"
-      false:
-        - kind: step
-          name: resolve_omop_dataset_id
-          uses: "skills.custom_tools:get_env_value"
-          input: |
-            {{ {"name": "OMOP_DATASET_ID", "default": "bigquery-public-data.cms_synthetic_patient_data_omop"} | tojson }}
-
-        - kind: step
-          name: resolve_bq_location
-          uses: "skills.custom_tools:get_env_value"
-          input: |
-            {{ {"name": "BIGQUERY_LOCATION", "default": "US"} | tojson }}
-
-        - kind: step
-          name: resolve_bq_project_id
-          uses: "skills.custom_tools:get_env_value"
-          updates_context: true
-          input: |
-            {{ {"name": "BIGQUERY_PROJECT_ID", "default": ""} | tojson }}
-
-        - kind: step
-          name: generate_sql
-          uses: agents.sql_generator
-          input: |
-            Cohort definition:
-            {{ context.scratchpad.cohort_definition }}
-
-            Concept sets JSON:
-            {{ context.scratchpad.concept_sets | tojson }}
-
-            BigQuery OMOP prefix:
-            {{ steps.resolve_omop_dataset_id.output }}
-
-            Output ONLY SQL.
-
-        - kind: step
-          name: dry_run_1
-          uses: "skills.bq_tools:bq_dry_run"
-          input: |
-            {{ {
-              "sql": steps.generate_sql.output,
-              "project_id": steps.resolve_bq_project_id.output,
-              "default_dataset": steps.resolve_omop_dataset_id.output,
-              "location": (steps.resolve_bq_location.output or "US")
-            } | tojson }}
-          updates_context: true
-
-        - kind: conditional
-          name: fix_if_fail_1
-          condition_expression: "not steps['dry_run_1'].success"
-          branches:
-            true:
-              - kind: step
-                name: fix_sql_1
-                uses: agents.sql_fixer
-                input: |
-                  Original SQL:
-                  {{ steps.generate_sql.output }}
-
-                  BigQuery error (from dry run):
-                  {{ steps.dry_run_1.output | tojson }}
-
-                  Output ONLY corrected SQL.
-
-              - kind: step
-                name: dry_run_2
-                uses: "skills.bq_tools:bq_dry_run"
-                input: |
-                  {{ {
-                    "sql": steps.fix_sql_1.output,
-                    "project_id": steps.resolve_bq_project_id.output,
-                    "default_dataset": steps.resolve_omop_dataset_id.output,
-                    "location": (steps.resolve_bq_location.output or "US")
-                  } | tojson }}
-
-              - kind: conditional
-                name: fix_if_fail_2
-                condition_expression: "not steps['dry_run_2'].success"
-                branches:
-                  true:
-                    - kind: step
-                      name: fix_sql_2
-                      uses: agents.sql_fixer
-                      input: |
-                        Original SQL:
-                        {{ steps.fix_sql_1.output }}
-
-                        BigQuery error (from dry run):
-                        {{ steps.dry_run_2.output | tojson }}
-
-                        Output ONLY corrected SQL.
-
-                    - kind: step
-                      name: dry_run_3
-                      uses: "skills.bq_tools:bq_dry_run"
-                      input: |
-                        {{ {
-                          "sql": steps.fix_sql_2.output,
-                          "project_id": steps.resolve_bq_project_id.output,
-                          "default_dataset": steps.resolve_omop_dataset_id.output,
-                          "location": (steps.resolve_bq_location.output or "US")
-                        } | tojson }}
-                  false:
-                    - kind: step
-                      name: passthrough_2
-                      agent: "flujo.builtins.passthrough"
-            false:
-              - kind: step
-                name: passthrough_1
-                agent: "flujo.builtins.passthrough"
-
-        - kind: step
-          name: final_sql
-          agent: "flujo.builtins.passthrough"
-          updates_context: true
-          input: |
-            {{ steps.fix_sql_2.output or steps.fix_sql_1.output or steps.generate_sql.output }}
-
-        - kind: step
-          name: store_final_sql
-          uses: "skills.custom_tools:wrap_in_scratchpad"
-          input: |
-            {{ {"data": steps.final_sql.output, "key": "final_sql"} | tojson }}
-          updates_context: true
-
-        # Status: SQL validated (or generated)
-        - kind: step
-          name: status_sql_validated
-          agent:
-            id: "flujo.builtins.stringify"
-          input: |
-            ✅ SQL validated
+  - kind: step
+    name: status_sql_validated
+    agent:
+      id: "flujo.builtins.stringify"
+    input: |
+      ✅ SQL validated (sub-pipeline)
