@@ -41,7 +41,7 @@ steps:
   # Optional: non-interactive inputs via JSON
   - kind: step
     name: parse_initial_payload
-    uses: "skills.custom_tools:parse_initial_payload"
+    uses: "projects.query_builder.skills.custom_tools:parse_initial_payload"
     input: "{{ context.initial_prompt }}"
     updates_context: true
 
@@ -97,7 +97,7 @@ steps:
 
         - kind: step
           name: normalize_concept_sets
-          uses: "skills.custom_tools:ensure_dict"
+          uses: "projects.query_builder.skills.custom_tools:ensure_dict"
           input: "{{ steps.get_concept_sets.output }}"
           updates_context: true
 
@@ -118,7 +118,7 @@ steps:
 
   - kind: step
     name: dry_run_1
-    uses: "skills.bq_tools:bq_dry_run"
+    uses: "projects.query_builder.skills.bq_tools:bq_dry_run"
     input: |
       {{ {
         "sql": steps.generate_sql.output,
@@ -144,9 +144,9 @@ steps:
 
             Output ONLY corrected SQL.
 
-        - kind: step
-          name: dry_run_2
-          uses: "skills.bq_tools:bq_dry_run"
+              - kind: step
+                name: dry_run_2
+                uses: "projects.query_builder.skills.bq_tools:bq_dry_run"
           input: |
             {{ {
               "sql": steps.fix_sql_1.output,
@@ -171,9 +171,9 @@ steps:
 
                   Output ONLY corrected SQL.
 
-              - kind: step
-                name: dry_run_3
-                uses: "skills.bq_tools:bq_dry_run"
+                    - kind: step
+                      name: dry_run_3
+                      uses: "projects.query_builder.skills.bq_tools:bq_dry_run"
                 input: |
                   {{ {
                     "sql": steps.fix_sql_2.output,
@@ -198,7 +198,7 @@ steps:
 
   - kind: step
     name: store_final_sql
-    uses: "skills.custom_tools:wrap_in_scratchpad"
+    uses: "projects.query_builder.skills.custom_tools:wrap_in_scratchpad"
     input: |
       {{ {"data": steps.final_sql.output, "key": "final_sql"} | tojson }}
     updates_context: true

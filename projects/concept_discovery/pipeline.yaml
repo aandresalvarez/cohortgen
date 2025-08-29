@@ -88,9 +88,14 @@ agents:
     output_schema: { type: string }
 
 steps:
+  - kind: step
+    name: parse_initial_payload
+    uses: "projects.concept_discovery.skills.custom_tools:parse_initial_payload"
+    input: "{{ context.initial_prompt }}"
+    updates_context: true
   - kind: conditional
     name: resolve_cohort_definition
-    condition_expression: "(not context.initial_prompt) and (context.scratchpad.get('status') != 'paused')"
+    condition_expression: "(not (context.scratchpad.get('cohort_definition') or context.initial_prompt)) and (context.scratchpad.get('status') != 'paused')"
     branches:
       true:
         - kind: hitl
@@ -125,11 +130,11 @@ steps:
 
         - kind: step
           name: prepare_athena_plan
-          uses: "skills.custom_tools:ensure_concept_plan_dict"
+          uses: "projects.concept_discovery.skills.custom_tools:ensure_concept_plan_dict"
 
         - kind: step
           name: search_athena
-          uses: "skills.athena_tools:athena_search_for_concept_plan"
+          uses: "projects.concept_discovery.skills.athena_tools:athena_search_for_concept_plan"
           updates_context: true
 
   - kind: step
@@ -183,13 +188,13 @@ steps:
   # Normalize and store concept sets for parent orchestrator
   - kind: step
     name: normalize_concept_sets_output
-    uses: "skills.custom_tools:ensure_dict"
+    uses: "projects.concept_discovery.skills.custom_tools:ensure_dict"
     input: "{{ steps.summarize_concept_sets.output }}"
     updates_context: true
 
   - kind: step
     name: store_concept_sets_output
-    uses: "skills.custom_tools:wrap_in_scratchpad"
+    uses: "projects.concept_discovery.skills.custom_tools:wrap_in_scratchpad"
     input: |
       {{ {"data": steps.normalize_concept_sets_output.output, "key": "concept_sets"} | tojson }}
     updates_context: true
@@ -206,7 +211,7 @@ steps:
 
   - kind: step
     name: normalize_concept_review
-    uses: "skills.custom_tools:ensure_dict"
+    uses: "projects.concept_discovery.skills.custom_tools:ensure_dict"
     input: "{{ steps.concept_review.output }}"
 
   - kind: conditional
@@ -216,7 +221,7 @@ steps:
       true:
         - kind: step
           name: store_concept_sets_review
-          uses: "skills.custom_tools:wrap_in_scratchpad"
+          uses: "projects.concept_discovery.skills.custom_tools:wrap_in_scratchpad"
           input: |
             {{ {"data": steps.normalize_concept_review.output, "key": "concept_sets"} | tojson }}
           updates_context: true

@@ -15,11 +15,11 @@ sync:
 
 # Validate orchestrator pipeline (projects/main)
 validate:
-	cd projects/main && uv run flujo dev validate --strict
+	cd projects/main && PYTHONPATH=$$(pwd)/../.. uv run flujo dev validate --strict
 
 # Run orchestrator pipeline with correct project venv
 run:
-	cd projects/main && uv run flujo run --debug-export
+	cd projects/main && PYTHONPATH=$$(pwd)/../.. uv run flujo run --debug-export
 
 # Environment doctor: ensure you're using this project's venv and SDKs
 doctor:

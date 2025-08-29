@@ -1,0 +1,629 @@
+{
+  "exported_at": "2025-08-29T16:53:37.368478Z",
+  "pipeline_name": "pipeline",
+  "run_id": null,
+  "env": {
+    "FLUJO_DEBUG": null,
+    "FLUJO_DEBUG_PROMPTS": null,
+    "FLUJO_TRACE_PREVIEW_LEN": null
+  },
+  "trace_tree": {
+    "name": "pipeline_run",
+    "status": "completed",
+    "start_time": 342160.06991175,
+    "end_time": 342160.073149041,
+    "attributes": {
+      "flujo.input": "",
+      "flujo.run_id": "run_efa75e025dca4a0e890ed19d03ac65ca",
+      "flujo.pipeline.name": "unnamed_20250829_095302",
+      "flujo.pipeline.version": "latest"
+    },
+    "events": [],
+    "children": [
+      {
+        "name": "get_initial_goal",
+        "status": "running",
+        "start_time": 342160.070015958,
+        "end_time": null,
+        "attributes": {
+          "flujo.step.type": "HumanInTheLoopStep",
+          "step_input": "",
+          "flujo.step.policy": "DefaultHitlStepExecutor",
+          "flujo.cache.hit": false
+        },
+        "events": [
+          {
+            "name": "flujo.resumed",
+            "attributes": {
+              "human_input": "Cohort of patient with contipation"
+            }
+          }
+        ],
+        "children": [
+          {
+            "name": "run_clarification_subpipeline",
+            "status": "completed",
+            "start_time": 342175.358502208,
+            "end_time": 342175.395952083,
+            "attributes": {
+              "flujo.step.type": "Step",
+              "step_input": "Cohort of patient with contipation",
+              "flujo.step.policy": "DefaultAgentStepExecutor",
+              "flujo.cache.hit": false,
+              "success": true,
+              "latency_s": 0.019545792,
+              "flujo.budget.actual_cost_usd": 0.0,
+              "flujo.budget.actual_tokens": 0
+            },
+            "events": [],
+            "children": []
+          },
+          {
+            "name": "status_definition_ready",
+            "status": "completed",
+            "start_time": 342175.39927325,
+            "end_time": 342175.40088875,
+            "attributes": {
+              "flujo.step.type": "Step",
+              "step_input": "step_history=[] total_cost_usd=0.0 total_tokens=0 final_pipeline_context=PipelineContext(run_id='run_1aff945290c3424a978c65e9c65f3355', initial_prompt='', scratchpad={'status': 'paused', 'last_state_update': 342160.070087958, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'pause_message': 'What would you like to accomplish?', 'steps': {'get_initial_goal': 'Cohort of patient with contipation'}, 'paused_step_input': 'Cohort of patient with contipation\\n'}, hitl_history=[{'message_to_human': 'What would you like to accomplish?', 'human_response': 'Cohort of patient with contipation', 'timestamp': '2025-08-29T16:53:17.739198+00:00'}], command_log=[{'turn': 1, 'generated_command': {'type': 'ask_human', 'question': 'What would you like to accomplish?'}, 'execution_result': 'Cohort of patient with contipation', 'timestamp': '2025-08-29T16:53:17.739390+00:00'}], conversation_history=[{'role': 'assistant', 'content': 'What would you like to accomplish?'}], call_count=0) trace_tree=Span(span_id='694695a2-3336-4843-97be-2df5ce7b0308', name='pipeline_run', start_time=342175.388155666, end_time=342175.393207666, parent_span_id=None, attributes={'flujo.input': 'Cohort of patient with contipation\\n', 'flujo.run_id': 'run_1aff945290c3424a978c65e9c65f3355', 'flujo.pipeline.name': 'unnamed_20250829_095302', 'flujo.pipeline.version': 'latest'}, children=[Span(span_id='49e7ebf0-ac3e-403f-8b69-d92f10f2446a', name='resolve_initial_goal', start_time=342175.388329291, end_time=None, parent_span_id='694695a2-3336-4843-97be-2df5ce7b0308', attributes={'flujo.step.type': 'ConditionalStep', 'step_input': 'Cohort of patient with contipation\\n', 'flujo.step.policy': 'DefaultConditionalStepExecutor', 'flujo.cache.hit': False}, children=[], events=[], status='running')], events=[], status='completed')",
+              "flujo.step.policy": "DefaultAgentStepExecutor",
+              "flujo.cache.hit": false,
+              "success": true,
+              "latency_s": 0.000195083,
+              "flujo.budget.actual_cost_usd": 0.0,
+              "flujo.budget.actual_tokens": 1
+            },
+            "events": [],
+            "children": []
+          },
+          {
+            "name": "run_concept_discovery_subpipeline",
+            "status": "completed",
+            "start_time": 342175.40309175,
+            "end_time": 342175.4127675,
+            "attributes": {
+              "flujo.step.type": "Step",
+              "step_input": "✅ Definition ready (sub-pipeline)\n",
+              "flujo.step.policy": "DefaultAgentStepExecutor",
+              "flujo.cache.hit": false,
+              "success": true,
+              "latency_s": 0.009088292,
+              "flujo.budget.actual_cost_usd": 0.0,
+              "flujo.budget.actual_tokens": 0
+            },
+            "events": [],
+            "children": []
+          },
+          {
+            "name": "status_concepts_ready",
+            "status": "completed",
+            "start_time": 342175.415564458,
+            "end_time": 342175.41659475,
+            "attributes": {
+              "flujo.step.type": "Step",
+              "step_input": "step_history=[] total_cost_usd=0.0 total_tokens=0 final_pipeline_context=PipelineContext(run_id='run_77a3b47de3994937a093ed369f78f0e5', initial_prompt='', scratchpad={'status': 'paused', 'last_state_update': 342160.070087958, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'pause_message': 'Paste the cohort definition (plain text from your study protocol or a prior clarification).', 'steps': {'get_initial_goal': 'Cohort of patient with contipation', 'status_definition_ready': '✅ Definition ready (sub-pipeline)\\n'}, 'paused_step_input': 'Cohort of patient with contipation\\n'}, hitl_history=[{'message_to_human': 'What would you like to accomplish?', 'human_response': 'Cohort of patient with contipation', 'timestamp': '2025-08-29T16:53:17.739198+00:00'}], command_log=[{'turn': 1, 'generated_command': {'type': 'ask_human', 'question': 'What would you like to accomplish?'}, 'execution_result': 'Cohort of patient with contipation', 'timestamp': '2025-08-29T16:53:17.739390+00:00'}], conversation_history=[{'role': 'assistant', 'content': 'What would you like to accomplish?'}], call_count=0) trace_tree=Span(span_id='447a1911-42a6-4f61-80c9-0dbc6f43e287', name='pipeline_run', start_time=342175.409072458, end_time=342175.412539958, parent_span_id=None, attributes={'flujo.input': '\\n', 'flujo.run_id': 'run_77a3b47de3994937a093ed369f78f0e5', 'flujo.pipeline.name': 'unnamed_20250829_095302', 'flujo.pipeline.version': 'latest'}, children=[Span(span_id='0487384e-5306-466c-a303-29663feca8e0', name='resolve_cohort_definition', start_time=342175.409181, end_time=None, parent_span_id='447a1911-42a6-4f61-80c9-0dbc6f43e287', attributes={'flujo.step.type': 'ConditionalStep', 'step_input': '\\n', 'flujo.step.policy': 'DefaultConditionalStepExecutor', 'flujo.cache.hit': False}, children=[], events=[], status='running')], events=[], status='completed')",
+              "flujo.step.policy": "DefaultAgentStepExecutor",
+              "flujo.cache.hit": false,
+              "success": true,
+              "latency_s": 0.000121833,
+              "flujo.budget.actual_cost_usd": 0.0,
+              "flujo.budget.actual_tokens": 1
+            },
+            "events": [],
+            "children": []
+          },
+          {
+            "name": "run_query_builder_subpipeline",
+            "status": "completed",
+            "start_time": 342175.41861175,
+            "end_time": 342175.429406666,
+            "attributes": {
+              "flujo.step.type": "Step",
+              "step_input": "✅ Concepts ready\n",
+              "flujo.step.policy": "DefaultAgentStepExecutor",
+              "flujo.cache.hit": false,
+              "success": true,
+              "latency_s": 0.01032675,
+              "flujo.budget.actual_cost_usd": 0.0,
+              "flujo.budget.actual_tokens": 0
+            },
+            "events": [],
+            "children": []
+          },
+          {
+            "name": "status_sql_validated",
+            "status": "completed",
+            "start_time": 342175.432722125,
+            "end_time": 342175.43399825,
+            "attributes": {
+              "flujo.step.type": "Step",
+              "step_input": "step_history=[StepResult(name='parse_initial_payload', output={'scratchpad': {}}, success=True, attempts=1, latency_s=0.000132875, token_counts=0, cost_usd=0.0, feedback=None, branch_context=PipelineContext(run_id='run_ac0d73cbf8704cac990cdce4d57b1e21', initial_prompt='', scratchpad={'status': 'paused', 'last_state_update': 342160.070087958, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'pause_message': 'Paste the finalized cohort definition (plain text).', 'steps': {'get_initial_goal': 'Cohort of patient with contipation', 'status_definition_ready': '✅ Definition ready (sub-pipeline)\\n', 'status_concepts_ready': '✅ Concepts ready\\n', 'parse_initial_payload': {'scratchpad': {}}}, 'paused_step_input': 'Cohort of patient with contipation\\n'}, hitl_history=[HumanInteraction(message_to_human='What would you like to accomplish?', human_response='Cohort of patient with contipation', timestamp=datetime.datetime(2025, 8, 29, 16, 53, 17, 739198, tzinfo=TzInfo(UTC)))], command_log=[ExecutedCommandLog(turn=1, generated_command={'type': 'ask_human', 'question': 'What would you like to accomplish?'}, execution_result='Cohort of patient with contipation', timestamp=datetime.datetime(2025, 8, 29, 16, 53, 17, 739390, tzinfo=TzInfo(UTC)))], conversation_history=[ConversationTurn(role=<ConversationRole.assistant: 'assistant'>, content='What would you like to accomplish?')], call_count=0), metadata_={}, step_history=[])] total_cost_usd=0.0 total_tokens=0 final_pipeline_context=PipelineContext(run_id='run_ac0d73cbf8704cac990cdce4d57b1e21', initial_prompt='', scratchpad={'status': 'paused', 'last_state_update': 342160.070087958, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'pause_message': 'Paste the finalized cohort definition (plain text).', 'steps': {'get_initial_goal': 'Cohort of patient with contipation', 'status_definition_ready': '✅ Definition ready (sub-pipeline)\\n', 'status_concepts_ready': '✅ Concepts ready\\n', 'parse_initial_payload': {'scratchpad': {}}}, 'paused_step_input': 'Cohort of patient with contipation\\n'}, hitl_history=[HumanInteraction(message_to_human='What would you like to accomplish?', human_response='Cohort of patient with contipation', timestamp=datetime.datetime(2025, 8, 29, 16, 53, 17, 739198, tzinfo=TzInfo(UTC)))], command_log=[ExecutedCommandLog(turn=1, generated_command={'type': 'ask_human', 'question': 'What would you like to accomplish?'}, execution_result='Cohort of patient with contipation', timestamp=datetime.datetime(2025, 8, 29, 16, 53, 17, 739390, tzinfo=TzInfo(UTC)))], conversation_history=[ConversationTurn(role=<ConversationRole.assistant: 'assistant'>, content='What would you like to accomplish?')], call_count=0) trace_tree=Span(span_id='61de9b0d-e69d-42d0-9b04-67d6cbc86711', name='pipeline_run', start_time=342175.423570875, end_time=342175.42919775, parent_span_id=None, attributes={'flujo.input': '{{ {\"cohort_definition\": context.scratchpad.cohort_definition, \"concept_sets\": context.scratchpad.concept_sets} | tojson }}\\n', 'flujo.run_id': 'run_ac0d73cbf8704cac990cdce4d57b1e21', 'flujo.pipeline.name': 'unnamed_20250829_095302', 'flujo.pipeline.version': 'latest'}, children=[Span(span_id='3476d687-366a-4948-a378-76958c117ebb', name='parse_initial_payload', start_time=342175.42365125, end_time=342175.424241833, parent_span_id='61de9b0d-e69d-42d0-9b04-67d6cbc86711', attributes={'flujo.step.type': 'Step', 'step_input': '{{ {\"cohort_definition\": context.scratchpad.cohort_definition, \"concept_sets\": context.scratchpad.concept_sets} | tojson }}\\n', 'flujo.step.policy': 'DefaultAgentStepExecutor', 'flujo.cache.hit': False, 'success': True, 'latency_s': 0.000132875, 'flujo.budget.actual_cost_usd': 0.0, 'flujo.budget.actual_tokens': 0}, children=[], events=[], status='completed'), Span(span_id='5569c834-cf7e-4549-abef-10c6a2d1d9ed', name='resolve_cohort_definition', start_time=342175.42621325, end_time=None, parent_span_id='61de9b0d-e69d-42d0-9b04-67d6cbc86711', attributes={'flujo.step.type': 'ConditionalStep', 'step_input': \"{'scratchpad': {}}\", 'flujo.step.policy': 'DefaultConditionalStepExecutor', 'flujo.cache.hit': False}, children=[], events=[], status='running')], events=[], status='completed')",
+              "flujo.step.policy": "DefaultAgentStepExecutor",
+              "flujo.cache.hit": false,
+              "success": true,
+              "latency_s": 0.000113834,
+              "flujo.budget.actual_cost_usd": 0.0,
+              "flujo.budget.actual_tokens": 1
+            },
+            "events": [],
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "result": {
+    "total_cost_usd": 0.0,
+    "total_tokens": 3,
+    "step_history": [
+      {
+        "name": "get_initial_goal",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.0,
+        "token_counts": 0,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": "Cohort of patient with contipation",
+        "metadata": {},
+        "step_history": []
+      },
+      {
+        "name": "run_clarification_subpipeline",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.019545792,
+        "token_counts": 0,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": {
+          "step_history": [],
+          "total_cost_usd": 0.0,
+          "total_tokens": 0,
+          "final_pipeline_context": {
+            "run_id": "run_1aff945290c3424a978c65e9c65f3355",
+            "initial_prompt": "",
+            "scratchpad": {
+              "status": "paused",
+              "last_state_update": 342160.070087958,
+              "hitl_message": "What would you like to accomplish?",
+              "hitl_data": "",
+              "pause_message": "What would you like to accomplish?",
+              "steps": {
+                "get_initial_goal": "Cohort of patient with contipation"
+              },
+              "paused_step_input": "Cohort of patient with contipation\n"
+            },
+            "hitl_history": [
+              {
+                "message_to_human": "What would you like to accomplish?",
+                "human_response": "Cohort of patient with contipation",
+                "timestamp": "2025-08-29T16:53:17.739198+00:00"
+              }
+            ],
+            "command_log": [
+              {
+                "turn": 1,
+                "generated_command": {
+                  "type": "ask_human",
+                  "question": "What would you like to accomplish?"
+                },
+                "execution_result": "Cohort of patient with contipation",
+                "timestamp": "2025-08-29T16:53:17.739390+00:00"
+              }
+            ],
+            "conversation_history": [
+              {
+                "role": "assistant",
+                "content": "What would you like to accomplish?"
+              }
+            ],
+            "call_count": 0
+          },
+          "trace_tree": {
+            "span_id": "694695a2-3336-4843-97be-2df5ce7b0308",
+            "name": "pipeline_run",
+            "start_time": 342175.388155666,
+            "end_time": 342175.393207666,
+            "parent_span_id": null,
+            "attributes": {
+              "flujo.input": "Cohort of patient with contipation\n",
+              "flujo.run_id": "run_1aff945290c3424a978c65e9c65f3355",
+              "flujo.pipeline.name": "unnamed_20250829_095302",
+              "flujo.pipeline.version": "latest"
+            },
+            "children": [
+              {
+                "span_id": "49e7ebf0-ac3e-403f-8b69-d92f10f2446a",
+                "name": "resolve_initial_goal",
+                "start_time": 342175.388329291,
+                "end_time": null,
+                "parent_span_id": "694695a2-3336-4843-97be-2df5ce7b0308",
+                "attributes": {
+                  "flujo.step.type": "ConditionalStep",
+                  "step_input": "Cohort of patient with contipation\n",
+                  "flujo.step.policy": "DefaultConditionalStepExecutor",
+                  "flujo.cache.hit": false
+                },
+                "children": [],
+                "events": [],
+                "status": "running"
+              }
+            ],
+            "events": [],
+            "status": "completed"
+          }
+        },
+        "metadata": {
+          "nested_usage_aggregated": true
+        },
+        "step_history": []
+      },
+      {
+        "name": "status_definition_ready",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.000195083,
+        "token_counts": 1,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": "✅ Definition ready (sub-pipeline)\n",
+        "metadata": {},
+        "step_history": []
+      },
+      {
+        "name": "run_concept_discovery_subpipeline",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.009088292,
+        "token_counts": 0,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": {
+          "step_history": [],
+          "total_cost_usd": 0.0,
+          "total_tokens": 0,
+          "final_pipeline_context": {
+            "run_id": "run_77a3b47de3994937a093ed369f78f0e5",
+            "initial_prompt": "",
+            "scratchpad": {
+              "status": "paused",
+              "last_state_update": 342160.070087958,
+              "hitl_message": "What would you like to accomplish?",
+              "hitl_data": "",
+              "pause_message": "Paste the cohort definition (plain text from your study protocol or a prior clarification).",
+              "steps": {
+                "get_initial_goal": "Cohort of patient with contipation",
+                "status_definition_ready": "✅ Definition ready (sub-pipeline)\n"
+              },
+              "paused_step_input": "Cohort of patient with contipation\n"
+            },
+            "hitl_history": [
+              {
+                "message_to_human": "What would you like to accomplish?",
+                "human_response": "Cohort of patient with contipation",
+                "timestamp": "2025-08-29T16:53:17.739198+00:00"
+              }
+            ],
+            "command_log": [
+              {
+                "turn": 1,
+                "generated_command": {
+                  "type": "ask_human",
+                  "question": "What would you like to accomplish?"
+                },
+                "execution_result": "Cohort of patient with contipation",
+                "timestamp": "2025-08-29T16:53:17.739390+00:00"
+              }
+            ],
+            "conversation_history": [
+              {
+                "role": "assistant",
+                "content": "What would you like to accomplish?"
+              }
+            ],
+            "call_count": 0
+          },
+          "trace_tree": {
+            "span_id": "447a1911-42a6-4f61-80c9-0dbc6f43e287",
+            "name": "pipeline_run",
+            "start_time": 342175.409072458,
+            "end_time": 342175.412539958,
+            "parent_span_id": null,
+            "attributes": {
+              "flujo.input": "\n",
+              "flujo.run_id": "run_77a3b47de3994937a093ed369f78f0e5",
+              "flujo.pipeline.name": "unnamed_20250829_095302",
+              "flujo.pipeline.version": "latest"
+            },
+            "children": [
+              {
+                "span_id": "0487384e-5306-466c-a303-29663feca8e0",
+                "name": "resolve_cohort_definition",
+                "start_time": 342175.409181,
+                "end_time": null,
+                "parent_span_id": "447a1911-42a6-4f61-80c9-0dbc6f43e287",
+                "attributes": {
+                  "flujo.step.type": "ConditionalStep",
+                  "step_input": "\n",
+                  "flujo.step.policy": "DefaultConditionalStepExecutor",
+                  "flujo.cache.hit": false
+                },
+                "children": [],
+                "events": [],
+                "status": "running"
+              }
+            ],
+            "events": [],
+            "status": "completed"
+          }
+        },
+        "metadata": {
+          "nested_usage_aggregated": true
+        },
+        "step_history": []
+      },
+      {
+        "name": "status_concepts_ready",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.000121833,
+        "token_counts": 1,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": "✅ Concepts ready\n",
+        "metadata": {},
+        "step_history": []
+      },
+      {
+        "name": "run_query_builder_subpipeline",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.01032675,
+        "token_counts": 0,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": {
+          "step_history": [
+            {
+              "name": "parse_initial_payload",
+              "output": {
+                "scratchpad": {}
+              },
+              "success": true,
+              "attempts": 1,
+              "latency_s": 0.000132875,
+              "token_counts": 0,
+              "cost_usd": 0.0,
+              "feedback": null,
+              "branch_context": {
+                "run_id": "run_ac0d73cbf8704cac990cdce4d57b1e21",
+                "initial_prompt": "",
+                "scratchpad": {
+                  "status": "paused",
+                  "last_state_update": 342160.070087958,
+                  "hitl_message": "What would you like to accomplish?",
+                  "hitl_data": "",
+                  "pause_message": "Paste the finalized cohort definition (plain text).",
+                  "steps": {
+                    "get_initial_goal": "Cohort of patient with contipation",
+                    "status_definition_ready": "✅ Definition ready (sub-pipeline)\n",
+                    "status_concepts_ready": "✅ Concepts ready\n",
+                    "parse_initial_payload": {
+                      "scratchpad": {}
+                    }
+                  },
+                  "paused_step_input": "Cohort of patient with contipation\n"
+                },
+                "hitl_history": [
+                  {
+                    "message_to_human": "What would you like to accomplish?",
+                    "human_response": "Cohort of patient with contipation",
+                    "timestamp": "2025-08-29T16:53:17.739198+00:00"
+                  }
+                ],
+                "command_log": [
+                  {
+                    "turn": 1,
+                    "generated_command": {
+                      "type": "ask_human",
+                      "question": "What would you like to accomplish?"
+                    },
+                    "execution_result": "Cohort of patient with contipation",
+                    "timestamp": "2025-08-29T16:53:17.739390+00:00"
+                  }
+                ],
+                "conversation_history": [
+                  {
+                    "role": "assistant",
+                    "content": "What would you like to accomplish?"
+                  }
+                ],
+                "call_count": 0
+              },
+              "metadata_": {},
+              "step_history": []
+            }
+          ],
+          "total_cost_usd": 0.0,
+          "total_tokens": 0,
+          "final_pipeline_context": {
+            "run_id": "run_ac0d73cbf8704cac990cdce4d57b1e21",
+            "initial_prompt": "",
+            "scratchpad": {
+              "status": "paused",
+              "last_state_update": 342160.070087958,
+              "hitl_message": "What would you like to accomplish?",
+              "hitl_data": "",
+              "pause_message": "Paste the finalized cohort definition (plain text).",
+              "steps": {
+                "get_initial_goal": "Cohort of patient with contipation",
+                "status_definition_ready": "✅ Definition ready (sub-pipeline)\n",
+                "status_concepts_ready": "✅ Concepts ready\n",
+                "parse_initial_payload": {
+                  "scratchpad": {}
+                }
+              },
+              "paused_step_input": "Cohort of patient with contipation\n"
+            },
+            "hitl_history": [
+              {
+                "message_to_human": "What would you like to accomplish?",
+                "human_response": "Cohort of patient with contipation",
+                "timestamp": "2025-08-29T16:53:17.739198+00:00"
+              }
+            ],
+            "command_log": [
+              {
+                "turn": 1,
+                "generated_command": {
+                  "type": "ask_human",
+                  "question": "What would you like to accomplish?"
+                },
+                "execution_result": "Cohort of patient with contipation",
+                "timestamp": "2025-08-29T16:53:17.739390+00:00"
+              }
+            ],
+            "conversation_history": [
+              {
+                "role": "assistant",
+                "content": "What would you like to accomplish?"
+              }
+            ],
+            "call_count": 0
+          },
+          "trace_tree": {
+            "span_id": "61de9b0d-e69d-42d0-9b04-67d6cbc86711",
+            "name": "pipeline_run",
+            "start_time": 342175.423570875,
+            "end_time": 342175.42919775,
+            "parent_span_id": null,
+            "attributes": {
+              "flujo.input": "{{ {\"cohort_definition\": context.scratchpad.cohort_definition, \"concept_sets\": context.scratchpad.concept_sets} | tojson }}\n",
+              "flujo.run_id": "run_ac0d73cbf8704cac990cdce4d57b1e21",
+              "flujo.pipeline.name": "unnamed_20250829_095302",
+              "flujo.pipeline.version": "latest"
+            },
+            "children": [
+              {
+                "span_id": "3476d687-366a-4948-a378-76958c117ebb",
+                "name": "parse_initial_payload",
+                "start_time": 342175.42365125,
+                "end_time": 342175.424241833,
+                "parent_span_id": "61de9b0d-e69d-42d0-9b04-67d6cbc86711",
+                "attributes": {
+                  "flujo.step.type": "Step",
+                  "step_input": "{{ {\"cohort_definition\": context.scratchpad.cohort_definition, \"concept_sets\": context.scratchpad.concept_sets} | tojson }}\n",
+                  "flujo.step.policy": "DefaultAgentStepExecutor",
+                  "flujo.cache.hit": false,
+                  "success": true,
+                  "latency_s": 0.000132875,
+                  "flujo.budget.actual_cost_usd": 0.0,
+                  "flujo.budget.actual_tokens": 0
+                },
+                "children": [],
+                "events": [],
+                "status": "completed"
+              },
+              {
+                "span_id": "5569c834-cf7e-4549-abef-10c6a2d1d9ed",
+                "name": "resolve_cohort_definition",
+                "start_time": 342175.42621325,
+                "end_time": null,
+                "parent_span_id": "61de9b0d-e69d-42d0-9b04-67d6cbc86711",
+                "attributes": {
+                  "flujo.step.type": "ConditionalStep",
+                  "step_input": "{'scratchpad': {}}",
+                  "flujo.step.policy": "DefaultConditionalStepExecutor",
+                  "flujo.cache.hit": false
+                },
+                "children": [],
+                "events": [],
+                "status": "running"
+              }
+            ],
+            "events": [],
+            "status": "completed"
+          }
+        },
+        "metadata": {
+          "nested_usage_aggregated": true
+        },
+        "step_history": [
+          {
+            "name": "parse_initial_payload",
+            "success": true,
+            "attempts": 1,
+            "latency_s": 0.000132875,
+            "token_counts": 0,
+            "cost_usd": 0.0,
+            "feedback": null,
+            "output": {
+              "scratchpad": {}
+            },
+            "metadata": {},
+            "step_history": []
+          }
+        ]
+      },
+      {
+        "name": "status_sql_validated",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.000113834,
+        "token_counts": 1,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": "✅ SQL validated (sub-pipeline)\n",
+        "metadata": {},
+        "step_history": []
+      }
+    ]
+  },
+  "final_context": {
+    "run_id": "run_ac0d73cbf8704cac990cdce4d57b1e21",
+    "initial_prompt": "",
+    "scratchpad": {
+      "status": "paused",
+      "last_state_update": 342160.070087958,
+      "hitl_message": "What would you like to accomplish?",
+      "hitl_data": "",
+      "pause_message": "Paste the finalized cohort definition (plain text).",
+      "steps": {
+        "get_initial_goal": "Cohort of patient with contipation",
+        "status_definition_ready": "✅ Definition ready (sub-pipeline)\n",
+        "status_concepts_ready": "✅ Concepts ready\n",
+        "parse_initial_payload": {
+          "scratchpad": {}
+        },
+        "status_sql_validated": "✅ SQL validated (sub-pipeline)\n"
+      },
+      "paused_step_input": "Cohort of patient with contipation\n"
+    },
+    "hitl_history": [
+      {
+        "message_to_human": "What would you like to accomplish?",
+        "human_response": "Cohort of patient with contipation",
+        "timestamp": "2025-08-29T16:53:17.739198+00:00"
+      }
+    ],
+    "command_log": [
+      {
+        "turn": 1,
+        "generated_command": {
+          "type": "ask_human",
+          "question": "What would you like to accomplish?"
+        },
+        "execution_result": "Cohort of patient with contipation",
+        "timestamp": "2025-08-29T16:53:17.739390+00:00"
+      }
+    ],
+    "conversation_history": [
+      {
+        "role": "assistant",
+        "content": "What would you like to accomplish?"
+      }
+    ],
+    "call_count": 0
+  }
+}

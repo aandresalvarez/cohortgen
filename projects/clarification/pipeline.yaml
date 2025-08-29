@@ -93,7 +93,7 @@ steps:
 
   - kind: step
     name: store_cohort_definition
-    uses: "skills.custom_tools:wrap_in_scratchpad"
+    uses: "projects.clarification.skills.custom_tools:wrap_in_scratchpad"
     input: |
       {{ {"data": steps.generate_cohort_definition.output, "key": "cohort_definition"} | tojson }}
     updates_context: true
