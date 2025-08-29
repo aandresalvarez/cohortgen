@@ -4,6 +4,11 @@ name: "cohort_orchestrator"
 pipeline_config:
   conversation_mode: true
 
+imports:
+  clarification: "../clarification/pipeline.yaml"
+  concept_discovery: "../concept_discovery/pipeline.yaml"
+  query_builder: "../query_builder/pipeline.yaml"
+
 agents:
   clarification_agent:
     model: "openai:gpt-5-mini"
@@ -98,21 +103,7 @@ agents:
       You fix BigQuery Standard SQL queries. Given original SQL and a BigQuery dry-run error, return corrected SQL while preserving project.dataset qualifiers. Output ONLY SQL.
     output_schema: { type: string }
 
-  # Orchestrator tool-backed pseudo-agent to call subpipelines (concept_discovery)
-  subpipeline_runner:
-    model: "openai:gpt-5-mini"
-    tools:
-      - "skills.orchestrator_tools:run_concept_discovery_subpipeline"
-      - "skills.orchestrator_tools:run_clarification_subpipeline"
-      - "skills.orchestrator_tools:run_query_builder_subpipeline"
-    timeout: 1800
-    max_retries: 0
-    system_prompt: |
-      You are a controller that invokes exactly one tool and returns its raw output.
-      - Always call the specified tool with the provided input.
-      - Do not add commentary; just return the tool result as-is.
-    output_schema:
-      type: object
+  # No special agents needed for imports-based subflows
 
 steps:
   # 0) Capture initial goal at the top-level
@@ -124,11 +115,9 @@ steps:
   # Clarification sub-pipeline (always)
   - kind: step
     name: run_clarification_subpipeline
-    uses: agents.subpipeline_runner
+    uses: imports.clarification
     input: |
       {{ steps.get_initial_goal.output }}
-    tool_name: "skills.orchestrator_tools:run_clarification_subpipeline"
-    updates_context: true
 
   - kind: step
     name: status_definition_ready
@@ -141,16 +130,15 @@ steps:
   # 2) Concept discovery sub-pipeline (always)
   - kind: step
     name: run_concept_discovery_subpipeline
-    uses: agents.subpipeline_runner
+    uses: imports.concept_discovery
     input: |
       {{ context.scratchpad.cohort_definition }}
-    tool_name: "skills.orchestrator_tools:run_concept_discovery_subpipeline"
-    updates_context: true
 
   - kind: step
     name: normalize_concepts_from_sub
     uses: "skills.custom_tools:ensure_dict"
-    input: "{{ context.scratchpad.concept_sets | tojson }}"
+    input: |
+      {{ steps.run_concept_discovery_subpipeline.output }}
     updates_context: true
   
 
@@ -195,7 +183,7 @@ steps:
   - kind: step
     name: store_concept_sets
     uses: "skills.custom_tools:store_as_concept_sets"
-    input: "{{ steps.normalize_concepts_fallback.output or steps.normalize_concept_sets.output }}"
+    input: "{{ steps.normalize_concepts_fallback.output or steps.normalize_concepts_from_sub.output or steps.normalize_concept_sets.output }}"
     updates_context: true
 
   # Human-in-the-loop review of concept sets
@@ -243,10 +231,15 @@ steps:
   # 3) Query builder sub-pipeline (always)
   - kind: step
     name: run_query_builder_subpipeline
-    uses: agents.subpipeline_runner
+    uses: imports.query_builder
     input: |
       {{ {"cohort_definition": context.scratchpad.cohort_definition, "concept_sets": context.scratchpad.concept_sets} | tojson }}
-    tool_name: "skills.orchestrator_tools:run_query_builder_subpipeline"
+
+  - kind: step
+    name: capture_final_sql
+    uses: "skills.custom_tools:wrap_in_scratchpad"
+    input: |
+      {{ {"data": (steps.run_query_builder_subpipeline.output.scratchpad.final_sql or steps.run_query_builder_subpipeline.output), "key": "final_sql"} | tojson }}
     updates_context: true
 
   - kind: step
