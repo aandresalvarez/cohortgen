@@ -118,6 +118,7 @@ steps:
     uses: imports.clarification
     input: |
       {{ steps.get_initial_goal.output }}
+    updates_context: true
 
   - kind: step
     name: status_definition_ready
@@ -133,6 +134,7 @@ steps:
     uses: imports.concept_discovery
     input: |
       {{ context.scratchpad.cohort_definition }}
+    updates_context: true
   
 
   # Status: concepts ready
@@ -150,6 +152,7 @@ steps:
     uses: imports.query_builder
     input: |
       {{ {"cohort_definition": context.scratchpad.cohort_definition, "concept_sets": context.scratchpad.concept_sets} | tojson }}
+    updates_context: true
 
   - kind: step
     name: status_sql_validated

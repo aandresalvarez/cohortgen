@@ -1,0 +1,726 @@
+{
+  "exported_at": "2025-08-29T17:02:30.220251Z",
+  "pipeline_name": "pipeline",
+  "run_id": null,
+  "env": {
+    "FLUJO_DEBUG": null,
+    "FLUJO_DEBUG_PROMPTS": null,
+    "FLUJO_TRACE_PREVIEW_LEN": null
+  },
+  "trace_tree": {
+    "name": "pipeline_run",
+    "status": "completed",
+    "start_time": 342704.957659125,
+    "end_time": 342704.960306916,
+    "attributes": {
+      "flujo.input": "",
+      "flujo.run_id": "run_86922259a7ff477c81d14273090aab69",
+      "flujo.pipeline.name": "unnamed_20250829_100207",
+      "flujo.pipeline.version": "latest"
+    },
+    "events": [],
+    "children": [
+      {
+        "name": "get_initial_goal",
+        "status": "running",
+        "start_time": 342704.957739083,
+        "end_time": null,
+        "attributes": {
+          "flujo.step.type": "HumanInTheLoopStep",
+          "step_input": "",
+          "flujo.step.policy": "DefaultHitlStepExecutor",
+          "flujo.cache.hit": false
+        },
+        "events": [
+          {
+            "name": "flujo.resumed",
+            "attributes": {
+              "human_input": "Cohort of people male with headache reported and constipation "
+            }
+          }
+        ],
+        "children": [
+          {
+            "name": "run_clarification_subpipeline",
+            "status": "completed",
+            "start_time": 342723.753213208,
+            "end_time": 342723.785911041,
+            "attributes": {
+              "flujo.step.type": "Step",
+              "step_input": "Cohort of people male with headache reported and constipation ",
+              "flujo.step.policy": "DefaultAgentStepExecutor",
+              "flujo.cache.hit": false,
+              "success": true,
+              "latency_s": 0.018867917,
+              "flujo.budget.actual_cost_usd": 0.0,
+              "flujo.budget.actual_tokens": 0
+            },
+            "events": [],
+            "children": []
+          },
+          {
+            "name": "status_definition_ready",
+            "status": "completed",
+            "start_time": 342723.789490916,
+            "end_time": 342723.791105,
+            "attributes": {
+              "flujo.step.type": "Step",
+              "step_input": "step_history=[] total_cost_usd=0.0 total_tokens=0 final_pipeline_context=PipelineContext(run_id='run_3cda3d08076c453c80844fff064d699a', initial_prompt='', scratchpad={'status': 'paused', 'last_state_update': 342704.957876666, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'pause_message': 'What would you like to accomplish?', 'steps': {'get_initial_goal': 'Cohort of people male with headache reported and constipation '}, 'paused_step_input': 'Cohort of people male with headache reported and constipation \\n'}, hitl_history=[{'message_to_human': 'What would you like to accomplish?', 'human_response': 'Cohort of people male with headache reported and constipation ', 'timestamp': '2025-08-29T17:02:26.154331+00:00'}], command_log=[{'turn': 1, 'generated_command': {'type': 'ask_human', 'question': 'What would you like to accomplish?'}, 'execution_result': 'Cohort of people male with headache reported and constipation ', 'timestamp': '2025-08-29T17:02:26.154736+00:00'}], conversation_history=[{'role': 'assistant', 'content': 'What would you like to accomplish?'}], call_count=0) trace_tree=Span(span_id='9d385c28-d3bb-492c-a879-e92d465db950', name='pipeline_run', start_time=342723.778337833, end_time=342723.783056041, parent_span_id=None, attributes={'flujo.input': 'Cohort of people male with headache reported and constipation \\n', 'flujo.run_id': 'run_3cda3d08076c453c80844fff064d699a', 'flujo.pipeline.name': 'unnamed_20250829_100207', 'flujo.pipeline.version': 'latest'}, children=[Span(span_id='94596ffe-a6a3-4d8b-88bb-2faca9a1c453', name='resolve_initial_goal', start_time=342723.778491541, end_time=None, parent_span_id='9d385c28-d3bb-492c-a879-e92d465db950', attributes={'flujo.step.type': 'ConditionalStep', 'step_input': 'Cohort of people male with headache reported and constipation \\n', 'flujo.step.policy': 'DefaultConditionalStepExecutor', 'flujo.cache.hit': False}, children=[], events=[], status='running')], events=[], status='completed')",
+              "flujo.step.policy": "DefaultAgentStepExecutor",
+              "flujo.cache.hit": false,
+              "success": true,
+              "latency_s": 0.000203542,
+              "flujo.budget.actual_cost_usd": 0.0,
+              "flujo.budget.actual_tokens": 1
+            },
+            "events": [],
+            "children": []
+          },
+          {
+            "name": "run_concept_discovery_subpipeline",
+            "status": "completed",
+            "start_time": 342723.793589,
+            "end_time": 342723.807043,
+            "attributes": {
+              "flujo.step.type": "Step",
+              "step_input": "✅ Definition ready (sub-pipeline)\n",
+              "flujo.step.policy": "DefaultAgentStepExecutor",
+              "flujo.cache.hit": false,
+              "success": true,
+              "latency_s": 0.012856083,
+              "flujo.budget.actual_cost_usd": 0.0,
+              "flujo.budget.actual_tokens": 0
+            },
+            "events": [],
+            "children": []
+          },
+          {
+            "name": "status_concepts_ready",
+            "status": "completed",
+            "start_time": 342723.810481458,
+            "end_time": 342723.811890333,
+            "attributes": {
+              "flujo.step.type": "Step",
+              "step_input": "step_history=[StepResult(name='parse_initial_payload', output={'scratchpad': {}}, success=True, attempts=1, latency_s=0.000148584, token_counts=0, cost_usd=0.0, feedback=None, branch_context=PipelineContext(run_id='run_96c09eb57bf642f7b2e3c6ce91e47a8c', initial_prompt='', scratchpad={'status': 'paused', 'last_state_update': 342704.957876666, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'pause_message': 'Paste the cohort definition (plain text from your study protocol or a prior clarification).', 'steps': {'get_initial_goal': 'Cohort of people male with headache reported and constipation ', 'status_definition_ready': '✅ Definition ready (sub-pipeline)\\n', 'parse_initial_payload': {'scratchpad': {}}}, 'paused_step_input': 'Cohort of people male with headache reported and constipation \\n'}, hitl_history=[HumanInteraction(message_to_human='What would you like to accomplish?', human_response='Cohort of people male with headache reported and constipation ', timestamp=datetime.datetime(2025, 8, 29, 17, 2, 26, 154331, tzinfo=TzInfo(UTC)))], command_log=[ExecutedCommandLog(turn=1, generated_command={'type': 'ask_human', 'question': 'What would you like to accomplish?'}, execution_result='Cohort of people male with headache reported and constipation ', timestamp=datetime.datetime(2025, 8, 29, 17, 2, 26, 154736, tzinfo=TzInfo(UTC)))], conversation_history=[ConversationTurn(role=<ConversationRole.assistant: 'assistant'>, content='What would you like to accomplish?')], call_count=0), metadata_={}, step_history=[])] total_cost_usd=0.0 total_tokens=0 final_pipeline_context=PipelineContext(run_id='run_96c09eb57bf642f7b2e3c6ce91e47a8c', initial_prompt='', scratchpad={'status': 'paused', 'last_state_update': 342704.957876666, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'pause_message': 'Paste the cohort definition (plain text from your study protocol or a prior clarification).', 'steps': {'get_initial_goal': 'Cohort of people male with headache reported and constipation ', 'status_definition_ready': '✅ Definition ready (sub-pipeline)\\n', 'parse_initial_payload': {'scratchpad': {}}}, 'paused_step_input': 'Cohort of people male with headache reported and constipation \\n'}, hitl_history=[HumanInteraction(message_to_human='What would you like to accomplish?', human_response='Cohort of people male with headache reported and constipation ', timestamp=datetime.datetime(2025, 8, 29, 17, 2, 26, 154331, tzinfo=TzInfo(UTC)))], command_log=[ExecutedCommandLog(turn=1, generated_command={'type': 'ask_human', 'question': 'What would you like to accomplish?'}, execution_result='Cohort of people male with headache reported and constipation ', timestamp=datetime.datetime(2025, 8, 29, 17, 2, 26, 154736, tzinfo=TzInfo(UTC)))], conversation_history=[ConversationTurn(role=<ConversationRole.assistant: 'assistant'>, content='What would you like to accomplish?')], call_count=0) trace_tree=Span(span_id='58f08b88-b374-4ef6-b6cf-5519296a4c73', name='pipeline_run', start_time=342723.799436583, end_time=342723.806801166, parent_span_id=None, attributes={'flujo.input': '\\n', 'flujo.run_id': 'run_96c09eb57bf642f7b2e3c6ce91e47a8c', 'flujo.pipeline.name': 'unnamed_20250829_100207', 'flujo.pipeline.version': 'latest'}, children=[Span(span_id='bdeaa7f3-6183-45e5-9df6-51b068e039f9', name='parse_initial_payload', start_time=342723.799537125, end_time=342723.800209791, parent_span_id='58f08b88-b374-4ef6-b6cf-5519296a4c73', attributes={'flujo.step.type': 'Step', 'step_input': '\\n', 'flujo.step.policy': 'DefaultAgentStepExecutor', 'flujo.cache.hit': False, 'success': True, 'latency_s': 0.000148584, 'flujo.budget.actual_cost_usd': 0.0, 'flujo.budget.actual_tokens': 0}, children=[], events=[], status='completed'), Span(span_id='694bbbc9-7221-4283-8891-0fe35005e0d9', name='resolve_cohort_definition', start_time=342723.802735875, end_time=None, parent_span_id='58f08b88-b374-4ef6-b6cf-5519296a4c73', attributes={'flujo.step.type': 'ConditionalStep', 'step_input': \"{'scratchpad': {}}\", 'flujo.step.policy': 'DefaultConditionalStepExecutor', 'flujo.cache.hit': False}, children=[], events=[], status='running')], events=[], status='completed')",
+              "flujo.step.policy": "DefaultAgentStepExecutor",
+              "flujo.cache.hit": false,
+              "success": true,
+              "latency_s": 0.000114,
+              "flujo.budget.actual_cost_usd": 0.0,
+              "flujo.budget.actual_tokens": 1
+            },
+            "events": [],
+            "children": []
+          },
+          {
+            "name": "run_query_builder_subpipeline",
+            "status": "completed",
+            "start_time": 342723.813872208,
+            "end_time": 342723.824387041,
+            "attributes": {
+              "flujo.step.type": "Step",
+              "step_input": "✅ Concepts ready\n",
+              "flujo.step.policy": "DefaultAgentStepExecutor",
+              "flujo.cache.hit": false,
+              "success": true,
+              "latency_s": 0.0100175,
+              "flujo.budget.actual_cost_usd": 0.0,
+              "flujo.budget.actual_tokens": 0
+            },
+            "events": [],
+            "children": []
+          },
+          {
+            "name": "status_sql_validated",
+            "status": "completed",
+            "start_time": 342723.827743625,
+            "end_time": 342723.828997625,
+            "attributes": {
+              "flujo.step.type": "Step",
+              "step_input": "step_history=[StepResult(name='parse_initial_payload', output={'scratchpad': {}}, success=True, attempts=1, latency_s=0.000129333, token_counts=0, cost_usd=0.0, feedback=None, branch_context=PipelineContext(run_id='run_6fbab4d203574f509996c66e8c707401', initial_prompt='', scratchpad={'status': 'paused', 'last_state_update': 342704.957876666, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'pause_message': 'Paste the finalized cohort definition (plain text).', 'steps': {'get_initial_goal': 'Cohort of people male with headache reported and constipation ', 'status_definition_ready': '✅ Definition ready (sub-pipeline)\\n', 'parse_initial_payload': {'scratchpad': {}}, 'status_concepts_ready': '✅ Concepts ready\\n'}, 'paused_step_input': 'Cohort of people male with headache reported and constipation \\n'}, hitl_history=[HumanInteraction(message_to_human='What would you like to accomplish?', human_response='Cohort of people male with headache reported and constipation ', timestamp=datetime.datetime(2025, 8, 29, 17, 2, 26, 154331, tzinfo=TzInfo(UTC)))], command_log=[ExecutedCommandLog(turn=1, generated_command={'type': 'ask_human', 'question': 'What would you like to accomplish?'}, execution_result='Cohort of people male with headache reported and constipation ', timestamp=datetime.datetime(2025, 8, 29, 17, 2, 26, 154736, tzinfo=TzInfo(UTC)))], conversation_history=[ConversationTurn(role=<ConversationRole.assistant: 'assistant'>, content='What would you like to accomplish?')], call_count=0), metadata_={}, step_history=[])] total_cost_usd=0.0 total_tokens=0 final_pipeline_context=PipelineContext(run_id='run_6fbab4d203574f509996c66e8c707401', initial_prompt='', scratchpad={'status': 'paused', 'last_state_update': 342704.957876666, 'hitl_message': 'What would you like to accomplish?', 'hitl_data': '', 'pause_message': 'Paste the finalized cohort definition (plain text).', 'steps': {'get_initial_goal': 'Cohort of people male with headache reported and constipation ', 'status_definition_ready': '✅ Definition ready (sub-pipeline)\\n', 'parse_initial_payload': {'scratchpad': {}}, 'status_concepts_ready': '✅ Concepts ready\\n'}, 'paused_step_input': 'Cohort of people male with headache reported and constipation \\n'}, hitl_history=[HumanInteraction(message_to_human='What would you like to accomplish?', human_response='Cohort of people male with headache reported and constipation ', timestamp=datetime.datetime(2025, 8, 29, 17, 2, 26, 154331, tzinfo=TzInfo(UTC)))], command_log=[ExecutedCommandLog(turn=1, generated_command={'type': 'ask_human', 'question': 'What would you like to accomplish?'}, execution_result='Cohort of people male with headache reported and constipation ', timestamp=datetime.datetime(2025, 8, 29, 17, 2, 26, 154736, tzinfo=TzInfo(UTC)))], conversation_history=[ConversationTurn(role=<ConversationRole.assistant: 'assistant'>, content='What would you like to accomplish?')], call_count=0) trace_tree=Span(span_id='115b22a9-fb77-4981-a1ce-8baed9c7aafa', name='pipeline_run', start_time=342723.8189315, end_time=342723.824175166, parent_span_id=None, attributes={'flujo.input': '{{ {\"cohort_definition\": context.scratchpad.cohort_definition, \"concept_sets\": context.scratchpad.concept_sets} | tojson }}\\n', 'flujo.run_id': 'run_6fbab4d203574f509996c66e8c707401', 'flujo.pipeline.name': 'unnamed_20250829_100207', 'flujo.pipeline.version': 'latest'}, children=[Span(span_id='0684d1d3-441d-445f-af47-06b4ef18e0c0', name='parse_initial_payload', start_time=342723.819009583, end_time=342723.81958025, parent_span_id='115b22a9-fb77-4981-a1ce-8baed9c7aafa', attributes={'flujo.step.type': 'Step', 'step_input': '{{ {\"cohort_definition\": context.scratchpad.cohort_definition, \"concept_sets\": context.scratchpad.concept_sets} | tojson }}\\n', 'flujo.step.policy': 'DefaultAgentStepExecutor', 'flujo.cache.hit': False, 'success': True, 'latency_s': 0.000129333, 'flujo.budget.actual_cost_usd': 0.0, 'flujo.budget.actual_tokens': 0}, children=[], events=[], status='completed'), Span(span_id='1776051c-8f49-453f-9f4a-006c327cd996', name='resolve_cohort_definition', start_time=342723.821187541, end_time=None, parent_span_id='115b22a9-fb77-4981-a1ce-8baed9c7aafa', attributes={'flujo.step.type': 'ConditionalStep', 'step_input': \"{'scratchpad': {}}\", 'flujo.step.policy': 'DefaultConditionalStepExecutor', 'flujo.cache.hit': False}, children=[], events=[], status='running')], events=[], status='completed')",
+              "flujo.step.policy": "DefaultAgentStepExecutor",
+              "flujo.cache.hit": false,
+              "success": true,
+              "latency_s": 9.9958e-05,
+              "flujo.budget.actual_cost_usd": 0.0,
+              "flujo.budget.actual_tokens": 1
+            },
+            "events": [],
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "result": {
+    "total_cost_usd": 0.0,
+    "total_tokens": 3,
+    "step_history": [
+      {
+        "name": "get_initial_goal",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.0,
+        "token_counts": 0,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": "Cohort of people male with headache reported and constipation ",
+        "metadata": {},
+        "step_history": []
+      },
+      {
+        "name": "run_clarification_subpipeline",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.018867917,
+        "token_counts": 0,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": {
+          "step_history": [],
+          "total_cost_usd": 0.0,
+          "total_tokens": 0,
+          "final_pipeline_context": {
+            "run_id": "run_3cda3d08076c453c80844fff064d699a",
+            "initial_prompt": "",
+            "scratchpad": {
+              "status": "paused",
+              "last_state_update": 342704.957876666,
+              "hitl_message": "What would you like to accomplish?",
+              "hitl_data": "",
+              "pause_message": "What would you like to accomplish?",
+              "steps": {
+                "get_initial_goal": "Cohort of people male with headache reported and constipation "
+              },
+              "paused_step_input": "Cohort of people male with headache reported and constipation \n"
+            },
+            "hitl_history": [
+              {
+                "message_to_human": "What would you like to accomplish?",
+                "human_response": "Cohort of people male with headache reported and constipation ",
+                "timestamp": "2025-08-29T17:02:26.154331+00:00"
+              }
+            ],
+            "command_log": [
+              {
+                "turn": 1,
+                "generated_command": {
+                  "type": "ask_human",
+                  "question": "What would you like to accomplish?"
+                },
+                "execution_result": "Cohort of people male with headache reported and constipation ",
+                "timestamp": "2025-08-29T17:02:26.154736+00:00"
+              }
+            ],
+            "conversation_history": [
+              {
+                "role": "assistant",
+                "content": "What would you like to accomplish?"
+              }
+            ],
+            "call_count": 0
+          },
+          "trace_tree": {
+            "span_id": "9d385c28-d3bb-492c-a879-e92d465db950",
+            "name": "pipeline_run",
+            "start_time": 342723.778337833,
+            "end_time": 342723.783056041,
+            "parent_span_id": null,
+            "attributes": {
+              "flujo.input": "Cohort of people male with headache reported and constipation \n",
+              "flujo.run_id": "run_3cda3d08076c453c80844fff064d699a",
+              "flujo.pipeline.name": "unnamed_20250829_100207",
+              "flujo.pipeline.version": "latest"
+            },
+            "children": [
+              {
+                "span_id": "94596ffe-a6a3-4d8b-88bb-2faca9a1c453",
+                "name": "resolve_initial_goal",
+                "start_time": 342723.778491541,
+                "end_time": null,
+                "parent_span_id": "9d385c28-d3bb-492c-a879-e92d465db950",
+                "attributes": {
+                  "flujo.step.type": "ConditionalStep",
+                  "step_input": "Cohort of people male with headache reported and constipation \n",
+                  "flujo.step.policy": "DefaultConditionalStepExecutor",
+                  "flujo.cache.hit": false
+                },
+                "children": [],
+                "events": [],
+                "status": "running"
+              }
+            ],
+            "events": [],
+            "status": "completed"
+          }
+        },
+        "metadata": {
+          "nested_usage_aggregated": true
+        },
+        "step_history": []
+      },
+      {
+        "name": "status_definition_ready",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.000203542,
+        "token_counts": 1,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": "✅ Definition ready (sub-pipeline)\n",
+        "metadata": {},
+        "step_history": []
+      },
+      {
+        "name": "run_concept_discovery_subpipeline",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.012856083,
+        "token_counts": 0,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": {
+          "step_history": [
+            {
+              "name": "parse_initial_payload",
+              "output": {
+                "scratchpad": {}
+              },
+              "success": true,
+              "attempts": 1,
+              "latency_s": 0.000148584,
+              "token_counts": 0,
+              "cost_usd": 0.0,
+              "feedback": null,
+              "branch_context": {
+                "run_id": "run_96c09eb57bf642f7b2e3c6ce91e47a8c",
+                "initial_prompt": "",
+                "scratchpad": {
+                  "status": "paused",
+                  "last_state_update": 342704.957876666,
+                  "hitl_message": "What would you like to accomplish?",
+                  "hitl_data": "",
+                  "pause_message": "Paste the cohort definition (plain text from your study protocol or a prior clarification).",
+                  "steps": {
+                    "get_initial_goal": "Cohort of people male with headache reported and constipation ",
+                    "status_definition_ready": "✅ Definition ready (sub-pipeline)\n",
+                    "parse_initial_payload": {
+                      "scratchpad": {}
+                    }
+                  },
+                  "paused_step_input": "Cohort of people male with headache reported and constipation \n"
+                },
+                "hitl_history": [
+                  {
+                    "message_to_human": "What would you like to accomplish?",
+                    "human_response": "Cohort of people male with headache reported and constipation ",
+                    "timestamp": "2025-08-29T17:02:26.154331+00:00"
+                  }
+                ],
+                "command_log": [
+                  {
+                    "turn": 1,
+                    "generated_command": {
+                      "type": "ask_human",
+                      "question": "What would you like to accomplish?"
+                    },
+                    "execution_result": "Cohort of people male with headache reported and constipation ",
+                    "timestamp": "2025-08-29T17:02:26.154736+00:00"
+                  }
+                ],
+                "conversation_history": [
+                  {
+                    "role": "assistant",
+                    "content": "What would you like to accomplish?"
+                  }
+                ],
+                "call_count": 0
+              },
+              "metadata_": {},
+              "step_history": []
+            }
+          ],
+          "total_cost_usd": 0.0,
+          "total_tokens": 0,
+          "final_pipeline_context": {
+            "run_id": "run_96c09eb57bf642f7b2e3c6ce91e47a8c",
+            "initial_prompt": "",
+            "scratchpad": {
+              "status": "paused",
+              "last_state_update": 342704.957876666,
+              "hitl_message": "What would you like to accomplish?",
+              "hitl_data": "",
+              "pause_message": "Paste the cohort definition (plain text from your study protocol or a prior clarification).",
+              "steps": {
+                "get_initial_goal": "Cohort of people male with headache reported and constipation ",
+                "status_definition_ready": "✅ Definition ready (sub-pipeline)\n",
+                "parse_initial_payload": {
+                  "scratchpad": {}
+                }
+              },
+              "paused_step_input": "Cohort of people male with headache reported and constipation \n"
+            },
+            "hitl_history": [
+              {
+                "message_to_human": "What would you like to accomplish?",
+                "human_response": "Cohort of people male with headache reported and constipation ",
+                "timestamp": "2025-08-29T17:02:26.154331+00:00"
+              }
+            ],
+            "command_log": [
+              {
+                "turn": 1,
+                "generated_command": {
+                  "type": "ask_human",
+                  "question": "What would you like to accomplish?"
+                },
+                "execution_result": "Cohort of people male with headache reported and constipation ",
+                "timestamp": "2025-08-29T17:02:26.154736+00:00"
+              }
+            ],
+            "conversation_history": [
+              {
+                "role": "assistant",
+                "content": "What would you like to accomplish?"
+              }
+            ],
+            "call_count": 0
+          },
+          "trace_tree": {
+            "span_id": "58f08b88-b374-4ef6-b6cf-5519296a4c73",
+            "name": "pipeline_run",
+            "start_time": 342723.799436583,
+            "end_time": 342723.806801166,
+            "parent_span_id": null,
+            "attributes": {
+              "flujo.input": "\n",
+              "flujo.run_id": "run_96c09eb57bf642f7b2e3c6ce91e47a8c",
+              "flujo.pipeline.name": "unnamed_20250829_100207",
+              "flujo.pipeline.version": "latest"
+            },
+            "children": [
+              {
+                "span_id": "bdeaa7f3-6183-45e5-9df6-51b068e039f9",
+                "name": "parse_initial_payload",
+                "start_time": 342723.799537125,
+                "end_time": 342723.800209791,
+                "parent_span_id": "58f08b88-b374-4ef6-b6cf-5519296a4c73",
+                "attributes": {
+                  "flujo.step.type": "Step",
+                  "step_input": "\n",
+                  "flujo.step.policy": "DefaultAgentStepExecutor",
+                  "flujo.cache.hit": false,
+                  "success": true,
+                  "latency_s": 0.000148584,
+                  "flujo.budget.actual_cost_usd": 0.0,
+                  "flujo.budget.actual_tokens": 0
+                },
+                "children": [],
+                "events": [],
+                "status": "completed"
+              },
+              {
+                "span_id": "694bbbc9-7221-4283-8891-0fe35005e0d9",
+                "name": "resolve_cohort_definition",
+                "start_time": 342723.802735875,
+                "end_time": null,
+                "parent_span_id": "58f08b88-b374-4ef6-b6cf-5519296a4c73",
+                "attributes": {
+                  "flujo.step.type": "ConditionalStep",
+                  "step_input": "{'scratchpad': {}}",
+                  "flujo.step.policy": "DefaultConditionalStepExecutor",
+                  "flujo.cache.hit": false
+                },
+                "children": [],
+                "events": [],
+                "status": "running"
+              }
+            ],
+            "events": [],
+            "status": "completed"
+          }
+        },
+        "metadata": {
+          "nested_usage_aggregated": true
+        },
+        "step_history": [
+          {
+            "name": "parse_initial_payload",
+            "success": true,
+            "attempts": 1,
+            "latency_s": 0.000148584,
+            "token_counts": 0,
+            "cost_usd": 0.0,
+            "feedback": null,
+            "output": {
+              "scratchpad": {}
+            },
+            "metadata": {},
+            "step_history": []
+          }
+        ]
+      },
+      {
+        "name": "status_concepts_ready",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.000114,
+        "token_counts": 1,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": "✅ Concepts ready\n",
+        "metadata": {},
+        "step_history": []
+      },
+      {
+        "name": "run_query_builder_subpipeline",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 0.0100175,
+        "token_counts": 0,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": {
+          "step_history": [
+            {
+              "name": "parse_initial_payload",
+              "output": {
+                "scratchpad": {}
+              },
+              "success": true,
+              "attempts": 1,
+              "latency_s": 0.000129333,
+              "token_counts": 0,
+              "cost_usd": 0.0,
+              "feedback": null,
+              "branch_context": {
+                "run_id": "run_6fbab4d203574f509996c66e8c707401",
+                "initial_prompt": "",
+                "scratchpad": {
+                  "status": "paused",
+                  "last_state_update": 342704.957876666,
+                  "hitl_message": "What would you like to accomplish?",
+                  "hitl_data": "",
+                  "pause_message": "Paste the finalized cohort definition (plain text).",
+                  "steps": {
+                    "get_initial_goal": "Cohort of people male with headache reported and constipation ",
+                    "status_definition_ready": "✅ Definition ready (sub-pipeline)\n",
+                    "parse_initial_payload": {
+                      "scratchpad": {}
+                    },
+                    "status_concepts_ready": "✅ Concepts ready\n"
+                  },
+                  "paused_step_input": "Cohort of people male with headache reported and constipation \n"
+                },
+                "hitl_history": [
+                  {
+                    "message_to_human": "What would you like to accomplish?",
+                    "human_response": "Cohort of people male with headache reported and constipation ",
+                    "timestamp": "2025-08-29T17:02:26.154331+00:00"
+                  }
+                ],
+                "command_log": [
+                  {
+                    "turn": 1,
+                    "generated_command": {
+                      "type": "ask_human",
+                      "question": "What would you like to accomplish?"
+                    },
+                    "execution_result": "Cohort of people male with headache reported and constipation ",
+                    "timestamp": "2025-08-29T17:02:26.154736+00:00"
+                  }
+                ],
+                "conversation_history": [
+                  {
+                    "role": "assistant",
+                    "content": "What would you like to accomplish?"
+                  }
+                ],
+                "call_count": 0
+              },
+              "metadata_": {},
+              "step_history": []
+            }
+          ],
+          "total_cost_usd": 0.0,
+          "total_tokens": 0,
+          "final_pipeline_context": {
+            "run_id": "run_6fbab4d203574f509996c66e8c707401",
+            "initial_prompt": "",
+            "scratchpad": {
+              "status": "paused",
+              "last_state_update": 342704.957876666,
+              "hitl_message": "What would you like to accomplish?",
+              "hitl_data": "",
+              "pause_message": "Paste the finalized cohort definition (plain text).",
+              "steps": {
+                "get_initial_goal": "Cohort of people male with headache reported and constipation ",
+                "status_definition_ready": "✅ Definition ready (sub-pipeline)\n",
+                "parse_initial_payload": {
+                  "scratchpad": {}
+                },
+                "status_concepts_ready": "✅ Concepts ready\n"
+              },
+              "paused_step_input": "Cohort of people male with headache reported and constipation \n"
+            },
+            "hitl_history": [
+              {
+                "message_to_human": "What would you like to accomplish?",
+                "human_response": "Cohort of people male with headache reported and constipation ",
+                "timestamp": "2025-08-29T17:02:26.154331+00:00"
+              }
+            ],
+            "command_log": [
+              {
+                "turn": 1,
+                "generated_command": {
+                  "type": "ask_human",
+                  "question": "What would you like to accomplish?"
+                },
+                "execution_result": "Cohort of people male with headache reported and constipation ",
+                "timestamp": "2025-08-29T17:02:26.154736+00:00"
+              }
+            ],
+            "conversation_history": [
+              {
+                "role": "assistant",
+                "content": "What would you like to accomplish?"
+              }
+            ],
+            "call_count": 0
+          },
+          "trace_tree": {
+            "span_id": "115b22a9-fb77-4981-a1ce-8baed9c7aafa",
+            "name": "pipeline_run",
+            "start_time": 342723.8189315,
+            "end_time": 342723.824175166,
+            "parent_span_id": null,
+            "attributes": {
+              "flujo.input": "{{ {\"cohort_definition\": context.scratchpad.cohort_definition, \"concept_sets\": context.scratchpad.concept_sets} | tojson }}\n",
+              "flujo.run_id": "run_6fbab4d203574f509996c66e8c707401",
+              "flujo.pipeline.name": "unnamed_20250829_100207",
+              "flujo.pipeline.version": "latest"
+            },
+            "children": [
+              {
+                "span_id": "0684d1d3-441d-445f-af47-06b4ef18e0c0",
+                "name": "parse_initial_payload",
+                "start_time": 342723.819009583,
+                "end_time": 342723.81958025,
+                "parent_span_id": "115b22a9-fb77-4981-a1ce-8baed9c7aafa",
+                "attributes": {
+                  "flujo.step.type": "Step",
+                  "step_input": "{{ {\"cohort_definition\": context.scratchpad.cohort_definition, \"concept_sets\": context.scratchpad.concept_sets} | tojson }}\n",
+                  "flujo.step.policy": "DefaultAgentStepExecutor",
+                  "flujo.cache.hit": false,
+                  "success": true,
+                  "latency_s": 0.000129333,
+                  "flujo.budget.actual_cost_usd": 0.0,
+                  "flujo.budget.actual_tokens": 0
+                },
+                "children": [],
+                "events": [],
+                "status": "completed"
+              },
+              {
+                "span_id": "1776051c-8f49-453f-9f4a-006c327cd996",
+                "name": "resolve_cohort_definition",
+                "start_time": 342723.821187541,
+                "end_time": null,
+                "parent_span_id": "115b22a9-fb77-4981-a1ce-8baed9c7aafa",
+                "attributes": {
+                  "flujo.step.type": "ConditionalStep",
+                  "step_input": "{'scratchpad': {}}",
+                  "flujo.step.policy": "DefaultConditionalStepExecutor",
+                  "flujo.cache.hit": false
+                },
+                "children": [],
+                "events": [],
+                "status": "running"
+              }
+            ],
+            "events": [],
+            "status": "completed"
+          }
+        },
+        "metadata": {
+          "nested_usage_aggregated": true
+        },
+        "step_history": [
+          {
+            "name": "parse_initial_payload",
+            "success": true,
+            "attempts": 1,
+            "latency_s": 0.000129333,
+            "token_counts": 0,
+            "cost_usd": 0.0,
+            "feedback": null,
+            "output": {
+              "scratchpad": {}
+            },
+            "metadata": {},
+            "step_history": []
+          }
+        ]
+      },
+      {
+        "name": "status_sql_validated",
+        "success": true,
+        "attempts": 1,
+        "latency_s": 9.9958e-05,
+        "token_counts": 1,
+        "cost_usd": 0.0,
+        "feedback": null,
+        "output": "✅ SQL validated (sub-pipeline)\n",
+        "metadata": {},
+        "step_history": []
+      }
+    ]
+  },
+  "final_context": {
+    "run_id": "run_6fbab4d203574f509996c66e8c707401",
+    "initial_prompt": "",
+    "scratchpad": {
+      "status": "paused",
+      "last_state_update": 342704.957876666,
+      "hitl_message": "What would you like to accomplish?",
+      "hitl_data": "",
+      "pause_message": "Paste the finalized cohort definition (plain text).",
+      "steps": {
+        "get_initial_goal": "Cohort of people male with headache reported and constipation ",
+        "status_definition_ready": "✅ Definition ready (sub-pipeline)\n",
+        "parse_initial_payload": {
+          "scratchpad": {}
+        },
+        "status_concepts_ready": "✅ Concepts ready\n",
+        "status_sql_validated": "✅ SQL validated (sub-pipeline)\n"
+      },
+      "paused_step_input": "Cohort of people male with headache reported and constipation \n"
+    },
+    "hitl_history": [
+      {
+        "message_to_human": "What would you like to accomplish?",
+        "human_response": "Cohort of people male with headache reported and constipation ",
+        "timestamp": "2025-08-29T17:02:26.154331+00:00"
+      }
+    ],
+    "command_log": [
+      {
+        "turn": 1,
+        "generated_command": {
+          "type": "ask_human",
+          "question": "What would you like to accomplish?"
+        },
+        "execution_result": "Cohort of people male with headache reported and constipation ",
+        "timestamp": "2025-08-29T17:02:26.154736+00:00"
+      }
+    ],
+    "conversation_history": [
+      {
+        "role": "assistant",
+        "content": "What would you like to accomplish?"
+      }
+    ],
+    "call_count": 0
+  }
+}
