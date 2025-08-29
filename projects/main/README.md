@@ -51,3 +51,25 @@ Defaults:
 Where used:
 - The pipeline step `resolve_omop_dataset_id` pulls `OMOP_DATASET_ID` (with default) for SQL generation.
 - BigQuery dry-run uses `BIGQUERY_PROJECT_ID` and `BIGQUERY_LOCATION` if provided.
+
+## Orchestrating Sub‑Pipelines (Separation of Concerns)
+
+Main can delegate to the sibling pipelines for clearer separation:
+
+- `projects/clarification`: clarification + cohort definition (not yet wired by default)
+- `projects/concept_discovery`: concept set discovery via ATHENA
+- `projects/query_builder`: SQL generation + BigQuery dry‑run
+
+Enable sub‑pipelines in Main by setting:
+
+- `USE_SUBPIPELINES=1` (in `projects/main/.env` or your shell)
+
+Behavior when enabled:
+- Concept discovery: Main calls `concept_discovery/pipeline.yaml` with the cohort definition and ingests the resulting concept sets.
+- Query builder: Main calls `query_builder/pipeline.yaml` non‑interactively by passing a JSON payload as `initial_prompt`:
+  `{ "cohort_definition": "...", "concept_sets": { ... } }`.
+  The query builder now parses this payload automatically.
+
+Notes:
+- Main falls back to its internal concept discovery + SQL generation when `USE_SUBPIPELINES` is unset.
+- Clarification sub‑pipeline can be wired similarly; today Main keeps its own clarification flow for continuity.
