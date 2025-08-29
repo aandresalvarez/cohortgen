@@ -180,3 +180,48 @@ steps:
         ]
       - assumptions: [...]
 
+  # Normalize and store concept sets for parent orchestrator
+  - kind: step
+    name: normalize_concept_sets_output
+    uses: "skills.custom_tools:ensure_dict"
+    input: "{{ steps.summarize_concept_sets.output }}"
+    updates_context: true
+
+  - kind: step
+    name: store_concept_sets_output
+    uses: "skills.custom_tools:wrap_in_scratchpad"
+    input: |
+      {{ {"data": steps.normalize_concept_sets_output.output, "key": "concept_sets"} | tojson }}
+    updates_context: true
+
+  # Optional HITL concept review inside sub-pipeline
+  - kind: hitl
+    name: concept_review
+    message: |
+      Review the current concept sets JSON. Paste revised JSON to apply, or type 'ok' to keep.
+
+      Current concept sets:
+      {{ steps.normalize_concept_sets_output.output | tojson }}
+    updates_context: true
+
+  - kind: step
+    name: normalize_concept_review
+    uses: "skills.custom_tools:ensure_dict"
+    input: "{{ steps.concept_review.output }}"
+
+  - kind: conditional
+    name: apply_review
+    condition_expression: "previous_step.get('concept_sets')"
+    branches:
+      true:
+        - kind: step
+          name: store_concept_sets_review
+          uses: "skills.custom_tools:wrap_in_scratchpad"
+          input: |
+            {{ {"data": steps.normalize_concept_review.output, "key": "concept_sets"} | tojson }}
+          updates_context: true
+      false:
+        - kind: step
+          name: review_passthrough
+          agent: "flujo.builtins.passthrough"
+          input: "no_changes"

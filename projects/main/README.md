@@ -54,22 +54,18 @@ Where used:
 
 ## Orchestrating Sub‑Pipelines (Separation of Concerns)
 
-Main can delegate to the sibling pipelines for clearer separation:
+Main imports and calls the sibling pipelines directly — no local skills are used for cohort work to keep concerns separated:
 
-- `projects/clarification`: clarification + cohort definition (not yet wired by default)
-- `projects/concept_discovery`: concept set discovery via ATHENA
-- `projects/query_builder`: SQL generation + BigQuery dry‑run
+- `projects/clarification/pipeline.yaml` → clarification and cohort definition
+- `projects/concept_discovery/pipeline.yaml` → ATHENA‑based concept discovery (+ inline review inside that pipeline)
+- `projects/query_builder/pipeline.yaml` → SQL generation and BigQuery validation
 
-Enable sub‑pipelines in Main by setting:
+How it’s wired:
+- `imports` section in `main/pipeline.yaml` declares the three sub‑pipelines.
+- Steps use `uses: imports.<alias>` to run them in‑process.
+- Sub‑pipelines handle their own skills and context updates. Main does not call `main/skills/*` for cohort logic.
 
-- `USE_SUBPIPELINES=1` (in `projects/main/.env` or your shell)
-
-Behavior when enabled:
-- Concept discovery: Main calls `concept_discovery/pipeline.yaml` with the cohort definition and ingests the resulting concept sets.
-- Query builder: Main calls `query_builder/pipeline.yaml` non‑interactively by passing a JSON payload as `initial_prompt`:
-  `{ "cohort_definition": "...", "concept_sets": { ... } }`.
-  The query builder now parses this payload automatically.
-
-Notes:
-- Main falls back to its internal concept discovery + SQL generation when `USE_SUBPIPELINES` is unset.
-- Clarification sub‑pipeline can be wired similarly; today Main keeps its own clarification flow for continuity.
+Data flow:
+- Clarification writes `scratchpad.cohort_definition`.
+- Concept discovery writes `scratchpad.concept_sets` (after an optional review inside that sub‑pipeline).
+- Query builder reads those and writes `scratchpad.final_sql`.

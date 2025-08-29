@@ -133,91 +133,7 @@ steps:
     uses: imports.concept_discovery
     input: |
       {{ context.scratchpad.cohort_definition }}
-
-  - kind: step
-    name: normalize_concepts_from_sub
-    uses: "skills.custom_tools:ensure_dict"
-    input: |
-      {{ steps.run_concept_discovery_subpipeline.output }}
-    updates_context: true
   
-
-  - kind: conditional
-    name: ensure_nonempty_concepts
-    condition_expression: "not previous_step.get('concept_sets')"
-    branches:
-      true:
-        - kind: step
-          name: default_concept_plan
-          uses: "skills.custom_tools:default_influenza_concept_plan"
-
-        - kind: step
-          name: search_athena_fallback
-          uses: "skills.athena_tools:athena_search_for_concept_plan"
-          input: "{{ steps.default_concept_plan.output | tojson }}"
-
-        - kind: step
-          name: summarize_concepts_fallback
-          uses: agents.concept_summarizer
-          input: |
-            Initial cohort definition:
-            {{ context.scratchpad.cohort_definition }}
-
-            Concept plan (fallback):
-            {{ steps.default_concept_plan.output | tojson }}
-
-            Athena search results:
-            {{ steps.search_athena_fallback.output | tojson }}
-
-            Output ONLY the final JSON spec with fields: concept_sets:[{name, concept_ids, include_descendants, standard_only}], assumptions:[...].
-
-        - kind: step
-          name: normalize_concepts_fallback
-          uses: "skills.custom_tools:ensure_dict"
-          input: "{{ steps.summarize_concepts_fallback.output }}"
-      false:
-        - kind: step
-          name: passthrough_concepts_nonempty
-          agent: "flujo.builtins.passthrough"
-
-  - kind: step
-    name: store_concept_sets
-    uses: "skills.custom_tools:store_as_concept_sets"
-    input: "{{ steps.normalize_concepts_fallback.output or steps.normalize_concepts_from_sub.output or steps.normalize_concept_sets.output }}"
-    updates_context: true
-
-  # Human-in-the-loop review of concept sets
-  - kind: hitl
-    name: concept_review
-    message: |
-      Review the current concept sets JSON below. To make changes, paste a revised JSON object now (schema: {"concept_sets": [...] }).
-      If no changes are needed, reply 'ok'.
-
-      Current concept sets:
-      {{ context.scratchpad.concept_sets | tojson }}
-    updates_context: true
-
-  - kind: step
-    name: normalize_review_input
-    uses: "skills.custom_tools:ensure_dict"
-    input: "{{ steps.concept_review.output }}"
-    updates_context: true
-
-  - kind: conditional
-    name: apply_review_if_valid
-    condition_expression: "previous_step.get('concept_sets')"
-    branches:
-      true:
-        - kind: step
-          name: store_concept_sets_review
-          uses: "skills.custom_tools:store_as_concept_sets"
-          input: "{{ steps.normalize_review_input.output }}"
-          updates_context: true
-      false:
-        - kind: step
-          name: review_passthrough
-          agent: "flujo.builtins.passthrough"
-          input: "no_changes"
 
   # Status: concepts ready
   - kind: step
@@ -234,13 +150,6 @@ steps:
     uses: imports.query_builder
     input: |
       {{ {"cohort_definition": context.scratchpad.cohort_definition, "concept_sets": context.scratchpad.concept_sets} | tojson }}
-
-  - kind: step
-    name: capture_final_sql
-    uses: "skills.custom_tools:wrap_in_scratchpad"
-    input: |
-      {{ {"data": (steps.run_query_builder_subpipeline.output.scratchpad.final_sql or steps.run_query_builder_subpipeline.output), "key": "final_sql"} | tojson }}
-    updates_context: true
 
   - kind: step
     name: status_sql_validated
