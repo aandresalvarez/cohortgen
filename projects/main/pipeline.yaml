@@ -103,6 +103,8 @@ agents:
     model: "openai:gpt-5-mini"
     tools:
       - "skills.orchestrator_tools:run_concept_discovery_subpipeline"
+      - "skills.orchestrator_tools:run_clarification_subpipeline"
+      - "skills.orchestrator_tools:run_query_builder_subpipeline"
     timeout: 1800
     max_retries: 0
     system_prompt: |
@@ -119,99 +121,133 @@ steps:
     message: "What would you like to accomplish?"
     updates_context: true
 
-  # 1) Clarification loop (LLM asks; user answers) until finish
-  - kind: loop
-    name: clarification_loop
-    loop:
-      conversation: true
-      history_management:
-        strategy: truncate_tokens
-        max_tokens: 3000
-      ai_turn_source: named_steps
-      user_turn_sources: ["hitl"]
-      named_steps: ["check_if_more_info_needed"]
-      history_template: |
-        --- Task Context ---
-        Initial goal: {{history.0.content}}
-        Recent turns:
-        {{#each history}}{{ this.role }}: {{ this.content }}
-        {{/each}}
-        Instruction:
-          Ask ONE clarifying question that explicitly references the initial goal {{history.0.content}}.
-          If goal is clear, output {"action":"finish"}.
-      body:
+  # Choose clarification path: sub-pipeline or internal
+  - kind: step
+    name: resolve_use_subpipelines_early
+    uses: "skills.custom_tools:get_env_value"
+    input: |
+      {{ {"name": "USE_SUBPIPELINES", "default": "0"} | tojson }}
+
+  - kind: conditional
+    name: clarification_path
+    condition_expression: "steps['resolve_use_subpipelines_early'].output == '1'"
+    branches:
+      true:
         - kind: step
-          name: check_if_more_info_needed
-          uses: agents.clarification_agent
+          name: run_clarification_subpipeline
+          uses: agents.subpipeline_runner
           input: |
-            --- Conversation So Far ---
+            {{ steps.get_initial_goal.output }}
+          tool_name: "skills.orchestrator_tools:run_clarification_subpipeline"
+          updates_context: true
+        - kind: step
+          name: status_definition_ready
+          agent:
+            id: "flujo.builtins.stringify"
+          input: |
+            ✅ Definition ready (sub-pipeline)
+      false:
+        - kind: loop
+          name: clarification_loop
+          loop:
+            conversation: true
+            history_management:
+              strategy: truncate_tokens
+              max_tokens: 3000
+            ai_turn_source: named_steps
+            user_turn_sources: ["hitl"]
+            named_steps: ["check_if_more_info_needed"]
+            history_template: |
+              --- Task Context ---
+              Initial goal: {{history.0.content}}
+              Recent turns:
+              {{#each history}}{{ this.role }}: {{ this.content }}
+              {{/each}}
+              Instruction:
+                Ask ONE clarifying question that explicitly references the initial goal {{history.0.content}}.
+                If goal is clear, output {"action":"finish"}.
+          body:
+            - kind: step
+              name: check_if_more_info_needed
+              uses: agents.clarification_agent
+              input: |
+                --- Conversation So Far ---
+                {{#each context.hitl_history}}
+                assistant: {{ this.message_to_human }}
+                user: {{ this.human_response }}
+                {{/each}}
+
+                --- Instruction ---
+                Initial goal: {{ steps.get_initial_goal.output }}
+                Ask ONE clarifying question referencing the goal and the conversation. If all slots are filled, output {"action":"finish"}.
+
+            - kind: conditional
+              name: ask_question_if_needed
+              condition_expression: "previous_step.action == 'ask'"
+              branches:
+                true:
+                  - kind: hitl
+                    name: ask_user_for_clarification
+                    message: "{{ steps.check_if_more_info_needed.output.question }}"
+                    updates_context: true
+                false:
+                  - kind: step
+                    name: passthrough
+                    agent: "flujo.builtins.passthrough"
+
+          exit_expression: |
+            (
+              steps['check_if_more_info_needed'] and
+              steps['check_if_more_info_needed'].action == 'finish'
+            )
+          max_loops: 6
+
+  - kind: conditional
+    name: ensure_cohort_definition_set
+    condition_expression: "not context.scratchpad.get('cohort_definition')"
+    branches:
+      true:
+        - kind: step
+          name: synthesize_slots
+          uses: "flujo.helpers.slot_synthesis:synthesize_slots"
+          updates_context: true
+
+        - kind: step
+          name: generate_cohort_definition
+          uses: agents.cohort_definer
+          updates_context: true
+          input: |
+            Initial goal: {{ steps.get_initial_goal.output }}
+
+            Clarifications (chronological):
             {{#each context.hitl_history}}
-            assistant: {{ this.message_to_human }}
-            user: {{ this.human_response }}
+            Q: {{ this.message_to_human }}
+            A: {{ this.human_response }}
             {{/each}}
 
-            --- Instruction ---
-            Initial goal: {{ steps.get_initial_goal.output }}
-            Ask ONE clarifying question referencing the goal and the conversation. If all slots are filled, output {"action":"finish"}.
+            Synthesized slots:
+            {{ context.scratchpad.slots | tojson }}
 
-        - kind: conditional
-          name: ask_question_if_needed
-          condition_expression: "previous_step.action == 'ask'"
-          branches:
-            true:
-              - kind: hitl
-                name: ask_user_for_clarification
-                message: "{{ steps.check_if_more_info_needed.output.question }}"
-                updates_context: true
-            false:
-              - kind: step
-                name: passthrough
-                agent: "flujo.builtins.passthrough"
+            Task: Produce the Final Cohort Definition per your system instructions. No code or SQL.
 
-      exit_expression: |
-        (
-          steps['check_if_more_info_needed'] and
-          steps['check_if_more_info_needed'].action == 'finish'
-        )
-      max_loops: 6
+        - kind: step
+          name: store_cohort_definition
+          uses: "skills.custom_tools:store_as_cohort_definition"
+          input: "{{ steps.generate_cohort_definition.output }}"
+          updates_context: true
 
-  - kind: step
-    name: synthesize_slots
-    uses: "flujo.helpers.slot_synthesis:synthesize_slots"
-    updates_context: true
-
-  - kind: step
-    name: generate_cohort_definition
-    uses: agents.cohort_definer
-    updates_context: true
-    input: |
-      Initial goal: {{ steps.get_initial_goal.output }}
-
-      Clarifications (chronological):
-      {{#each context.hitl_history}}
-      Q: {{ this.message_to_human }}
-      A: {{ this.human_response }}
-      {{/each}}
-
-      Synthesized slots:
-      {{ context.scratchpad.slots | tojson }}
-
-      Task: Produce the Final Cohort Definition per your system instructions. No code or SQL.
-
-  - kind: step
-    name: store_cohort_definition
-    uses: "skills.custom_tools:store_as_cohort_definition"
-    input: "{{ steps.generate_cohort_definition.output }}"
-    updates_context: true
-
-  # Status: definition ready
-  - kind: step
-    name: status_definition_ready
-    agent:
-      id: "flujo.builtins.stringify"
-    updates_context: true
-    input: |
-      ✅ Definition ready
+        - kind: step
+          name: status_definition_ready
+          agent:
+            id: "flujo.builtins.stringify"
+          updates_context: true
+          input: |
+            ✅ Definition ready
+      false:
+        - kind: step
+          name: definition_ready_passthrough
+          agent: "flujo.builtins.passthrough"
+          input: "definition_already_set"
 
   # 2) Concept discovery (LLM + Athena search)
   - kind: step
@@ -233,9 +269,9 @@ steps:
           tool_name: "skills.orchestrator_tools:run_concept_discovery_subpipeline"
           updates_context: true
         - kind: step
-          name: skip_internal_concept_discovery
-          agent: "flujo.builtins.passthrough"
-          input: "subpipeline_path"
+          name: normalize_concepts_from_sub
+          uses: "skills.custom_tools:ensure_dict"
+          input: "{{ context.scratchpad.concept_sets | tojson }}"
       false:
         - kind: step
           name: decompose_concept_sets
@@ -274,44 +310,7 @@ steps:
           name: normalize_concept_sets
           uses: "skills.custom_tools:ensure_dict"
           input: "{{ steps.summarize_concept_sets.output }}"
-  - kind: step
-    name: decompose_concept_sets
-    uses: agents.concept_decomposer
-    input: |
-      Cohort definition:
-      {{ context.scratchpad.cohort_definition }}
-
-      Output ONLY a JSON object that matches the required schema.
-
-  - kind: step
-    name: prepare_athena_plan
-    uses: "skills.custom_tools:ensure_concept_plan_dict"
-
-  - kind: step
-    name: search_athena
-    uses: "skills.athena_tools:athena_search_for_concept_plan"
-    updates_context: true
-
-  - kind: step
-    name: summarize_concept_sets
-    uses: agents.concept_summarizer
-    input: |
-      Initial cohort definition:
-      {{ context.scratchpad.cohort_definition }}
-
-      Concept plan (from decomposer):
-      {{ steps.decompose_concept_sets.output | tojson }}
-
-      Athena search results:
-      {{ steps.search_athena.output | tojson }}
-
-      Output ONLY the final JSON spec with fields: concept_sets:[{name, concept_ids, include_descendants, standard_only}], assumptions:[...].
-
-  - kind: step
-    name: normalize_concept_sets
-    uses: "skills.custom_tools:ensure_dict"
-    input: "{{ steps.summarize_concept_sets.output }}"
-    updates_context: true
+  
 
   - kind: conditional
     name: ensure_nonempty_concepts
@@ -356,6 +355,38 @@ steps:
     uses: "skills.custom_tools:store_as_concept_sets"
     input: "{{ steps.normalize_concepts_fallback.output or steps.normalize_concept_sets.output }}"
     updates_context: true
+
+  # Human-in-the-loop review of concept sets
+  - kind: hitl
+    name: concept_review
+    message: |
+      Review the current concept sets JSON below. To make changes, paste a revised JSON object now (schema: {"concept_sets": [...] }).
+      If no changes are needed, reply 'ok'.
+
+      Current concept sets:
+      {{ context.scratchpad.concept_sets | tojson }}
+    updates_context: true
+
+  - kind: step
+    name: normalize_review_input
+    uses: "skills.custom_tools:ensure_dict"
+    input: "{{ steps.concept_review.output }}"
+
+  - kind: conditional
+    name: apply_review_if_valid
+    condition_expression: "previous_step.get('concept_sets')"
+    branches:
+      true:
+        - kind: step
+          name: store_concept_sets_review
+          uses: "skills.custom_tools:store_as_concept_sets"
+          input: "{{ steps.normalize_review_input.output }}"
+          updates_context: true
+      false:
+        - kind: step
+          name: review_passthrough
+          agent: "flujo.builtins.passthrough"
+          input: "no_changes"
 
   # Status: concepts ready
   - kind: step

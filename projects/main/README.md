@@ -1,4 +1,4 @@
-# Flujo Project
+#  Cohort Copilot
 
 Welcome! This project is scaffolded for use with Flujo.
 

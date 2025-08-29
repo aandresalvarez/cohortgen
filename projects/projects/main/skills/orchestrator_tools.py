@@ -82,6 +82,43 @@ async def run_concept_discovery_subpipeline(cohort_definition: str) -> Dict[str,
     return {"scratchpad": {"concept_sets": concept_sets}}
 
 
+def _parse_cohort_definition_from_debug(debug_path: Path) -> str:
+    try:
+        data = json.loads(debug_path.read_text())
+    except Exception:
+        return ""
+    # Prefer scratchpad.cohort_definition
+    scratch = (data or {}).get("scratchpad", {})
+    text = scratch.get("cohort_definition")
+    if isinstance(text, str) and text.strip():
+        return text
+    # Fallback to steps.generate_cohort_definition.output.value
+    steps = scratch.get("steps") or {}
+    gen = steps.get("generate_cohort_definition") or {}
+    if isinstance(gen, dict):
+        val = gen.get("value") or gen.get("output") or ""
+        if isinstance(val, str):
+            return val
+    return ""
+
+
+async def run_clarification_subpipeline(initial_goal: str) -> Dict[str, Any]:
+    """Run the clarification pipeline with the provided initial goal.
+
+    Returns {"scratchpad": {"cohort_definition": str}}.
+    """
+    projects = _projects_root()
+    proj_dir = projects / "clarification"
+    pipeline = proj_dir / "pipeline.yaml"
+    debug_dir = proj_dir / "debug"
+
+    args = ["run", "-p", str(pipeline), "--debug-export", "--input", str(initial_goal or "").strip()]
+    _ = _run_cli_in(proj_dir, *args, timeout=1800)
+    debug_file = _latest_debug_json(debug_dir)
+    text = _parse_cohort_definition_from_debug(debug_file) if debug_file else ""
+    return {"scratchpad": {"cohort_definition": text}}
+
+
 def _parse_final_sql_from_debug(debug_path: Path) -> str:
     try:
         data = json.loads(debug_path.read_text())
