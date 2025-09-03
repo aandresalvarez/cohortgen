@@ -64,9 +64,10 @@ def test_no_unsupported_slice_filter_in_yaml():
 
 
 def test_concept_discovery_execute_tool_input_not_json_stringified():
-    """Ensure execute_tool receives object, not a JSON string."""
+    """Ensure execute_tool receives the object output from the previous step."""
     p = ROOT / "projects" / "concept_discovery" / "pipeline.yaml"
     content = read(p)
     # Require exact input shape for execute_tool step
     assert "name: execute_tool" in content
+    # The execute_tool step must explicitly take input from decide_next_action output (object, not JSON string)
     assert 'input: "{{ steps.decide_next_action.output }}"' in content

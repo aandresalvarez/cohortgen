@@ -108,11 +108,15 @@ steps:
           name: execute_action
           condition_expression: "previous_step.action == 'tool'"
           branches:
-            true:
+            "true":
               - name: execute_tool
                 uses: "skills.custom_tools:execute_athena_tool"
                 input: "{{ steps.decide_next_action.output }}"
                 updates_context: true
+            "false":
+              - kind: step
+                name: no_tool_action
+                agent: "flujo.builtins.passthrough"
       
       exit_expression: "steps['decide_next_action'].action == 'finish'"
       max_loops: 15
