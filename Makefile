@@ -1,4 +1,5 @@
 .PHONY: install sync test lint typecheck format clean update-flujo run validate doctor which-flujo openai-version
+.PHONY: validate-% run-% fmt
 
 # Create/refresh the venv and install deps
 # Also ensure Flujo git source is bumped to latest main
@@ -15,11 +16,11 @@ sync:
 
 # Validate orchestrator pipeline (projects/main)
 validate:
-	cd projects/main && PYTHONPATH=$$(pwd)/../.. uv run flujo dev validate --strict
+	cd projects/main && uv run flujo dev validate --strict
 
 # Run orchestrator pipeline with correct project venv
 run:
-	cd projects/main && PYTHONPATH=$$(pwd)/../.. uv run flujo run --debug-export
+	cd projects/main && uv run flujo run --debug-export
 
 # Environment doctor: ensure you're using this project's venv and SDKs
 doctor:
@@ -57,3 +58,14 @@ format:
 clean:
 	rm -rf .venv
 	rm -f uv.lock
+
+# Validate a specific subproject: make validate-<name>
+validate-%:
+	cd projects/$* && uv run flujo dev validate --strict
+
+# Run a specific subproject: make run-<name>
+run-%:
+	cd projects/$* && uv run flujo run
+
+# Alias for formatter
+fmt: format

@@ -4,27 +4,21 @@ import json
 from typing import Any, Dict
 
 
-# Example custom tool function
 async def echo_tool(x: str) -> str:
     return x
 
 
 async def ensure_dict(data: Dict[str, Any] | str | object) -> Dict[str, Any]:
-    """Normalize a JSON-like input into a dict[str, Any].
-
-    Accepts a plain dict, JSON string, or arbitrary object. Falls back to wrapping
-    non-JSON inputs under {"data": ...}.
-    """
     if data is None:
         return {}
     if isinstance(data, dict):
         return data
     if isinstance(data, str):
-        try:
-            loaded = json.loads(data)
-            return loaded if isinstance(loaded, dict) else {"data": loaded}
-        except Exception:
-            return {"data": data}
+            try:
+                loaded = json.loads(data)
+                return loaded if isinstance(loaded, dict) else {"data": loaded}
+            except Exception:
+                return {"data": data}
     try:
         return json.loads(json.dumps(data, default=str))
     except Exception:
@@ -32,19 +26,10 @@ async def ensure_dict(data: Dict[str, Any] | str | object) -> Dict[str, Any]:
 
 
 async def wrap_in_scratchpad(data: Any, *, key: str = "value") -> Dict[str, Any]:
-    """Wrap arbitrary data under context.scratchpad[key] for updates_context merge."""
     return {"scratchpad": {key: data}}
 
 
 async def parse_initial_payload(initial: Any) -> Dict[str, Any]:
-    """Parse initial input into scratchpad values for non-interactive runs.
-
-    Accepts either a JSON string or dict with optional keys:
-      - cohort_definition: str
-      - concept_sets: dict or list
-
-    Returns {"scratchpad": {...}} for updates_context merge.
-    """
     if initial is None:
         return {"scratchpad": {}}
     if isinstance(initial, str):
@@ -69,3 +54,19 @@ async def parse_initial_payload(initial: Any) -> Dict[str, Any]:
     if isinstance(cs, (dict, list)):
         out["concept_sets"] = cs
     return {"scratchpad": out}
+
+
+async def store_final_sql(sql: Any) -> Dict[str, Any]:
+    if sql is None:
+        sql = ""
+    return {"scratchpad": {"final_sql": sql}}
+
+
+async def store_current_sql(sql: Any) -> Dict[str, Any]:
+    if sql is None:
+        sql = ""
+    return {"scratchpad": {"current_sql": sql}}
+
+
+async def store_dry_run_result(result: Any) -> Dict[str, Any]:
+    return {"scratchpad": {"dry_run_result": result or {}}}
