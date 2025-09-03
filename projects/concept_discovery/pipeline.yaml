@@ -12,14 +12,14 @@ agents:
     timeout: 120
     max_retries: 1
     system_prompt: |
-      You are an expert OMOP/ATLAS cohort designer.
-      Task: Read the cohort definition and produce a structured plan of concept sets to build in ATHENA.
-      - Focus only on concept sets that are needed to implement the cohort (index events, inclusion/exclusion conditions, exposures, procedures, measurements, observations, visits).
-      - Prefer standard concepts only (standard_concept = 'S') unless the definition explicitly needs non-standard.
-      - Suggest domain restrictions and vocabulary preferences when clear (e.g., SNOMED for conditions, RxNorm for drugs, CPT/HCPCS for procedures, LOINC for labs), but do not overconstrain if unclear.
-      - Include whether to include descendants for each set (true by default for intent-based concept sets).
-      - Generate multiple query terms per set when helpful to capture synonyms.
-      Output ONLY a valid JSON object that adheres to the schema.
+      You are an expert OMOP/ATLAS cohort designer. Task: Read the cohort definition and produce a structured plan of concept sets to build in ATHENA.
+      Strict requirements:
+      - No placeholders. Do NOT emit generic tokens like <CONDITION_NAME>.
+      - Derive concrete query terms directly from the user's cohort definition.
+      - Prefer standard concepts only ('S') unless the definition requires non‑standard.
+      - Suggest domain/vocabulary restrictions when clear (e.g., SNOMED for conditions, RxNorm for drugs).
+      - Include whether to include descendants (true by default).
+      Output ONLY a valid JSON object.
     output_schema:
       type: object
       properties:
@@ -29,154 +29,99 @@ agents:
             type: object
             properties:
               name: { type: string }
-              intent: { type: string, description: "short description of purpose" }
-              domain: { type: string, description: "OMOP DomainId like Condition, Drug, Procedure, Measurement, Observation, Visit" }
-              vocabulary: { type: array, items: { type: string }, description: "Optional vocabulary hints like SNOMED, RxNorm, LOINC" }
+              intent: { type: string }
+              domain: { type: string }
+              vocabulary: { type: array, items: { type: string } }
               include_descendants: { type: boolean, default: true }
               standard_only: { type: boolean, default: true }
               queries: { type: array, items: { type: string } }
             required: [name, queries]
 
-  concept_summarizer:
-    model: "openai:gpt-5-mini"
-    model_settings:
-      openai_reasoning_effort: "low"
-    timeout: 120
-    max_retries: 1
-    system_prompt: |
-      You are an expert OMOP/ATLAS cohort implementer.
-      Combine the concept plan, refined standard concepts (if available), and Athena search results into a final JSON spec of concept sets for ATLAS.
-      - Prefer the refined agent output when present; otherwise, select from raw search results.
-      - For each concept set, output:
-        - name
-        - concepts: array of { concept_id, concept_name }
-        - concept_ids: array of integers (derived from concepts; keep for backward compatibility)
-        - concept_names: array of strings (derived from concepts)
-        - include_descendants
-        - standard_only
-      - Select only standard concepts (standard_concept = 'S'). Do NOT include classification concepts ('C') unless explicitly required by the cohort definition with a clear rationale.
-      - Do not invent concept IDs or names; only use those returned by the Athena search results (candidates).
-      - If a concept set has zero candidates, add a note under assumptions to revisit the queries.
-      Output ONLY JSON. No commentary.
-    output_schema: { type: string }
-
-  concept_refiner:
+  concept_explorer_agent:
     model: "openai:gpt-5-mini"
     model_settings:
       openai_reasoning_effort: "medium"
     timeout: 180
     max_retries: 1
     system_prompt: |
-      You are an expert OMOP concept explorer.
-      Goal: Given a concept plan and initial Athena search results, identify STANDARD (standard_concept = 'S') concept IDs for each concept set by exploring candidates.
-      You can call tools to search, fetch details, relationships, summaries, and graphs. Use them iteratively when needed:
-        - Use relationships to follow 'Maps to' from non-standard to standard concepts.
-        - Use 'Is a' / hierarchy or graph to select the most appropriate standard concepts for the intent.
-        - Prefer domain/vocabulary hints in the plan (e.g., SNOMED for conditions, RxNorm for drugs, LOINC for labs).
-        - If initial candidates are classification ('C') or non-standard, explore related concepts to find standard ('S').
-        - Be conservative; avoid over-inclusion. Choose the minimal set that captures the intent.
-      Output ONLY JSON with fields:
-        - concept_sets: [ { name, concepts: [{ concept_id, concept_name }], include_descendants, standard_only } ]
-        - assumptions: [ ... ]
-      Do NOT invent or guess IDs. Only include IDs you retrieved via tools.
+      You are an expert OMOP concept explorer. Your goal is to build a final, high-quality list of STANDARD OMOP concepts.
+      You are inside an exploration loop. On each turn, you will be given the current state of the concept sets and a history of your previous actions.
+      Your task is to decide on the SINGLE BEST next action to take to improve the concept sets.
+      
+      Available Tools:
+      - `athena_search`: To find new initial candidates.
+      - `athena_details`: To get more information on specific concepts.
+      - `athena_relationships`: To explore how concepts are connected (e.g., 'Maps to', 'Is a'). This is your primary tool for finding standard concepts from non-standard ones.
+      
+      Strategy:
+      1. Analyze the `current_sets`. Identify gaps, non-standard concepts, or areas needing more detail.
+      2. Consult your `exploration_history` to avoid repeating failed actions.
+      3. Decide on ONE action: either call ONE tool to get more information, or decide you are finished.
+      4. If you have enough high-quality, standard concepts and further exploration is unlikely to yield better results, call `finish`.
+
+      Output ONLY JSON with the schema: {"action": "tool" | "finish", "tool_name": str?, "tool_input": object?, "final_sets": object?}.
+      - If action is "tool", provide `tool_name` and `tool_input`.
+      - If action is "finish", provide the `final_sets`.
     tools:
       - "skills.athena_tools:athena_search"
       - "skills.athena_tools:athena_details"
       - "skills.athena_tools:athena_relationships"
-      - "skills.athena_tools:athena_summary"
-      - "skills.athena_tools:athena_graph"
-    output_schema: { type: string }
+    output_schema:
+      type: object
+      properties:
+        action: { type: string, enum: [tool, finish] }
+        tool_name: { type: string }
+        tool_input: { type: object }
+        final_sets: { type: object }
+      required: [action]
 
 steps:
-  - kind: conditional
-    name: resolve_cohort_definition
-    condition_expression: "(not context.initial_prompt) and (context.scratchpad.get('status') != 'paused')"
-    branches:
-      true:
-        - kind: hitl
-          name: get_cohort_definition
-          message: "Paste the cohort definition (plain text from your study protocol or a prior clarification)."
-          updates_context: true
-      false:
-        - kind: step
-          name: get_cohort_definition
-          agent: "flujo.builtins.passthrough"
-          input: "{{ context.initial_prompt }}"
-          updates_context: true
+  - name: parse_initial_payload
+    uses: "skills.custom_tools:parse_initial_payload"
+    input: "{{ context.initial_prompt }}"
+    updates_context: true
 
-  - kind: conditional
-    name: stop_if_parent_paused
-    condition_expression: "context.scratchpad.get('status') == 'paused'"
-    branches:
-      true:
-        - kind: step
-          name: noop_concept_discovery
-          agent: "flujo.builtins.passthrough"
-          input: "parent_paused"
-      false:
-        - kind: step
-          name: decompose_concept_sets
-          uses: agents.concept_decomposer
+  - name: decompose_concept_sets
+    uses: agents.concept_decomposer
+    input: "{{ context.scratchpad.cohort_definition }}"
+    updates_context: true
+
+  - name: search_initial_candidates
+    uses: "skills.athena_tools:athena_search_for_concept_plan"
+    input: "{{ previous_step.output | tojson }}"
+    updates_context: true
+
+  - kind: loop
+    name: exploration_loop
+    loop:
+      body:
+        - name: decide_next_action
+          uses: agents.concept_explorer_agent
           input: |
-            Cohort definition:
-            {{ steps.get_cohort_definition.output }}
-
-            Output ONLY a JSON object that matches the required schema.
-
-        - kind: step
-          name: prepare_athena_plan
-          uses: "skills.custom_tools:ensure_concept_plan_dict"
-
-        - kind: step
-          name: search_athena
-          uses: "skills.athena_tools:athena_search_for_concept_plan"
+            Cohort Definition: {{ context.scratchpad.cohort_definition }}
+            Current Concept Sets: {{ context.scratchpad.concept_sets | tojson }}
+            Exploration History: {{ context.scratchpad.exploration_history | tojson }}
+            Refinement Feedback: {{ context.scratchpad.refinement_feedback or '' }}
           updates_context: true
+        
+        - kind: conditional
+          name: execute_action
+          condition_expression: "previous_step.action == 'tool'"
+          branches:
+            true:
+              - name: execute_tool
+                uses: "skills.custom_tools:execute_athena_tool"
+                input: "{{ steps.decide_next_action.output }}"
+                updates_context: true
+      
+      exit_expression: "steps['decide_next_action'].action == 'finish'"
+      max_loops: 15
 
-  - kind: step
-    name: refine_to_standard_concepts
-    uses: agents.concept_refiner
-    input: |
-      Cohort definition:
-      {{ steps.get_cohort_definition.output }}
+  - name: store_concept_sets
+    uses: "skills.custom_tools:store_as_concept_sets"
+    input: "{{ steps.decide_next_action.output.final_sets }}"
+    updates_context: true
 
-      Concept plan:
-      {{ steps.prepare_athena_plan.output | tojson }}
-
-      Initial Athena search results:
-      {{ steps.search_athena.output | tojson }}
-
-      Task: For each concept set, select standard ('S') concepts by exploring the initial candidates and their relationships.
-      - Favor 'Maps to' relationships from non-standard to standard concepts.
-      - Use details/summary/graph for disambiguation when necessary.
-      - Respect domain and vocabulary hints from the plan where clear.
-      Output ONLY JSON: { concept_sets: [{ name, concepts: [{concept_id, concept_name}], include_descendants, standard_only }], assumptions: [] }
-
-  - kind: step
-    name: summarize_concept_sets
-    uses: agents.concept_summarizer
-    input: |
-      Initial cohort definition:
-      {{ steps.get_cohort_definition.output }}
-
-            Concept plan (from decomposer):
-            {{ steps.decompose_concept_sets.output | tojson }}
-
-            Athena search results:
-            {{ steps.search_athena.output | tojson }}
-
-      Refined standard concepts (from explorer):
-      {{ steps.refine_to_standard_concepts.output | tojson }}
-
-      Output ONLY the final JSON spec with fields:
-      - concept_sets: [
-          {
-            name,
-            concepts: [{ concept_id, concept_name }],
-            concept_ids,  # keep for backward compatibility
-            concept_names,
-            include_descendants,
-            standard_only
-          }
-        ]
-      - assumptions: [...]
-
+  - name: emit_for_parent
+    agent: "flujo.builtins.passthrough"
+    input: "{{ context.scratchpad.concept_sets | tojson }}"

@@ -38,9 +38,16 @@ agents:
     output_schema: { type: string }
 
 steps:
+  # Optional: non-interactive inputs via JSON
+  - kind: step
+    name: parse_initial_payload
+    uses: "skills.custom_tools:parse_initial_payload"
+    input: "{{ context.initial_prompt }}"
+    updates_context: true
+
   - kind: conditional
     name: resolve_cohort_definition
-    condition_expression: "not (context.scratchpad.get('cohort_definition') or context.initial_prompt)"
+    condition_expression: "not context.scratchpad.get('cohort_definition')"
     branches:
       true:
         - kind: hitl
@@ -51,7 +58,7 @@ steps:
         - kind: step
           name: get_cohort_definition
           agent: "flujo.builtins.passthrough"
-          input: "{{ context.scratchpad.cohort_definition or context.initial_prompt }}"
+          input: "{{ context.scratchpad.cohort_definition }}"
           updates_context: true
 
   - kind: conditional
@@ -86,7 +93,17 @@ steps:
         - kind: step
           name: omop_dataset_id
           agent: "flujo.builtins.passthrough"
-          input: "bigquery-public-data.cms_synthetic_patient_data_omop"
+          input: "{{ env.OMOP_DATASET_ID or 'bigquery-public-data.cms_synthetic_patient_data_omop' }}"
+
+        - kind: step
+          name: bq_location
+          agent: "flujo.builtins.passthrough"
+          input: "{{ env.BIGQUERY_LOCATION or 'US' }}"
+
+        - kind: step
+          name: bq_project_id
+          agent: "flujo.builtins.passthrough"
+          input: "{{ env.BIGQUERY_PROJECT_ID or '' }}"
 
         - kind: step
           name: normalize_concept_sets
@@ -110,88 +127,85 @@ steps:
             Output ONLY SQL.
 
   - kind: step
-    name: dry_run_1
-    uses: "skills.bq_tools:bq_dry_run"
-    input: |
-      {{ {
-        "sql": steps.generate_sql.output,
-        "default_dataset": steps.omop_dataset_id.output,
-        "location": "US"
-      } | tojson }}
+    name: store_current_sql_initial
+    uses: "skills.custom_tools:store_current_sql"
+    input: "{{ steps.generate_sql.output }}"
     updates_context: true
 
-  - kind: conditional
-    name: fix_if_fail_1
-    condition_expression: "not steps['dry_run_1'].success"
-    branches:
-      true:
+  - kind: loop
+    name: repair_sql_loop
+    loop:
+      ai_turn_source: named_steps
+      user_turn_sources: []
+      named_steps: ["dry_run", "maybe_fix_sql"]
+      body:
         - kind: step
-          name: fix_sql_1
-          uses: agents.sql_fixer
-          input: |
-            Original SQL:
-            {{ steps.generate_sql.output }}
-
-            BigQuery error (from dry run):
-            {{ steps.dry_run_1.output | tojson }}
-
-            Output ONLY corrected SQL.
-
-        - kind: step
-          name: dry_run_2
+          name: dry_run
           uses: "skills.bq_tools:bq_dry_run"
           input: |
             {{ {
-              "sql": steps.fix_sql_1.output,
+              "sql": context.scratchpad.current_sql,
               "default_dataset": steps.omop_dataset_id.output,
-              "location": "US"
+              "project_id": steps.bq_project_id.output,
+              "location": steps.bq_location.output
             } | tojson }}
+          updates_context: true
 
         - kind: conditional
-          name: fix_if_fail_2
-          condition_expression: "not steps['dry_run_2'].success"
+          name: maybe_fix_sql
+          condition_expression: "not steps['dry_run'].success"
           branches:
             true:
               - kind: step
-                name: fix_sql_2
+                name: fix_sql
                 uses: agents.sql_fixer
                 input: |
                   Original SQL:
-                  {{ steps.fix_sql_1.output }}
+                  {{ context.scratchpad.current_sql }}
 
                   BigQuery error (from dry run):
-                  {{ steps.dry_run_2.output | tojson }}
+                  {{ steps.dry_run.output | tojson }}
 
                   Output ONLY corrected SQL.
-
               - kind: step
-                name: dry_run_3
-                uses: "skills.bq_tools:bq_dry_run"
-                input: |
-                  {{ {
-                    "sql": steps.fix_sql_2.output,
-                    "default_dataset": steps.omop_dataset_id.output,
-                    "location": "US"
-                  } | tojson }}
+                name: store_current_sql_fixed
+                uses: "skills.custom_tools:store_current_sql"
+                input: "{{ steps.fix_sql.output }}"
+                updates_context: true
             false:
               - kind: step
-                name: passthrough_2
+                name: no_fix_needed
                 agent: "flujo.builtins.passthrough"
-      false:
-        - kind: step
-          name: passthrough_1
-          agent: "flujo.builtins.passthrough"
+      exit_expression: "steps['dry_run'].success"
+      max_loops: 3
 
   - kind: step
     name: final_sql
     agent: "flujo.builtins.passthrough"
-    input: |
-      {{ steps.fix_sql_2.output or steps.fix_sql_1.output or steps.generate_sql.output }}
+    input: "{{ context.scratchpad.current_sql }}"
     updates_context: true
 
   - kind: step
     name: store_final_sql
-    uses: "skills.custom_tools:wrap_in_scratchpad"
+    uses: "skills.custom_tools:store_final_sql"
+    input: "{{ steps.final_sql.output }}"
+    updates_context: true
+
+  # Final dry run to capture cost and stats for reporting
+  - kind: step
+    name: final_dry_run
+    uses: "skills.bq_tools:bq_dry_run"
     input: |
-      {{ {"data": steps.final_sql.output, "key": "final_sql"} | tojson }}
+      {{ {
+        "sql": context.scratchpad.final_sql,
+        "default_dataset": steps.omop_dataset_id.output,
+        "project_id": steps.bq_project_id.output,
+        "location": steps.bq_location.output
+      } | tojson }}
+    updates_context: true
+
+  - kind: step
+    name: store_final_dry_run
+    uses: "skills.custom_tools:store_dry_run_result"
+    input: "{{ steps.final_dry_run.output }}"
     updates_context: true
