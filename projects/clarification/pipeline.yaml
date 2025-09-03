@@ -59,12 +59,12 @@ steps:
     name: resolve_initial_goal
     condition_expression: "not context.initial_prompt"
     branches:
-      true:
+      "true":
         - kind: hitl
           name: get_initial_goal
           message: "What would you like to accomplish?"
           updates_context: true
-      false:
+      "false":
         - kind: step
           name: get_initial_goal
           agent: "flujo.builtins.passthrough"
@@ -110,12 +110,12 @@ steps:
           name: ask_question_if_needed
           condition_expression: "previous_step.action == 'ask'"
           branches:
-            true:
+            "true":
               - kind: hitl
                 name: ask_user_for_clarification
                 message: "{{ steps.check_if_more_info_needed.output.question }}"
                 updates_context: true
-            false:
+            "false":
               - kind: step
                 name: passthrough
                 agent: "flujo.builtins.passthrough"

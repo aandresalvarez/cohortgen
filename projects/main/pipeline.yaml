@@ -25,6 +25,10 @@ steps:
     states:
       clarification:
         steps:
+          - kind: step
+            name: status_update_clarification
+            agent: "flujo.builtins.passthrough"
+            input: "🧭 Stage: Clarification — Interpreting your goal and asking up to 1–2 brief questions to finalize a precise cohort definition. Action: answer briefly; we’ll advance automatically when clear."
           - name: run_clarification_subpipeline
             uses: imports.clarification
             input: |
@@ -41,6 +45,10 @@ steps:
 
       concept_discovery:
         steps:
+          - kind: step
+            name: status_update_concepts
+            agent: "flujo.builtins.passthrough"
+            input: "✅ Stage: Concept Discovery — Searching ATHENA and traversing relationships to assemble standard OMOP concept sets from your cohort definition. No action needed now. Next: you’ll review the proposed sets."
           - kind: step
             name: prepare_for_concepts
             uses: "skills.custom_tools:prepare_concept_discovery_input"
@@ -65,6 +73,10 @@ steps:
       review:
         steps:
           - kind: step
+            name: status_update_review
+            agent: "flujo.builtins.passthrough"
+            input: "🔎 Stage: Review — Please review/refine the proposed concept sets. Action: reply 'yes' to accept, paste edited JSON with a top-level concept_sets array, or give plain‑language feedback to refine."
+          - kind: step
             name: summarize_sets
             uses: "skills.custom_tools:summarize_concept_sets_brief"
             input: "{{ context.scratchpad.concept_sets | tojson }}"
@@ -86,6 +98,10 @@ steps:
       assumptions_review:
         steps:
           - kind: step
+            name: status_update_assumptions
+            agent: "flujo.builtins.passthrough"
+            input: "📝 Stage: Assumptions — Confirming key assumptions inferred from the cohort and concepts. Action: type 'yes' to acknowledge and continue to SQL, or provide corrections to stay here."
+          - kind: step
             name: extract_assumptions
             uses: "skills.custom_tools:extract_assumptions_text"
             updates_context: true
@@ -105,6 +121,10 @@ steps:
 
       query_builder:
         steps:
+          - kind: step
+            name: status_update_query_builder
+            agent: "flujo.builtins.passthrough"
+            input: "🛠️ Stage: SQL Generation — Building the final SQL for your cohort using the accepted concept sets and assumptions. No action needed. Next: we’ll present the SQL and a short report."
           - kind: step
             name: prepare_for_query_builder
             uses: "skills.custom_tools:prepare_query_builder_input"

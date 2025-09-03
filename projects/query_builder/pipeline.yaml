@@ -49,12 +49,12 @@ steps:
     name: resolve_cohort_definition
     condition_expression: "not context.scratchpad.get('cohort_definition')"
     branches:
-      true:
+      "true":
         - kind: hitl
           name: get_cohort_definition
           message: "Paste the finalized cohort definition (plain text)."
           updates_context: true
-      false:
+      "false":
         - kind: step
           name: get_cohort_definition
           agent: "flujo.builtins.passthrough"
@@ -65,14 +65,14 @@ steps:
     name: resolve_concept_sets
     condition_expression: "(not context.scratchpad.get('concept_sets')) and (context.scratchpad.get('status') != 'paused')"
     branches:
-      true:
+      "true":
         - kind: hitl
           name: get_concept_sets
           message: |
             Paste the concept sets JSON from the previous step (concept_discovery). Example:
             {"concept_sets": [{"name":"Heart failure","concept_ids":[...],"include_descendants":true,"standard_only":true}]}
           updates_context: true
-      false:
+      "false":
         - kind: step
           name: get_concept_sets
           agent: "flujo.builtins.passthrough"
@@ -84,12 +84,12 @@ steps:
     name: stop_if_parent_paused
     condition_expression: "context.scratchpad.get('status') == 'paused'"
     branches:
-      true:
+      "true":
         - kind: step
           name: noop_query_builder
           agent: "flujo.builtins.passthrough"
           input: "parent_paused"
-      false:
+      "false":
         - kind: step
           name: omop_dataset_id
           agent: "flujo.builtins.passthrough"
@@ -155,7 +155,7 @@ steps:
           name: maybe_fix_sql
           condition_expression: "not steps['dry_run'].success"
           branches:
-            true:
+            "true":
               - kind: step
                 name: fix_sql
                 uses: agents.sql_fixer
@@ -172,7 +172,7 @@ steps:
                 uses: "skills.custom_tools:store_current_sql"
                 input: "{{ steps.fix_sql.output }}"
                 updates_context: true
-            false:
+            "false":
               - kind: step
                 name: no_fix_needed
                 agent: "flujo.builtins.passthrough"
