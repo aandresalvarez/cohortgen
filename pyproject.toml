@@ -37,7 +37,7 @@ packages = ["src/cohortgen"]
 package = true
 
 [tool.uv.sources]
-flujo = { git = "https://github.com/aandresalvarez/flujo.git", rev = "b6a0b6de286bb56d5d7ef30459acb0ae988b9364" }
+flujo = { git = "https://github.com/aandresalvarez/flujo.git", rev = "2a9bf4ca8398815c0c7a4d1361210ffbbf227a20" }
 
 [project.scripts]
 cohortgen = "cohortgen.cli:main"

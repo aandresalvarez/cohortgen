@@ -1,0 +1,261 @@
+version: "0.1"
+name: "omop_concept_resolution"
+
+agents:
+  text_processor:
+    model: "openai:gpt-5-mini"
+    model_settings:
+      openai_reasoning_effort: "medium"
+    system_prompt: |
+      You are a meticulous OMOP concept scout. Review the Athena search payload
+      and pick up to 12 promising candidate concept IDs.
+
+      Ordering rules for `candidate_ids`:
+        1. Exact or very close lexical match to the search term.
+        2. Prefer Standard over Non-standard when equally plausible.
+        3. Vocabulary alignment with the search term's domain.
+        4. Semantic closeness (synonyms, mappings, clinical equivalence).
+        5. Deterministic tie breaker: ascending concept_id.
+
+      Requirements:
+        - Remove duplicates and ignore irrelevant or noisy hits (locations, races,
+          unrelated conditions, staging codes, etc.).
+        - Always explain the reasoning for the ordering in `message` using concise,
+          evidence-based statements. Do not use numeric scores.
+        - Return only integers in `candidate_ids`.
+        - If the Athena response indicates an error or is missing, still produce a best-effort
+          non-empty `candidate_ids` list using domain knowledge of OMOP and common SNOMED standards.
+          Prefer Standard concepts when possible. Never refuse; provide your best single top candidate
+          when uncertain and justify it in `message`.
+
+      Output JSON fields:
+        - `message`: short reasoning summary (mention top candidates explicitly).
+        - `candidate_ids`: ordered list following the rules above.
+  
+    output_schema:
+      type: object
+      additionalProperties: false
+      properties:
+        message:
+          type: string
+        candidate_ids:
+          type: array
+          items:
+            type: integer
+          maxItems: 12
+      required: [message, candidate_ids]
+
+  concept_analyzer_batch:
+    model: "openai:gpt-5-mini"
+    model_settings:
+      openai_reasoning_effort: "medium"
+    system_prompt: |
+      You are an OMOP domain expert evaluating candidate concepts in batches.
+
+      Input format:
+        - Search term with intent notes.
+        - Up to three candidate concept JSON objects. If a `summary` object is present, use it as the
+          primary source of truth for attributes and relationships. Otherwise, rely on `details` and
+          `relationships` fields.
+        - Depth indicators show how many relationship hops away the candidate is.
+
+      For each candidate (preserve input order):
+        - Determine if the concept is Standard (`is_standard`).
+        - Judge whether it correctly represents the search term (`is_correct_for_term`).
+        - Provide explicit reasoning—cite evidence from concept attributes,
+          relationships, and the search term. No numeric scores.
+        - If the concept suggests following relationships (e.g., "Maps to",
+          "Is a"), list new candidate concept_ids in `suggested_new_candidates`.
+          Only include justified, Standard prospects. Deduplicate locally.
+        - Set `relationship_hint` to the key relationship/path you followed.
+
+      Return `decisions` in the exact same order as the input candidates.
+      When a candidate is Non-standard and shows a 'Non-standard to Standard map (OMOP)' relationship,
+      include the mapped Standard concept_id in `suggested_new_candidates` and mention it in `relationship_hint`
+      (e.g., "Maps to SNOMED 4046213").
+
+      Terminate early in your reasoning when you identify a definitive Standard
+      match, but still return structured decisions for every concept in the batch.
+
+    output_schema:
+      type: object
+      additionalProperties: false
+      properties:
+        decisions:
+          type: array
+          maxItems: 3
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              concept_id:
+                type: integer
+              is_standard:
+                type: boolean
+              is_correct_for_term:
+                type: boolean
+              suggested_new_candidates:
+                type: array
+                items:
+                  type: integer
+              relationship_hint:
+                type: string
+              reasoning:
+                type: string
+            required: [concept_id, is_standard, is_correct_for_term, reasoning]
+      required: [decisions]
+
+steps:
+  - kind: step
+    name: search_concepts
+    uses: "skills.custom_tools:search_athena_concepts"
+    input: "{{ context.initial_prompt }}"
+    updates_context: true
+
+  - kind: step
+    name: collect_candidates
+    uses: "agents.text_processor"
+    input: |
+      Search term: {{ context.initial_prompt }}
+      Athena response: {{ steps.search_concepts.output | tojson }}
+    processing:
+      structured_output: openai_json
+      schema:
+        type: object
+        additionalProperties: false
+        properties:
+          message:
+            type: string
+          candidate_ids:
+            type: array
+            items:
+              type: integer
+            maxItems: 12
+        required: [message, candidate_ids]
+    updates_context: false
+
+  - kind: step
+    name: queue_init
+    uses: "skills.custom_tools:queue_init"
+    input: "{{ steps.collect_candidates.output.candidate_ids | tojson }}"
+    updates_context: true
+    config:
+      max_depth: 2
+      max_visits: 50
+      batch_size: 3
+
+  - kind: loop
+    name: resolve_queue
+    loop:
+      max_loops: 60
+      body:
+        - kind: step
+          name: prepare_and_decide_branch
+          uses: "skills.custom_tools:prepare_and_decide_branch"
+          updates_context: true
+
+        - kind: conditional
+          name: process_batch
+          condition_expression: "previous_step.branch_key"
+          branches:
+            process:
+              - kind: step
+                name: fetch_batch
+                uses: "skills.custom_tools:fetch_athena_concept_info_batch"
+                input: "{{ steps.prepare_and_decide_branch.output.ids | tojson }}"
+                config:
+                  timeout: 12
+                  max_retries: 0
+
+              - kind: step
+                name: try_short_circuit
+                uses: "skills.custom_tools:try_short_circuit"
+                input: |
+                  {
+                    "concepts": {{ steps.fetch_batch.output.concepts | tojson }},
+                    "term": {{ context.initial_prompt | tojson }}
+                  }
+                updates_context: true
+
+              - kind: step
+                name: minify_concepts
+                uses: "skills.custom_tools:minify_concepts"
+                input: "{{ steps.fetch_batch.output }}"
+
+              - kind: step
+                name: select_concepts
+                uses: "skills.custom_tools:select_concepts"
+                input: |
+                  {
+                    "minified": {{ steps.minify_concepts.output.concepts | tojson }},
+                    "raw": {{ steps.fetch_batch.output.concepts | tojson }}
+                  }
+
+              - kind: step
+                name: mark_batch_visited
+                uses: "skills.custom_tools:mark_batch_visited"
+                input: "{{ steps.prepare_and_decide_branch.output.ids | tojson }}"
+                updates_context: true
+
+              - kind: step
+                name: analyze_batch
+                uses: "agents.concept_analyzer_batch"
+                input: |
+                  Search term: {{ context.initial_prompt }}
+                  Queue depths: {{ steps.prepare_and_decide_branch.output.depths | tojson }}
+                  Candidate concepts (aligned with the queue order):
+                  {{ steps.select_concepts.output.concepts | tojson }}
+                processing:
+                  structured_output: openai_json
+                  schema:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      decisions:
+                        type: array
+                        maxItems: 3
+                        items:
+                          type: object
+                          additionalProperties: false
+                          properties:
+                            concept_id: { type: integer }
+                            is_standard: { type: boolean }
+                            is_correct_for_term: { type: boolean }
+                            suggested_new_candidates:
+                              type: array
+                              items:
+                                type: integer
+                            relationship_hint: { type: string }
+                            reasoning: { type: string }
+                          required: [concept_id, is_standard, is_correct_for_term, reasoning]
+                    required: [decisions]
+                config:
+                  timeout: 20
+
+              - kind: step
+                name: update_queue
+                uses: "skills.custom_tools:update_queue_from_batch"
+                input: |
+                  {
+                    "ids": {{ steps.prepare_and_decide_branch.output.ids | tojson }},
+                    "depths": {{ steps.prepare_and_decide_branch.output.depths | tojson }},
+                    "concepts": {{ steps.fetch_batch.output.concepts | tojson }},
+                    "decisions": {{ steps.analyze_batch.output.decisions | tojson }}
+                  }
+                updates_context: true
+            exit:
+              - kind: step
+                name: mark_condition_exit
+                uses: "skills.custom_tools:mark_condition_exit"
+                updates_context: true
+          default_branch:
+            - kind: step
+              name: mark_condition_exit
+              uses: "skills.custom_tools:mark_condition_exit"
+              updates_context: true
+
+      exit_expression: "steps.prepare_and_decide_branch.output.EXIT_NOW or previous_step.resolved or (previous_step.queue_state and previous_step.queue_state.resolved) or context._omop_queue_state.resolved or context.queue_state.resolved"
+
+  - kind: step
+    name: finalize_resolution
+    uses: "skills.custom_tools:finalize_resolution"
