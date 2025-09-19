@@ -1,0 +1,1 @@
+TypeMismatchError("Type mismatch: Output of 'process_text' (returns `<class 'flujo.domain.blueprint.model_generator.TextProcessor'>`) is not compatible with 'project_candidate_ids' (expects `typing.Dict[str, typing.Any]`). For best results, use a static type checker like mypy to catch these issues before runtime.")
