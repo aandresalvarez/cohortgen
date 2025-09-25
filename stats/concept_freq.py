@@ -57,3 +57,5 @@ def generate_concept_frequency_sql(schema: str, cohort_table: str, min_persons: 
     ORDER BY cc.domain, cc.person_count DESC
     """
     return final_sql.strip()
+
+## this function pulls the most common concepts from each domain for a given cohort
