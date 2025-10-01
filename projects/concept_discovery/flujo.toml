@@ -1,7 +1,7 @@
 # Flujo project configuration template
 
-# Use an in-memory state backend by default for new projects
-state_uri = "memory://"
+# Use SQLite for persistent state and trace storage
+state_uri = "sqlite:///.flujo/flujo_ops.db"
 
 # Load environment variables (API keys, etc.) from this file.
 # Copy `.env.example` to `.env`, fill your keys, or change this path.
