@@ -193,10 +193,11 @@ async def execute_athena_tool(payload: Dict[str, Any] | str, *, context: Pipelin
     return {"scratchpad": {"exploration_history": hist}}
 
 
-async def store_as_concept_sets(data: Dict[str, Any] | str | object) -> Dict[str, Any]:
+async def store_as_concept_sets(data: Dict[str, Any] | str | object, *, context: PipelineContext) -> Dict[str, Any]:
     """Store concept sets into scratchpad.concept_sets.
 
     Accepts a dict or JSON string from a previous summarizer/normalizer step.
+    If data is None or empty, falls back to using current concept_sets from context.
     """
     parsed: Dict[str, Any]
     if data is None:
@@ -216,7 +217,69 @@ async def store_as_concept_sets(data: Dict[str, Any] | str | object) -> Dict[str
                 parsed = {"concept_sets": []}
         except Exception:
             parsed = {"concept_sets": []}
+    
+    # FALLBACK: If agent returned empty final_sets, use current candidates from context
+    if not parsed.get("concept_sets"):
+        sp = getattr(context, "scratchpad", {})
+        current_sets = sp.get("concept_sets", [])
+        
+        if isinstance(current_sets, list) and len(current_sets) > 0:
+            # Convert current candidates to final format
+            final_sets = []
+            for cs in current_sets:
+                if not isinstance(cs, dict):
+                    continue
+                
+                candidates = cs.get("candidates", [])
+                # Filter to keep only good candidates (standard SNOMED concepts)
+                included = []
+                for cand in candidates:
+                    if isinstance(cand, dict):
+                        # Keep if it's a standard SNOMED concept
+                        if (cand.get("vocabulary_id") == "SNOMED" and 
+                            cand.get("standard_concept") == "S"):
+                            included.append({
+                                "concept_id": cand.get("concept_id"),
+                                "concept_name": cand.get("concept_name"),
+                                "domain_id": cand.get("domain_id"),
+                                "vocabulary_id": cand.get("vocabulary_id"),
+                                "standard_concept": cand.get("standard_concept"),
+                                "concept_code": cand.get("concept_code")
+                            })
+                
+                if included:  # Only include sets with valid concepts
+                    final_sets.append({
+                        "name": cs.get("name", "Unnamed Set"),
+                        "included_concepts": included,
+                        "excluded_concepts": []
+                    })
+            
+            if final_sets:
+                parsed = {"concept_sets": final_sets}
     return {"scratchpad": {"concept_sets": parsed}}
+
+
+async def format_final_output(data: Dict[str, Any] | str | object) -> Dict[str, Any]:
+    """Format final concept sets for output.
+    
+    Ensures output is in proper ATLAS-compatible JSON format.
+    """
+    if isinstance(data, dict):
+        # If it's already properly formatted, return as-is
+        if "concept_sets" in data:
+            return data
+        # If it's wrapped, unwrap it
+        return data
+    elif isinstance(data, str):
+        try:
+            loaded = json.loads(data)
+            if isinstance(loaded, dict):
+                return loaded
+        except Exception:
+            pass
+    
+    # Fallback to empty structure
+    return {"concept_sets": []}
 
 
 async def summarize_candidate_counts(data: Dict[str, Any] | str | object) -> str:

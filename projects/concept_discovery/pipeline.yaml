@@ -54,21 +54,22 @@ agents:
       - `athena_relationships`: To explore how concepts are connected (e.g., 'Maps to', 'Is a'). Use this to find standard concepts from non-standard ones.
       
       CRITICAL REQUIREMENTS:
-      1. **ALWAYS verify candidate quality first**: On your first turn, you MUST use `athena_details` to inspect at least 2-3 candidates per concept set.
-      2. **Check for quality issues**: Look for non-standard concepts, wrong domains, irrelevant matches, or missing key subtypes.
-      3. **Validate relationships**: Use `athena_relationships` to check if candidates have the correct hierarchies (parents/children).
-      4. **Only finish when confident**: You should perform AT LEAST 2-3 exploration actions before finishing. DO NOT finish on the first turn unless the current_sets are completely empty.
+      1. **Quick validation**: On your first turn, examine 1-2 key candidates using `athena_details` to verify they are standard SNOMED concepts.
+      2. **Fast decision**: After 1-2 quality checks, you should be ready to finish. DO NOT over-explore.
+      3. **Finish quickly**: If candidates look reasonable (standard SNOMED, correct domain, relevant names), call `finish` immediately.
+      4. **Maximum 3 actions**: You should finish within 3 tool calls maximum. Exploration is optional if initial candidates look good.
       
       Strategy:
-      1. **First turn**: ALWAYS start by examining candidates with `athena_details` to understand what was found.
-      2. **Analyze gaps**: Identify non-standard concepts, wrong vocabularies, irrelevant matches, or missing important subtypes.
-      3. **Explore relationships**: Use `athena_relationships` to find better mappings or verify hierarchies.
-      4. **Decide when done**: Only call `finish` after you've performed quality checks and the concepts are comprehensive and correct.
+      1. **First turn**: Quickly check 1-2 candidates with `athena_details`. If they are standard SNOMED and relevant, prepare to finish.
+      2. **Second turn (optional)**: Only if you found serious issues (non-standard, wrong domain), use one more tool to investigate.
+      3. **Finish**: After 1-2 checks, call `finish` and provide all valid candidates in final_sets.
+      4. **DO NOT OVER-EXPLORE**: The initial search already found good candidates. Your job is to validate and finish quickly.
       
       Output ONLY JSON with the schema: {"action": "tool" | "finish", "tool_name": str?, "tool_input": object?, "final_sets": object?}.
-      - If action is "tool", provide `tool_name` and `tool_input`.
-      - If action is "finish", provide the complete `final_sets` with all concept sets and their final candidates.
-      - The `final_sets` must have the structure: {"concept_sets": [{"name": str, "included_concepts": [...], "excluded_concepts": [...]}]}
+      - If action is "tool", provide `tool_name` and `tool_input`. Set `final_sets` to null.
+      - If action is "finish", you MUST provide the complete `final_sets` with all concept sets and their candidates.
+      - The `final_sets` structure is REQUIRED when finishing: {"concept_sets": [{"name": str, "included_concepts": [{concept_id, concept_name, domain_id, vocabulary_id, standard_concept, concept_code}, ...], "excluded_concepts": []}]}
+      - CRITICAL: When you decide to finish, you MUST copy all valid candidates from current_sets into final_sets.included_concepts. DO NOT return null or empty final_sets.
     tools:
       - "skills.athena_tools:athena_search"
       - "skills.athena_tools:athena_details"
@@ -76,10 +77,20 @@ agents:
     output_schema:
       type: object
       properties:
-        action: { type: string, enum: [tool, finish] }
-        tool_name: { type: string }
-        tool_input: { type: object }
-        final_sets: { type: object }
+        action: 
+          type: string
+          enum: [tool, finish]
+        tool_name:
+          type: string
+          nullable: true
+        tool_input:
+          oneOf:
+            - type: object
+            - type: "null"
+        final_sets:
+          oneOf:
+            - type: object
+            - type: "null"
       required: [action]
 
 steps:
@@ -141,7 +152,7 @@ steps:
                 agent: "flujo.builtins.passthrough"
       
       exit_expression: "steps['decide_next_action'].action == 'finish'"
-      max_loops: 15
+      max_loops: 5
 
   - kind: step
     name: store_concept_sets
@@ -151,5 +162,5 @@ steps:
 
   - kind: step
     name: emit_for_parent
-    agent: "flujo.builtins.passthrough"
-    input: "{{ context.scratchpad.concept_sets | tojson }}"
+    uses: "skills.custom_tools:format_final_output"
+    input: "{{ context.scratchpad.concept_sets }}"
