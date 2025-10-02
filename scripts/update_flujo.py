@@ -23,9 +23,9 @@ def get_latest_commit(repo: str, ref: str) -> str:
 
 def update_pyproject_rev(pyproject: Path, new_sha: str) -> bool:
     text = pyproject.read_text()
-    # Match the flujo source line and capture current rev
+    # Match the flujo source line and capture current rev (can be branch name or SHA)
     pattern = re.compile(
-        r"^(\s*flujo\s*=\s*\{[^\n}]*rev\s*=\s*\")([0-9a-f]{40})(\"[^\n}]*\}\s*)$",
+        r"^(\s*flujo\s*=\s*\{[^\n}]*rev\s*=\s*\")([^\"]+)(\"[^\n}]*\}\s*)$",
         re.MULTILINE,
     )
     m = pattern.search(text)

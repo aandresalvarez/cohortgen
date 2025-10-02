@@ -8,7 +8,7 @@ install: update-flujo sync
 # Update Flujo pin in pyproject.toml to latest commit on main
 update-flujo:
 	@echo "Updating Flujo revision to latest main..."
-	@uv run python scripts/update_flujo.py 2>/dev/null || python3 scripts/update_flujo.py 2>/dev/null || python scripts/update_flujo.py
+	@uv run python scripts/update_flujo.py
 
 # Sync dependencies using uv (creates .venv if missing)
 sync:
