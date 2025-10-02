@@ -286,7 +286,10 @@ async def summarize_candidate_counts(data: Dict[str, Any] | str | object) -> str
     """Summarize candidate counts per concept set, flagging empty sets.
 
     Accepts the output of athena_search_for_concept_plan / athena_expand_candidates /
-    smart expansion: {"concept_sets": [{"name":..., "candidates":[{...}], ...}]}
+    smart expansion. Handles both formats:
+    - {"concept_sets": [...]} (direct format)
+    - {"scratchpad": {"concept_sets": [...]}} (Flujo context format)
+    
     Returns a human-readable string.
     """
     # Normalize input to dict
@@ -307,7 +310,14 @@ async def summarize_candidate_counts(data: Dict[str, Any] | str | object) -> str
         except Exception:
             payload = {"data": str(data)}
 
-    sets = payload.get("concept_sets") if isinstance(payload, dict) else None
+    # Handle both direct and scratchpad-wrapped formats
+    if isinstance(payload, dict):
+        if "scratchpad" in payload and isinstance(payload["scratchpad"], dict):
+            sets = payload["scratchpad"].get("concept_sets")
+        else:
+            sets = payload.get("concept_sets")
+    else:
+        sets = None
     if not isinstance(sets, list):
         return "No concept sets available for summary."
 
