@@ -82,6 +82,22 @@ def _retry(call, *args, attempts: int = 3, delay: float = 0.5, backoff: float = 
 
 
 def athena_search_for_concept_plan(plan: Union[str, Dict[str, Any]], top_k: int = 10) -> Dict[str, Any]:
+    """Search ATHENA for concepts matching a concept plan.
+    
+    Args:
+        plan: Concept plan with structure {"concept_sets": [...]}, or JSON string
+        top_k: Maximum candidates to return per query
+        
+    Returns:
+        Dict with structure {"scratchpad": {"concept_sets": [...]}}
+        This format is designed for Flujo pipelines with updates_context: true.
+        Each concept set includes:
+        - name: Concept set name
+        - candidates: List of matching concepts
+        - include_descendants: Whether to include descendants
+        - standard_only: Whether to filter to standard concepts only
+        - notes: Intent/description
+    """
     if isinstance(plan, str):
         try:
             plan_obj = json.loads(plan)
@@ -147,7 +163,8 @@ def athena_search_for_concept_plan(plan: Union[str, Dict[str, Any]], top_k: int 
                 "notes": item.get("intent") or "",
             }
         )
-    return {"concept_sets": out_sets}
+    # Return in scratchpad format for proper context storage when updates_context: true
+    return {"scratchpad": {"concept_sets": out_sets}}
 
 
 # === Minimal tool surface for the concept_refiner agent ===
