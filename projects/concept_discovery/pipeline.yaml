@@ -8,7 +8,7 @@ agents:
   concept_decomposer:
     model: "openai:gpt-5-mini"
     model_settings:
-      openai_reasoning_effort: "medium"
+      reasoning: { effort: "medium" }
     timeout: 120
     max_retries: 1
     system_prompt: |
@@ -40,7 +40,7 @@ agents:
   concept_explorer_agent:
     model: "openai:gpt-5-mini"
     model_settings:
-      openai_reasoning_effort: "medium"
+      reasoning: { effort: "medium" }
     timeout: 180
     max_retries: 1
     system_prompt: |
@@ -76,26 +76,34 @@ agents:
       required: [action]
 
 steps:
-  - name: parse_initial_payload
+  - kind: step
+    name: parse_initial_payload
     uses: "skills.custom_tools:parse_initial_payload"
     input: "{{ context.initial_prompt }}"
     updates_context: true
 
-  - name: decompose_concept_sets
+  - kind: step
+    name: decompose_concept_sets
     uses: agents.concept_decomposer
     input: "{{ context.scratchpad.cohort_definition }}"
-    updates_context: true
 
-  - name: search_initial_candidates
+  - kind: step
+    name: normalize_concept_plan
+    uses: "skills.custom_tools:ensure_concept_plan_dict"
+    input: "{{ previous_step }}"
+
+  - kind: step
+    name: search_initial_candidates
     uses: "skills.athena_tools:athena_search_for_concept_plan"
-    input: "{{ previous_step.output | tojson }}"
+    input: "{{ previous_step }}"
     updates_context: true
 
   - kind: loop
     name: exploration_loop
     loop:
       body:
-        - name: decide_next_action
+        - kind: step
+          name: decide_next_action
           uses: agents.concept_explorer_agent
           input: |
             Cohort Definition: {{ context.scratchpad.cohort_definition }}
@@ -109,7 +117,8 @@ steps:
           condition_expression: "previous_step.action == 'tool'"
           branches:
             "true":
-              - name: execute_tool
+              - kind: step
+                name: execute_tool
                 uses: "skills.custom_tools:execute_athena_tool"
                 input: "{{ steps.decide_next_action.output }}"
                 updates_context: true
@@ -121,11 +130,13 @@ steps:
       exit_expression: "steps['decide_next_action'].action == 'finish'"
       max_loops: 15
 
-  - name: store_concept_sets
+  - kind: step
+    name: store_concept_sets
     uses: "skills.custom_tools:store_as_concept_sets"
     input: "{{ steps.decide_next_action.output.final_sets }}"
     updates_context: true
 
-  - name: emit_for_parent
+  - kind: step
+    name: emit_for_parent
     agent: "flujo.builtins.passthrough"
     input: "{{ context.scratchpad.concept_sets | tojson }}"

@@ -131,15 +131,19 @@ async def parse_initial_payload(initial: Any) -> Dict[str, Any]:
     return {"scratchpad": sp}
 
 
-async def execute_athena_tool(payload: Dict[str, Any], *, context: PipelineContext) -> Dict[str, Any]:
+async def execute_athena_tool(payload: Dict[str, Any] | str, *, context: PipelineContext) -> Dict[str, Any]:
     """Execute a chosen Athena tool and log to exploration_history.
 
     Expects payload like {"tool_name": str, "tool_input": {...}}
+    Accepts dict or JSON string for flexibility.
     """
     from . import athena_tools  # local import
 
-    tool_name = payload.get("tool_name")
-    tool_input = payload.get("tool_input")
+    # Normalize input to dict
+    data = await ensure_dict(payload)
+    
+    tool_name = data.get("tool_name")
+    tool_input = data.get("tool_input")
     result: Dict[str, Any]
     if not tool_name or not hasattr(athena_tools, tool_name):
         result = {"success": False, "error": f"Tool '{tool_name}' not found."}
