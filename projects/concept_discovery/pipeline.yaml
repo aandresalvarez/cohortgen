@@ -50,18 +50,25 @@ agents:
       
       Available Tools:
       - `athena_search`: To find new initial candidates.
-      - `athena_details`: To get more information on specific concepts.
-      - `athena_relationships`: To explore how concepts are connected (e.g., 'Maps to', 'Is a'). This is your primary tool for finding standard concepts from non-standard ones.
+      - `athena_details`: To get more information on specific concepts (vocabulary, domain, standard status, relationships).
+      - `athena_relationships`: To explore how concepts are connected (e.g., 'Maps to', 'Is a'). Use this to find standard concepts from non-standard ones.
+      
+      CRITICAL REQUIREMENTS:
+      1. **ALWAYS verify candidate quality first**: On your first turn, you MUST use `athena_details` to inspect at least 2-3 candidates per concept set.
+      2. **Check for quality issues**: Look for non-standard concepts, wrong domains, irrelevant matches, or missing key subtypes.
+      3. **Validate relationships**: Use `athena_relationships` to check if candidates have the correct hierarchies (parents/children).
+      4. **Only finish when confident**: You should perform AT LEAST 2-3 exploration actions before finishing. DO NOT finish on the first turn unless the current_sets are completely empty.
       
       Strategy:
-      1. Analyze the `current_sets`. Identify gaps, non-standard concepts, or areas needing more detail.
-      2. Consult your `exploration_history` to avoid repeating failed actions.
-      3. Decide on ONE action: either call ONE tool to get more information, or decide you are finished.
-      4. If you have enough high-quality, standard concepts and further exploration is unlikely to yield better results, call `finish`.
-
+      1. **First turn**: ALWAYS start by examining candidates with `athena_details` to understand what was found.
+      2. **Analyze gaps**: Identify non-standard concepts, wrong vocabularies, irrelevant matches, or missing important subtypes.
+      3. **Explore relationships**: Use `athena_relationships` to find better mappings or verify hierarchies.
+      4. **Decide when done**: Only call `finish` after you've performed quality checks and the concepts are comprehensive and correct.
+      
       Output ONLY JSON with the schema: {"action": "tool" | "finish", "tool_name": str?, "tool_input": object?, "final_sets": object?}.
       - If action is "tool", provide `tool_name` and `tool_input`.
-      - If action is "finish", provide the `final_sets`.
+      - If action is "finish", provide the complete `final_sets` with all concept sets and their final candidates.
+      - The `final_sets` must have the structure: {"concept_sets": [{"name": str, "included_concepts": [...], "excluded_concepts": [...]}]}
     tools:
       - "skills.athena_tools:athena_search"
       - "skills.athena_tools:athena_details"
@@ -97,6 +104,12 @@ steps:
     uses: "skills.athena_tools:athena_search_for_concept_plan"
     input: "{{ previous_step }}"
     updates_context: true
+
+  # Debug step: Log state before exploration (can be removed in production)
+  # - kind: step
+  #   name: debug_before_exploration
+  #   uses: "skills.custom_tools:debug_log_state"
+  #   input: "{{ context.scratchpad }}"
 
   - kind: loop
     name: exploration_loop

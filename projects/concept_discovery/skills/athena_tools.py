@@ -147,7 +147,8 @@ def athena_search_for_concept_plan(plan: Union[str, Dict[str, Any]], top_k: int 
                 "notes": item.get("intent") or "",
             }
         )
-    return {"concept_sets": out_sets}
+    # Return in scratchpad format for proper context storage when updates_context: true
+    return {"scratchpad": {"concept_sets": out_sets}}
 
 
 # === Minimal tool surface for the concept_refiner agent ===

@@ -62,6 +62,35 @@ async def wrap_in_scratchpad(data: Any, *, key: str = "value") -> Dict[str, Any]
     return {"scratchpad": {key: data}}
 
 
+async def debug_log_state(data: Any, *, context: PipelineContext) -> Dict[str, Any]:
+    """Debug helper to log current pipeline state.
+    
+    Returns the data unchanged but prints debug information about context.
+    """
+    import sys
+    
+    sp = getattr(context, "scratchpad", {})
+    concept_sets = sp.get("concept_sets", [])
+    exploration_history = sp.get("exploration_history", [])
+    
+    print("=" * 80, file=sys.stderr)
+    print("🔍 DEBUG: Current Pipeline State", file=sys.stderr)
+    print(f"  Concept Sets Count: {len(concept_sets) if isinstance(concept_sets, list) else 'N/A'}", file=sys.stderr)
+    print(f"  Exploration History Length: {len(exploration_history) if isinstance(exploration_history, list) else 'N/A'}", file=sys.stderr)
+    
+    if isinstance(concept_sets, list):
+        for i, cs in enumerate(concept_sets):
+            if isinstance(cs, dict):
+                name = cs.get("name", "unknown")
+                candidates = cs.get("candidates", [])
+                print(f"    Set {i+1}: {name} - {len(candidates) if isinstance(candidates, list) else 0} candidates", file=sys.stderr)
+    
+    print("=" * 80, file=sys.stderr)
+    
+    # Pass through the data unchanged
+    return data if isinstance(data, dict) else {"data": data}
+
+
 async def parse_initial_payload(initial: Any) -> Dict[str, Any]:
     if initial is None:
         return {"scratchpad": {"exploration_history": []}}
@@ -246,3 +275,201 @@ async def summarize_candidate_counts(data: Dict[str, Any] | str | object) -> str
     if zeros:
         lines.append(f"\nNote: {zeros} concept set(s) are empty. Consider adding terms or enabling deeper search.")
     return "\n".join(lines)
+
+
+# ============================================================================
+# PIPELINE V2: Helper functions for modular validation architecture
+# ============================================================================
+
+async def aggregate_validation_results(
+    concept_sets: List[Dict[str, Any]], validations: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """Aggregate validation results from parallel concept set validations.
+    
+    Combines individual validation scores and issues into a summary.
+    Stores in scratchpad.validation_summary for decision making.
+    """
+    if not isinstance(validations, list):
+        validations = [validations] if validations else []
+    
+    if not isinstance(concept_sets, list):
+        concept_sets = []
+    
+    # Calculate aggregate metrics
+    total_sets = len(validations)
+    if total_sets == 0:
+        return {
+            "scratchpad": {
+                "validation_summary": {
+                    "average_quality": 0,
+                    "total_sets": 0,
+                    "ready_to_finalize": False,
+                    "details": []
+                }
+            }
+        }
+    
+    scores = []
+    all_issues = []
+    details = []
+    
+    for i, validation in enumerate(validations):
+        if not isinstance(validation, dict):
+            continue
+            
+        score = validation.get("quality_score", 0)
+        issues = validation.get("issues", [])
+        recommendations = validation.get("recommendations", "")
+        
+        scores.append(score)
+        all_issues.extend(issues)
+        
+        # Get corresponding concept set name
+        set_name = concept_sets[i].get("name", f"Set {i+1}") if i < len(concept_sets) else f"Set {i+1}"
+        
+        details.append({
+            "name": set_name,
+            "quality_score": score,
+            "issues": issues,
+            "recommendations": recommendations,
+            "exclude_concepts": validation.get("exclude_concepts", []),
+            "missing_concepts": validation.get("missing_concepts", [])
+        })
+    
+    avg_quality = sum(scores) / len(scores) if scores else 0
+    ready = avg_quality >= 8 and len(all_issues) == 0
+    
+    return {
+        "scratchpad": {
+            "validation_summary": {
+                "average_quality": round(avg_quality, 2),
+                "total_sets": total_sets,
+                "ready_to_finalize": ready,
+                "all_issues": all_issues,
+                "details": details
+            }
+        }
+    }
+
+
+async def apply_concept_refinements(
+    concept_sets: List[Dict[str, Any]], validations: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Apply refinements based on validation feedback.
+    
+    Removes exclude_concepts and marks missing_concepts for addition.
+    """
+    if not isinstance(concept_sets, list):
+        concept_sets = []
+    
+    if not isinstance(validations, dict):
+        validations = {}
+    
+    details = validations.get("details", [])
+    refined_sets = []
+    
+    for i, concept_set in enumerate(concept_sets):
+        if i >= len(details):
+            refined_sets.append(concept_set)
+            continue
+        
+        validation = details[i]
+        exclude_ids = set(validation.get("exclude_concepts", []))
+        
+        # Filter out excluded candidates
+        candidates = concept_set.get("candidates", [])
+        filtered_candidates = [
+            c for c in candidates
+            if c.get("concept_id") not in exclude_ids
+        ]
+        
+        refined_set = {
+            **concept_set,
+            "candidates": filtered_candidates,
+            "refinement_applied": True,
+            "excluded_count": len(candidates) - len(filtered_candidates)
+        }
+        
+        refined_sets.append(refined_set)
+    
+    return {
+        "scratchpad": {
+            "concept_sets": refined_sets
+        }
+    }
+
+
+async def increment_counter(current: int) -> Dict[str, Any]:
+    """Increment a counter value. Used for tracking refinement iterations."""
+    return {
+        "scratchpad": {
+            "refinement_count": (current if isinstance(current, int) else 0) + 1
+        }
+    }
+
+
+async def extract_concept_sets_for_map(data: Any, *, context: PipelineContext) -> List[Dict[str, Any]]:
+    """Extract concept_sets from context.scratchpad for use in map steps.
+    
+    Returns the list directly (not wrapped in scratchpad) so map can iterate over it.
+    The data parameter is ignored - we always read from context.
+    """
+    sp = getattr(context, "scratchpad", {})
+    concept_sets = sp.get("concept_sets", [])
+    
+    if not isinstance(concept_sets, list):
+        return []
+    
+    return concept_sets
+
+
+async def finalize_concept_sets(
+    concept_sets: List[Dict[str, Any]], validations: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Convert validated concept sets into final OHDSI-compatible format.
+    
+    Output format matches ATLAS concept set structure:
+    {
+      "concept_sets": [
+        {
+          "name": str,
+          "included_concepts": [{concept_id, concept_name, domain_id, ...}],
+          "excluded_concepts": []
+        }
+      ]
+    }
+    """
+    if not isinstance(concept_sets, list):
+        concept_sets = []
+    
+    final_sets = []
+    
+    for concept_set in concept_sets:
+        name = concept_set.get("name", "Unnamed Set")
+        candidates = concept_set.get("candidates", [])
+        
+        # Convert candidates to included_concepts format
+        included = []
+        for cand in candidates:
+            included.append({
+                "concept_id": cand.get("concept_id"),
+                "concept_name": cand.get("concept_name"),
+                "domain_id": cand.get("domain_id"),
+                "vocabulary_id": cand.get("vocabulary_id"),
+                "standard_concept": cand.get("standard_concept"),
+                "concept_code": cand.get("concept_code")
+            })
+        
+        final_sets.append({
+            "name": name,
+            "included_concepts": included,
+            "excluded_concepts": []  # Could be populated from validation if needed
+        })
+    
+    return {
+        "scratchpad": {
+            "final_concept_sets": {
+                "concept_sets": final_sets
+            }
+        }
+    }

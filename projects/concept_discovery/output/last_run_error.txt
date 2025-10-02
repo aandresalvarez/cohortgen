@@ -1,0 +1,1 @@
+TypeMismatchError("Type mismatch: Output of 'search_initial_candidates' (returns `<class 'dict'>`) is not compatible with 'prepare_for_validation' (expects `<class 'flujo.domain.models.PipelineContext'>`). For best results, use a static type checker like mypy to catch these issues before runtime.")
