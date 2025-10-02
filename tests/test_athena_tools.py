@@ -98,8 +98,10 @@ def test_athena_search_for_concept_plan_filters_and_limits(monkeypatch):
 
     out = athena_tools.athena_search_for_concept_plan(plan, top_k=2)
 
-    assert "concept_sets" in out and len(out["concept_sets"]) == 1
-    cs = out["concept_sets"][0]
+    # Function now returns scratchpad format for Flujo context updates
+    assert "scratchpad" in out and "concept_sets" in out["scratchpad"]
+    assert len(out["scratchpad"]["concept_sets"]) == 1
+    cs = out["scratchpad"]["concept_sets"][0]
     # Enforces top_k limit
     assert len(cs["candidates"]) <= 2
     # Ensure only domain+vocab-matching and standard-only (S or C) make it through
@@ -161,7 +163,8 @@ def test_athena_search_accepts_camel_case_and_bools(monkeypatch):
         ]
     }
     out = athena_tools.athena_search_for_concept_plan(plan, top_k=5)
-    cs = out["concept_sets"][0]
+    # Function now returns scratchpad format for Flujo context updates
+    cs = out["scratchpad"]["concept_sets"][0]
     assert len(cs["candidates"]) == 1
     c = cs["candidates"][0]
     assert c["concept_id"] == 10
