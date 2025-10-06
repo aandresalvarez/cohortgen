@@ -271,22 +271,29 @@ def get_run_display(run_id: Optional[str]) -> Tuple[str, bool]:
     return "\n".join(output), stage4_complete
 
 
-def update_display_and_dashboard(run_id, auto_load=True):
-    """Update run display and auto-load dashboard if Stage 4 complete (first time only)."""
+def update_display_and_dashboard(run_id):
+    """Update run display and auto-load dashboard if Stage 4 complete."""
     display_text, stage4_complete = get_run_display(run_id)
     
-    # Auto-load dashboard data if Stage 4 is complete and auto_load is True
-    if stage4_complete and run_id and auto_load:
+    # Auto-load dashboard data if Stage 4 is complete
+    if stage4_complete and run_id:
         dashboard_data = load_stage4_dashboard(run_id)
         return (display_text, gr.update(visible=True, open=True)) + dashboard_data
-    elif stage4_complete and run_id:
-        # Stage 4 complete but don't auto-load (timer refresh)
-        empty_df = pd.DataFrame()
-        return (display_text, gr.update(visible=True, open=True)) + ("", "", "", "", empty_df, empty_df, empty_df, empty_df, empty_df, "")
     else:
         # Return empty dashboard data when not visible
         empty_df = pd.DataFrame()
         return (display_text, gr.update(visible=False)) + ("", "", "", "", empty_df, empty_df, empty_df, empty_df, empty_df, "")
+
+
+def update_display_only(run_id):
+    """Update ONLY run display and accordion visibility (for timer refresh)."""
+    display_text, stage4_complete = get_run_display(run_id)
+    
+    # Only update visibility, don't touch dashboard data
+    if stage4_complete:
+        return display_text, gr.update(visible=True, open=True)
+    else:
+        return display_text, gr.update(visible=False)
 
 
 def format_sql(sql_text: str) -> str:
@@ -1079,7 +1086,7 @@ with gr.Blocks(
         return None
 
     runs_table.select(select_run, outputs=selected_run_id).then(
-        lambda run_id: update_display_and_dashboard(run_id, auto_load=True),
+        update_display_and_dashboard,
         inputs=selected_run_id,
         outputs=[
             run_display,
@@ -1305,27 +1312,14 @@ with gr.Blocks(
         outputs=stage4_output,
     )
 
-    # Auto-refresh runs list and run display (but NOT dashboard data)
+    # Auto-refresh runs list and run display ONLY (dashboard data untouched)
     refresh_timer.tick(
         lambda: get_runs_list(),
         outputs=runs_table,
     ).then(
-        lambda run_id: update_display_and_dashboard(run_id, auto_load=False),
+        update_display_only,
         inputs=selected_run_id,
-        outputs=[
-            run_display,
-            analytics_dashboard_accordion,
-            stage4_summary_cards_main,
-            stage4_quick_stats_main,
-            stage4_quality_main,
-            stage4_insights_main,
-            stage4_gender_chart_main,
-            stage4_age_chart_main,
-            stage4_year_chart_main,
-            stage4_monthly_chart_main,
-            stage4_characteristics_table_main,
-            stage4_output_main,
-        ],
+        outputs=[run_display, analytics_dashboard_accordion],
     )
 
 
