@@ -182,14 +182,14 @@ class FinalConceptSets(BaseModel):
 # Agents
 # ============================================================================
 
-# Phase 2C: Use faster model for decomposition (3-5x faster, 90-95% accuracy)
-DECOMPOSER_MODEL = os.getenv("DECOMPOSER_MODEL", "gpt-3.5-turbo")
+# Phase 2C: Use gpt-5-mini for decomposition (faster than gpt-5, good quality)
+DECOMPOSER_MODEL = os.getenv("DECOMPOSER_MODEL", "gpt-5-mini")
 
 # Decomposer Agent: Breaks down cohort definition into concept sets
 decomposer_agent = Agent(  # type: ignore[call-overload]
     f"openai:{DECOMPOSER_MODEL}",
     output_type=ConceptPlan,
-    model_settings={},  # No reasoning for gpt-3.5-turbo
+    model_settings={"reasoning": {"effort": "medium"}},
     system_prompt="""
 You are an expert OMOP/ATLAS cohort designer.
 
@@ -220,13 +220,13 @@ Output a valid ConceptPlan with concrete, actionable concept sets.
 )
 
 # Candidate Aggregator Agent: Intelligently selects candidate IDs from ATHENA search results
-# Phase 2C: Use faster model for candidate aggregation
-AGGREGATOR_MODEL = os.getenv("AGGREGATOR_MODEL", "gpt-3.5-turbo")
+# Phase 2C: Use gpt-5-mini for candidate aggregation
+AGGREGATOR_MODEL = os.getenv("AGGREGATOR_MODEL", "gpt-5-mini")
 
 candidate_aggregator_agent = Agent(  # type: ignore[call-overload]
     f"openai:{AGGREGATOR_MODEL}",
     output_type=CandidateSelection,
-    model_settings={},  # No reasoning for gpt-3.5-turbo
+    model_settings={"reasoning": {"effort": "medium"}},
     system_prompt="""
 You are a meticulous OMOP concept scout. Review the Athena search payload
 and pick up to 12 promising candidate concept IDs.
