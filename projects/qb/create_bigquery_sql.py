@@ -152,7 +152,7 @@ CRITICAL RULES:
    - Table not found → Verify project.dataset.table path
    - Type mismatch → Cast or convert as needed
    - Syntax error → Follow BigQuery Standard SQL syntax
-5. **Preserve logic**: Only change what's needed to fix the error
+6. **Preserve logic**: Only change what's needed to fix the error
 6. **Output format**: SQL ONLY (no markdown, no explanations, no code blocks)
 
 Example fix:
