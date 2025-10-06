@@ -60,7 +60,7 @@ class SQLGenerationResult(BaseModel):
 
 # SQL Generator Agent
 sql_generator_agent = Agent(  # type: ignore[call-overload]
-    "openai:gpt-5-mini",
+    "openai:gpt-5",
     output_type=str,
     model_settings={"reasoning": {"effort": "medium"}},
     system_prompt="""
@@ -118,27 +118,33 @@ OUTPUT FORMAT:
 
 # SQL Fixer Agent
 sql_fixer_agent = Agent(  # type: ignore[call-overload]
-    "openai:gpt-5-mini",
+    "openai:gpt-5",  # Use more powerful model for fixing
     output_type=str,
     model_settings={"reasoning": {"effort": "medium"}},
     system_prompt="""
-You fix BigQuery Standard SQL queries.
+You are an expert BigQuery SQL debugger specializing in OMOP CDM schemas.
 
-Given:
-- Original SQL
-- BigQuery dry-run error message
+Your task: Fix BigQuery Standard SQL based on the exact error message provided.
 
-Task:
-- Return corrected SQL that resolves the error
-- Preserve the original logic and intent
-- Keep all project.dataset prefixes
-- Maintain OMOP CDM field names
+CRITICAL RULES:
+1. **Read the error carefully** - BigQuery errors are precise (e.g., "Name procedure_date not found at [57:12]")
+2. **Use ONLY columns from provided schema** - Do NOT guess or invent column names
+3. **Common OMOP schema variations**:
+   - Some datasets have typos (e.g., "procedure_dat" instead of "procedure_date")
+   - Date columns might be DATE or DATETIME type
+   - Always check the schema for exact column names
+4. **Fix strategies**:
+   - Column not found → Check schema, use correct column name
+   - Table not found → Verify project.dataset.table path
+   - Type mismatch → Cast or convert as needed
+   - Syntax error → Follow BigQuery Standard SQL syntax
+5. **Preserve logic**: Only change what's needed to fix the error
+6. **Output format**: SQL ONLY (no markdown, no explanations, no code blocks)
 
-RULES:
-- Only output SQL (no markdown, no explanations)
-- Do not remove table qualifiers
-- Do not change the query logic unless needed to fix the error
-- If the error is about missing tables, verify the project.dataset path is correct
+Example fix:
+Error: "Name procedure_date not found"
+Schema shows: procedure_dat, procedure_datetime
+Fix: Replace procedure_date with procedure_datetime (or CAST(procedure_dat AS DATE))
 """,
 )
 
@@ -153,7 +159,7 @@ def run_bigquery_sql_generation(
     omop_dataset: str = "bigquery-public-data.cms_synthetic_patient_data_omop",
     project_id: Optional[str] = None,
     location: str = "US",
-    max_fix_iterations: int = 3,
+    max_fix_iterations: int = 5,
 ) -> SQLGenerationResult:
     """
     Generate and validate BigQuery SQL for OMOP cohort definition.
@@ -172,11 +178,102 @@ def run_bigquery_sql_generation(
     print("\n" + "=" * 70)
     print("STAGE 3: BIGQUERY SQL GENERATION")
     print("=" * 70)
+    
+    # Step 0: Discover available tables and their schemas
+    print("\n[Step 0] Discovering available OMOP tables and schemas...")
+    try:
+        from google.cloud import bigquery
+        client = bigquery.Client(project=project_id, location=location)
+        
+        # Parse dataset identifier
+        if "." in omop_dataset:
+            dataset_parts = omop_dataset.split(".", 1)
+            ds_project = dataset_parts[0]
+            ds_name = dataset_parts[1]
+        else:
+            ds_project = project_id
+            ds_name = omop_dataset
+        
+        dataset_ref = client.dataset(ds_name, project=ds_project)
+        available_tables = {table.table_id for table in client.list_tables(dataset_ref)}
+        
+        print(f"✅ Found {len(available_tables)} tables in {omop_dataset}")
+        print(f"   Available domain tables: {', '.join(sorted(t for t in available_tables if t in ['condition_occurrence', 'procedure_occurrence', 'drug_exposure', 'measurement', 'observation']))}")
+        
+        # Get schema information for domain tables
+        domain_tables = ['condition_occurrence', 'procedure_occurrence', 'drug_exposure', 'measurement', 'observation']
+        table_schemas = {}
+        
+        for table_name in domain_tables:
+            if table_name in available_tables:
+                try:
+                    full_table_id = f"{ds_project}.{ds_name}.{table_name}"
+                    table = client.get_table(full_table_id)
+                    # Store relevant columns (person_id, concept_id, date columns)
+                    columns = [field.name for field in table.schema]
+                    date_columns = [col for col in columns if 'date' in col.lower() or 'datetime' in col.lower()]
+                    table_schemas[table_name] = {
+                        "all_columns": columns,
+                        "date_columns": date_columns
+                    }
+                except Exception as schema_error:
+                    print(f"⚠️  Could not fetch schema for {table_name}: {schema_error}")
+        
+        if table_schemas:
+            print(f"\n📋 Schema Discovery:")
+            for table_name, schema_info in table_schemas.items():
+                date_cols = ', '.join(schema_info['date_columns'][:3])
+                print(f"   {table_name}: date columns = {date_cols}")
+        
+        # Check which concept sets have tables available
+        domain_table_map = {
+            "Condition": "condition_occurrence",
+            "Procedure": "procedure_occurrence",
+            "Drug": "drug_exposure",
+            "Measurement": "measurement",
+            "Observation": "observation",
+        }
+        
+        missing_tables = []
+        for concept_set in cohort_input.concept_sets:
+            # ConceptSet is a Pydantic model, use attribute access
+            domain = getattr(concept_set, "domain", "") if hasattr(concept_set, "domain") else ""
+            if not domain and concept_set.included_concepts:
+                # Extract domain from first concept
+                domain = concept_set.included_concepts[0].get("domain_id", "") if isinstance(concept_set.included_concepts[0], dict) else ""
+            
+            table_name = domain_table_map.get(domain, "")
+            if table_name and table_name not in available_tables:
+                concept_set_name = concept_set.name if hasattr(concept_set, "name") else str(concept_set)
+                missing_tables.append(f"{concept_set_name} (Domain: {domain} → {table_name})")
+        
+        if missing_tables:
+            print(f"\n⚠️  Warning: Some concept sets reference tables that don't exist:")
+            for item in missing_tables:
+                print(f"   - {item}")
+            print(f"   These concepts will be excluded from the generated SQL.\n")
+        
+        available_tables_list = list(available_tables)
+        
+    except Exception as e:
+        print(f"⚠️  Could not discover tables: {e}")
+        print(f"   Proceeding with default OMOP table assumptions...")
+        available_tables_list = []  # Empty means "assume all tables exist"
+        table_schemas = {}
 
     # Format input for agent
     clinical_text = _format_clinical_definition(cohort_input.clinical_definition)
-    concept_sets_text = _format_concept_sets(cohort_input.concept_sets)
+    concept_sets_text = _format_concept_sets(cohort_input.concept_sets, available_tables_list)
 
+    # Add schema information to prompt if available
+    schema_hint = ""
+    if table_schemas:
+        schema_hint = "\n\nIMPORTANT - Actual Table Schemas (use these exact column names):\n"
+        for table_name, schema_info in table_schemas.items():
+            schema_hint += f"\n{table_name}:\n"
+            schema_hint += f"  - Date columns: {', '.join(schema_info['date_columns'])}\n"
+            schema_hint += f"  - All columns: {', '.join(schema_info['all_columns'][:20])}{'...' if len(schema_info['all_columns']) > 20 else ''}\n"
+    
     prompt = f"""
 Cohort Definition:
 {clinical_text}
@@ -185,6 +282,7 @@ Concept Sets:
 {concept_sets_text}
 
 BigQuery OMOP Dataset: {omop_dataset}
+{schema_hint}
 
 Generate BigQuery Standard SQL to identify the cohort members (person_id).
 """
@@ -248,6 +346,13 @@ Generate BigQuery Standard SQL to identify the cohort members (person_id).
 
         # Attempt to fix SQL
         print(f"\n[Step {iteration + 2}] Attempting to fix SQL...")
+        
+        # Add schema context to fix prompt if available
+        schema_context = ""
+        if table_schemas:
+            schema_context = "\n\nAvailable Table Schemas (use ONLY these column names):\n"
+            for table_name, schema_info in table_schemas.items():
+                schema_context += f"\n{table_name} columns: {', '.join(schema_info['all_columns'])}\n"
 
         fix_prompt = f"""
 Original SQL:
@@ -255,6 +360,14 @@ Original SQL:
 
 BigQuery Errors:
 {json.dumps(validation_result.errors, indent=2)}
+{schema_context}
+
+Instructions:
+1. Read the error message carefully - it tells you the exact issue
+2. If error mentions "Name X not found", check the table schema above for the correct column name
+3. If error mentions missing table, verify the full table path
+4. Do NOT invent column names - use ONLY columns from the schema above
+5. For date filtering in procedure_occurrence, use the available date columns from schema
 
 Output ONLY the corrected SQL.
 """
@@ -263,6 +376,7 @@ Output ONLY the corrected SQL.
         current_sql = _clean_sql(fix_result.output.strip())
 
         print(f"   SQL updated ({len(current_sql)} characters)")
+        print(f"   Retrying validation...")
 
     # Should never reach here, but just in case
     return SQLGenerationResult(
@@ -301,9 +415,17 @@ def _format_clinical_definition(clinical_def: Dict[str, Any]) -> str:
     return "\n".join(parts) if parts else "No clinical definition provided"
 
 
-def _format_concept_sets(concept_sets: List[ConceptSet]) -> str:
-    """Format concept sets for prompt with domain information."""
+def _format_concept_sets(concept_sets: List[ConceptSet], available_tables: List[str] = None) -> str:
+    """Format concept sets for prompt with domain information, filtering by available tables."""
     lines = []
+    
+    domain_table_map = {
+        "Condition": "condition_occurrence",
+        "Procedure": "procedure_occurrence",
+        "Drug": "drug_exposure",
+        "Measurement": "measurement",
+        "Observation": "observation",
+    }
 
     for cs in concept_sets:
         concept_ids = [c.get("concept_id") for c in cs.included_concepts if c.get("concept_id")]
@@ -312,6 +434,12 @@ def _format_concept_sets(concept_sets: List[ConceptSet]) -> str:
         domain = "Unknown"
         if cs.included_concepts and len(cs.included_concepts) > 0:
             domain = cs.included_concepts[0].get("domain_id", "Unknown")
+        
+        # Skip concept sets whose domain tables don't exist (if table discovery was successful)
+        if available_tables is not None and len(available_tables) > 0:
+            table_name = domain_table_map.get(domain, "")
+            if table_name and table_name not in available_tables:
+                continue  # Skip this concept set
 
         lines.append(f"\nConcept Set: {cs.name}")
         lines.append(f"  Domain: {domain}")

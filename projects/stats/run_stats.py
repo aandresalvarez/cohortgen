@@ -108,13 +108,14 @@ def build_analytics_queries(
     join_index = ""
     have_index = False
     if esrd_list:
+        # Rewritten to use JOIN instead of correlated subquery (BigQuery requirement)
         index_cte = f"""
 , index_dates AS (
-  SELECT person_id, MIN(condition_start_date) AS index_date
-  FROM {cond}
-  WHERE person_id IN (SELECT person_id FROM cohort)
-    AND condition_concept_id IN ({esrd_list})
-  GROUP BY person_id
+  SELECT co.person_id, MIN(co.condition_start_date) AS index_date
+  FROM {cond} co
+  INNER JOIN cohort c ON c.person_id = co.person_id
+  WHERE co.condition_concept_id IN ({esrd_list})
+  GROUP BY co.person_id
 )
 """
         join_index = "LEFT JOIN index_dates i USING(person_id)"
