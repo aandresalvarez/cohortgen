@@ -1,0 +1,12 @@
+{
+  "index_event": "First recorded diagnosis of end-stage renal disease (ESRD)",
+  "demographics": {},
+  "inclusion_criteria": [
+    "History of heart failure any time prior to the index ESRD diagnosis (pre-extracted)",
+    "First recorded diagnosis of end-stage renal disease (index event)"
+  ],
+  "exclusion_criteria": [],
+  "observation_window": "No specific post-index follow-up required; follow-up until end of continuous observation or death",
+  "prior_observation": "No minimum prior observation required beyond the pre-extracted history of heart failure",
+  "cohort_exit": "End of continuous observation or death"
+}

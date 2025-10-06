@@ -1,0 +1,28 @@
+======================================================================
+Stage 4: Analytics
+Run ID: 20251006_144604_eb27fc
+======================================================================
+
+BigQuery Configuration:
+  Project: alvaro-169413
+  Dataset: bigquery-public-data.cms_synthetic_patient_data_omop
+  Location: US
+
+Found ESRD concept IDs for index derivation: [193782, 37018886, 43020455, 46273164, 45768813]
+
+Building analytics queries...
+  ✓ Removed trailing semicolon from SQL
+  ✓ Built 4 analytics queries
+
+[Run] cohort_size...
+  ✓ 1 rows
+[Run] by_gender...
+  ✓ 2 rows
+[Run] age_buckets...
+  ✓ 4 rows
+[Run] index_year...
+  ✓ 4 rows
+
+======================================================================
+✅ Analytics Complete
+======================================================================

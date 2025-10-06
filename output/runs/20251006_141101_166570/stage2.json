@@ -1,0 +1,276 @@
+{
+  "concept_sets": [
+    {
+      "name": "Heart failure - diagnosis",
+      "intent": "Identify persons with a prior diagnosis of heart failure of any type (acute, chronic, systolic/HFrEF, diastolic/HFpEF, left/right, congestive)",
+      "domain": "Condition",
+      "included_concepts": [
+        {
+          "concept_id": 316139,
+          "concept_name": "Heart failure",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "84114007"
+        },
+        {
+          "concept_id": 319835,
+          "concept_name": "Congestive heart failure",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "42343007"
+        },
+        {
+          "concept_id": 4229440,
+          "concept_name": "Chronic congestive heart failure",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "88805009"
+        }
+      ],
+      "excluded_concepts": [],
+      "resolution_outcome": {
+        "status": "resolved",
+        "concept": null,
+        "reason": "timeout",
+        "visit_count": 3,
+        "stop_reason": "timeout",
+        "pending_candidates": [
+          4023479,
+          4111554,
+          4108244,
+          4242669,
+          44784442
+        ],
+        "history": [],
+        "evidence": null,
+        "accepted_concepts": [
+          {
+            "concept_id": 316139,
+            "concept_name": "Heart failure",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "84114007"
+          },
+          {
+            "concept_id": 319835,
+            "concept_name": "Congestive heart failure",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "42343007"
+          },
+          {
+            "concept_id": 4229440,
+            "concept_name": "Chronic congestive heart failure",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "88805009"
+          }
+        ]
+      }
+    },
+    {
+      "name": "End-stage renal disease - diagnosis",
+      "intent": "Identify persons with end-stage renal disease (ESRD), including synonyms and CKD stage 5",
+      "domain": "Condition",
+      "included_concepts": [
+        {
+          "concept_id": 193782,
+          "concept_name": "End-stage renal disease",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "46177005"
+        },
+        {
+          "concept_id": 37018886,
+          "concept_name": "End stage renal disease due to hypertension",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "111411000119103"
+        },
+        {
+          "concept_id": 46273164,
+          "concept_name": "End stage renal disease due to benign hypertension",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "712487000"
+        },
+        {
+          "concept_id": 43020455,
+          "concept_name": "Malignant hypertensive end stage renal disease",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "285841000119104"
+        }
+      ],
+      "excluded_concepts": [],
+      "resolution_outcome": {
+        "status": "resolved",
+        "concept": null,
+        "reason": "accepted_matches",
+        "visit_count": 5,
+        "stop_reason": null,
+        "pending_candidates": [],
+        "history": [],
+        "evidence": null,
+        "accepted_concepts": [
+          {
+            "concept_id": 193782,
+            "concept_name": "End-stage renal disease",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "46177005"
+          },
+          {
+            "concept_id": 37018886,
+            "concept_name": "End stage renal disease due to hypertension",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "111411000119103"
+          },
+          {
+            "concept_id": 46273164,
+            "concept_name": "End stage renal disease due to benign hypertension",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "712487000"
+          },
+          {
+            "concept_id": 43020455,
+            "concept_name": "Malignant hypertensive end stage renal disease",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "285841000119104"
+          }
+        ]
+      }
+    }
+  ],
+  "atlas": {
+    "concept_sets": [
+      {
+        "name": "Heart failure - diagnosis",
+        "expression": {
+          "items": [
+            {
+              "concept": {
+                "CONCEPT_ID": 316139,
+                "CONCEPT_NAME": "Heart failure",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "84114007"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": 319835,
+                "CONCEPT_NAME": "Congestive heart failure",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "42343007"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": 4229440,
+                "CONCEPT_NAME": "Chronic congestive heart failure",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "88805009"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "End-stage renal disease - diagnosis",
+        "expression": {
+          "items": [
+            {
+              "concept": {
+                "CONCEPT_ID": 193782,
+                "CONCEPT_NAME": "End-stage renal disease",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "46177005"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": 37018886,
+                "CONCEPT_NAME": "End stage renal disease due to hypertension",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "111411000119103"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": 46273164,
+                "CONCEPT_NAME": "End stage renal disease due to benign hypertension",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "712487000"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": 43020455,
+                "CONCEPT_NAME": "Malignant hypertensive end stage renal disease",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "285841000119104"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            }
+          ]
+        }
+      }
+    ],
+    "summary": {
+      "total_concept_sets": 2,
+      "total_included_concepts": 7,
+      "total_excluded_concepts": 0
+    }
+  }
+}

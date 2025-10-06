@@ -1,0 +1,15 @@
+{
+  "index_event": "",
+  "demographics": {
+    "pre_extracted": true,
+    "note": "No additional demographic constraints provided"
+  },
+  "inclusion_criteria": [
+    "Prior diagnosis of heart failure (as stated)",
+    "End-stage renal disease (as stated)"
+  ],
+  "exclusion_criteria": [],
+  "observation_window": "",
+  "prior_observation": "",
+  "cohort_exit": ""
+}

@@ -1,0 +1,58 @@
+{
+  "status": "complete",
+  "project_id": "alvaro-169413",
+  "dataset": "bigquery-public-data.cms_synthetic_patient_data_omop",
+  "results": {
+    "cohort_size": [
+      {
+        "n": 244251
+      }
+    ],
+    "by_gender": [
+      {
+        "gender": "female",
+        "n": 141409
+      },
+      {
+        "gender": "male",
+        "n": 102842
+      }
+    ],
+    "age_buckets": [
+      {
+        "age_bucket": "18-39",
+        "n": 5408
+      },
+      {
+        "age_bucket": "40-64",
+        "n": 32794
+      },
+      {
+        "age_bucket": "65-74",
+        "n": 77242
+      },
+      {
+        "age_bucket": "75+",
+        "n": 128807
+      }
+    ],
+    "index_year": [
+      {
+        "index_year": 2007,
+        "n": 4
+      },
+      {
+        "index_year": 2008,
+        "n": 62397
+      },
+      {
+        "index_year": 2009,
+        "n": 109007
+      },
+      {
+        "index_year": 2010,
+        "n": 72843
+      }
+    ]
+  }
+}

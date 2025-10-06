@@ -1077,9 +1077,8 @@ def run_intelligent_concept_discovery(
     print("\n" + "=" * 70)
     print("✅ INTELLIGENT CONCEPT DISCOVERY COMPLETE")
     print("=" * 70)
-    print("\nOutput is ready for ATLAS import!")
-    print("Intelligent exploration with LLM seeding and queue-based refinement! 🎉")
-
+    print("\nOutput is ready!")
+     
     return {"concept_sets": final_concept_sets, "atlas": atlas_formatted}
 
 

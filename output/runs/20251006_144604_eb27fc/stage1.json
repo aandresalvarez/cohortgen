@@ -1,0 +1,12 @@
+{
+  "index_event": "",
+  "demographics": {},
+  "inclusion_criteria": [
+    "Prior diagnosis of heart failure",
+    "End-stage renal disease (ESRD)"
+  ],
+  "exclusion_criteria": [],
+  "observation_window": "",
+  "prior_observation": "",
+  "cohort_exit": ""
+}
