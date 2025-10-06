@@ -400,6 +400,54 @@ def render_stage(stage_result, run) -> str:
             output.append("")
             output.append("**BigQuery SQL Generated**")
             
+            # Show validation if available
+            if run.stage3_validation_path:
+                try:
+                    import json
+                    with open(run.stage3_validation_path) as f:
+                        validation = json.load(f)
+                    
+                    if validation.get("is_valid"):
+                        output.append("")
+                        output.append(f"✅ **SQL Validated** (BigQuery dry run successful)")
+                        if "estimated_cost" in validation:
+                            output.append(f"- Estimated query cost: ${validation['estimated_cost']:.4f}")
+                        if "bytes_processed" in validation:
+                            gb = validation["bytes_processed"] / (1024**3)
+                            output.append(f"- Data to process: {gb:.2f} GB")
+                    else:
+                        output.append("")
+                        output.append("❌ **SQL Validation Failed**")
+                        if validation.get("errors"):
+                            output.append(f"```\n{validation['errors'][0]}\n```")
+                except Exception:
+                    pass
+            
+            # Show formatted SQL automatically
+            if run.stage3_sql_path:
+                try:
+                    with open(run.stage3_sql_path) as f:
+                        sql = f.read()
+                    
+                    output.append("")
+                    output.append("**Generated SQL:**")
+                    output.append("```sql")
+                    
+                    # Show full SQL with line numbers (first 50 lines)
+                    lines = sql.split('\n')
+                    for i, line in enumerate(lines[:50], 1):
+                        output.append(f"{i:3d} | {line}")
+                    
+                    if len(lines) > 50:
+                        output.append(f"... ({len(lines) - 50} more lines)")
+                    
+                    output.append("```")
+                    output.append(f"*Total: {len(lines)} lines, {len(sql)} characters*")
+                    output.append("")
+                    output.append("💡 *Full formatted SQL with syntax highlighting available in 'Download Artifacts & Logs' → 'Stage 3 (SQL)' → 'Format SQL' button*")
+                except Exception:
+                    pass
+            
             # Show log if available
             if run.stage3_log_path:
                 log_content = get_stage_log(run.run_id, 3)
