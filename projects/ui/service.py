@@ -916,4 +916,136 @@ class CohortService:
             omop_dataset_id=original.user_inputs.omop_dataset_id,
             bigquery_location=original.user_inputs.bigquery_location,
         )
+    
+    # Interactive Clarification Methods
+    _clarification_sessions: dict[str, Any] = {}  # Store active sessions
+    
+    def start_interactive_clarification(self, run_id: str) -> tuple[str, bool]:
+        """
+        Start an interactive clarification session for Stage 1.
+        
+        Args:
+            run_id: The run ID
+            
+        Returns:
+            Tuple of (first_question, is_complete)
+        """
+        from projects.ui.interactive_clarification import InteractiveClarificationSession
+        from projects.ui.models import ClarificationSession, StageStatus
+        
+        run = self.get_run(run_id)
+        if not run:
+            return "Error: Run not found", True
+        
+        # Create interactive session
+        session = InteractiveClarificationSession(
+            run_id=run_id,
+            initial_description=run.user_inputs.cohort_description
+        )
+        
+        # Store in memory
+        self._clarification_sessions[run_id] = session
+        
+        # Update run status
+        run.status = RunStatus.RUNNING
+        
+        # Create/update Stage 1
+        if not run.stages or run.stages[0].stage != 1:
+            stage_result = StageResult(
+                stage=1,
+                status=StageStatus.WAITING_FOR_INPUT,
+                started_at=datetime.now().isoformat(),
+            )
+            run.stages.insert(0, stage_result)
+        else:
+            run.stages[0].status = StageStatus.WAITING_FOR_INPUT
+        
+        # Save session state to run
+        run.clarification_session = ClarificationSession(
+            run_id=run_id,
+            conversation_history=session.get_conversation_history(),
+            is_complete=session.is_complete,
+            cohort_definition=session.cohort_definition,
+        )
+        
+        self.storage.save_run(run)
+        
+        # Get first question
+        history = session.get_conversation_history()
+        if history:
+            first_question = history[-1]["content"]
+            return first_question, False
+        
+        return "Ready to start clarification", False
+    
+    def send_clarification_message(self, run_id: str, message: str) -> tuple[Optional[str], bool, Optional[dict]]:
+        """
+        Send a message in the clarification chat and get response.
+        
+        Args:
+            run_id: The run ID
+            message: User's message/answer
+            
+        Returns:
+            Tuple of (next_question, is_complete, cohort_definition)
+        """
+        from projects.ui.models import ClarificationSession
+        
+        # Get session
+        session = self._clarification_sessions.get(run_id)
+        if not session:
+            return "Error: Session not found. Please start clarification first.", True, None
+        
+        # Send message
+        next_question, is_complete, cohort_def = session.send_message(message)
+        
+        # Update run
+        run = self.get_run(run_id)
+        if run:
+            run.clarification_session = ClarificationSession(
+                run_id=run_id,
+                conversation_history=session.get_conversation_history(),
+                is_complete=is_complete,
+                cohort_definition=cohort_def,
+            )
+            
+            if is_complete:
+                # Mark Stage 1 as complete
+                if run.stages and run.stages[0].stage == 1:
+                    run.stages[0].status = StageStatus.COMPLETE
+                    run.stages[0].completed_at = datetime.now().isoformat()
+                    
+                    # Save cohort definition as artifact
+                    if cohort_def:
+                        artifact_path = self.storage.save_artifact(
+                            run_id, "stage1.json", json.dumps(cohort_def, indent=2)
+                        )
+                        run.stage1_path = artifact_path
+                        run.stages[0].artifact_path = artifact_path
+            
+            self.storage.save_run(run)
+        
+        return next_question, is_complete, cohort_def
+    
+    def get_clarification_state(self, run_id: str) -> Optional[dict]:
+        """
+        Get the current clarification session state.
+        
+        Args:
+            run_id: The run ID
+            
+        Returns:
+            Session state dict or None
+        """
+        session = self._clarification_sessions.get(run_id)
+        if session:
+            return session.get_state()
+        
+        # Check if saved in run
+        run = self.get_run(run_id)
+        if run and run.clarification_session:
+            from dataclasses import asdict
+            return asdict(run.clarification_session)
+        
+        return None
 
