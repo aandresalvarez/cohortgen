@@ -28,6 +28,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Literal, Optional
 
 from dotenv import load_dotenv
@@ -61,6 +62,16 @@ MAX_QUERIES_PER_SET = int(os.getenv("MAX_QUERIES_PER_SET", "3"))
 SEARCH_TOP_K = int(os.getenv("SEARCH_TOP_K", "8"))
 PER_SET_TIME_LIMIT_SEC = int(os.getenv("PER_SET_TIME_LIMIT_SEC", "15"))
 MAX_ACCEPTED_PER_SET = int(os.getenv("MAX_ACCEPTED_PER_SET", "3"))
+PARALLEL_CONCEPT_SETS = int(os.getenv("PARALLEL_CONCEPT_SETS", "5"))  # Phase 1: Parallelization
+
+# Phase 1 Optimization: Smart vocabulary filtering by domain
+DOMAIN_VOCAB_MAP = {
+    "Condition": ["SNOMED"],  # Focus on SNOMED for conditions
+    "Drug": ["RxNorm"],  # Focus on RxNorm for drugs
+    "Procedure": ["SNOMED", "CPT4"],  # SNOMED and CPT for procedures
+    "Measurement": ["LOINC"],  # LOINC for measurements
+    "Observation": ["SNOMED"],  # SNOMED for observations
+}
 
 
 # ============================================================================
@@ -262,6 +273,17 @@ For each candidate (preserve input order):
   "Is a"), list new candidate concept_ids in `suggested_new_candidates`.
   Only include justified, Standard prospects. Deduplicate locally.
 - Set `relationship_hint` to the key relationship/path you followed.
+
+🚀 PHASE 1 OPTIMIZATION - FAST EXIT RULE:
+If you find a concept that is:
+- Standard concept (standard_concept = 'S')
+- Correct domain (matches search intent)
+- Name matches perfectly or near-perfectly (e.g., "Type 2 diabetes mellitus" for "type 2 diabetes")
+→ Mark is_correct_for_term = TRUE and is_standard = TRUE
+→ The system will collect this as an accepted match and may stop exploration early
+
+DO NOT suggest additional candidates or relationships if you already have a perfect standard match!
+Focus on quality over exploration depth.
 
 Return `decisions` in the exact same order as the input candidates.
 When a candidate is Non-standard and shows a 'Non-standard to Standard map (OMOP)' relationship,
@@ -699,6 +721,251 @@ def _finalize_resolution(queue_state: QueueState) -> ResolutionOutcome:
 # ============================================================================
 
 
+def _process_single_concept_set(
+    concept_set,
+    max_visits: int,
+    max_depth: int,
+    batch_size: int,
+) -> Dict[str, Any]:
+    """
+    Process a single concept set (extracted for Phase 1 parallelization).
+    
+    This function contains the logic for searching, seeding, and exploring
+    a single concept set. It's extracted to enable ThreadPoolExecutor parallelization.
+    """
+    print(f"\nProcessing: {concept_set.name}")
+
+    # Search ATHENA for each query
+    all_search_results = []
+    for query in concept_set.queries[:MAX_QUERIES_PER_SET]:
+        print(f"    Searching: {query}")
+        try:
+            # Phase 1: Smart vocabulary filtering by domain
+            smart_vocab = DOMAIN_VOCAB_MAP.get(concept_set.domain, concept_set.vocabulary)
+            search_result = search_athena(
+                ctx={},
+                query=query,
+                domain=concept_set.domain,
+                vocabulary=smart_vocab if smart_vocab else concept_set.vocabulary,
+                standard_only=concept_set.standard_only,
+                top_k=SEARCH_TOP_K,
+            )
+            if search_result.get("success") and search_result.get("candidates"):
+                all_search_results.extend(search_result["candidates"])
+                print(f"      ✅ Found {len(search_result['candidates'])} candidates")
+            else:
+                print(
+                    f"      ⚠️  No candidates found: {search_result.get('error', 'Unknown error')}"
+                )
+        except Exception as e:
+            print(f"      ❌ Search failed: {e}")
+            continue
+
+    if not all_search_results:
+        print(f"  ⚠️  No search results for {concept_set.name}")
+        return {
+            "name": concept_set.name,
+            "intent": concept_set.intent,
+            "domain": concept_set.domain,
+            "included_concepts": [],
+            "excluded_concepts": [],
+        }
+
+    # LLM intelligently selects candidate IDs
+    print("  🤖 LLM candidate selection...")
+    try:
+        selection_result = candidate_aggregator_agent.run_sync(
+            f"Search term: {concept_set.name}\nIntent: {concept_set.intent}\nDomain: {concept_set.domain}\nAthena results: {json.dumps(all_search_results, indent=2)}"
+        )
+        selection = selection_result.output
+    except Exception as e:
+        print(f"  ❌ LLM selection failed: {e}")
+        selection = CandidateSelection(
+            message="Fallback selection due to LLM error",
+            candidate_ids=[
+                c.get("concept_id") for c in all_search_results[:5] if c.get("concept_id")
+            ],
+        )
+
+    print(f"  ✅ Selected {len(selection.candidate_ids)} candidates: {selection.message}")
+
+    # Initialize queue with selected candidates
+    queue_state = QueueState(
+        pending=[QueueItem(concept_id=cid, depth=0) for cid in selection.candidate_ids],
+        visited=[],
+        depth_map={str(cid): 0 for cid in selection.candidate_ids},
+        max_depth=max_depth,
+        max_visits=max_visits,
+        batch_size=batch_size,
+        initial_candidates=selection.candidate_ids,
+        initial_message=selection.message,
+    )
+
+    # Queue-based exploration
+    print(
+        f"  [Step 3] Queue-based exploration (max_depth={max_depth}, max_visits={max_visits})"
+    )
+
+    iteration = 0
+    start_time = time.time()
+    max_iteration_time = PER_SET_TIME_LIMIT_SEC
+
+    while (
+        not queue_state.resolved
+        and queue_state.visit_count < max_visits
+        and queue_state.pending
+    ):
+        iteration += 1
+
+        if time.time() - start_time > max_iteration_time:
+            print(f"    ⏰ Timeout reached ({max_iteration_time}s), exiting")
+            queue_state.stop_reason = "timeout"
+            break
+
+        batch_info = _queue_next_batch(queue_state)
+        if not batch_info["has_batch"]:
+            break
+
+        ids = batch_info["ids"]
+        depths = batch_info["depths"]
+
+        print(f"    [Iteration {iteration}] Processing batch: {ids} (depths: {depths})")
+
+        # Phase 1: Batch fetch concept details
+        print(f"      Fetching details for {len(ids)} concepts (batched)...")
+        all_details = {}
+        try:
+            batch_details_result = get_concept_details(ctx={}, concept_ids=ids)
+            if batch_details_result.get("success"):
+                all_details = {
+                    c["concept_id"]: c 
+                    for c in batch_details_result.get("concepts", [])
+                }
+        except Exception as e:
+            print(f"        ⚠️  Batch details failed: {e}, falling back to individual")
+
+        concepts = []
+        for cid in ids:
+            try:
+                details = all_details.get(cid, {})
+                if not details:
+                    details_result = get_concept_details(ctx={}, concept_ids=[cid])
+                    details = (
+                        details_result.get("concepts", [{}])[0]
+                        if details_result.get("success")
+                        else {}
+                    )
+                
+                relationships_result = get_concept_relationships(ctx={}, concept_id=cid)
+
+                concept_data = {
+                    "concept_id": cid,
+                    "details": details,
+                    "relationships": (
+                        relationships_result.get("relationships", [])
+                        if relationships_result.get("success")
+                        else []
+                    ),
+                }
+                concepts.append(concept_data)
+            except Exception as e:
+                print(f"        ❌ Failed to fetch concept {cid}: {e}")
+                concepts.append({"concept_id": cid, "details": {}, "relationships": []})
+
+        short_circuit = _try_short_circuit_resolution(concepts, concept_set.name, queue_state)
+        if short_circuit:
+            print(f"    ✅ Found strong match candidate: {short_circuit['reason']}")
+            sc_id = _coerce_int(short_circuit.get("concept_id"))
+            if sc_id is not None:
+                matched = next(
+                    (c for c in concepts if _coerce_int(c.get("concept_id")) == sc_id), None
+                )
+                if matched:
+                    inc = _included_from_details(sc_id, matched.get("details", {}))
+                    if inc and all(
+                        (_coerce_int(x.get("concept_id")) != sc_id)
+                        for x in queue_state.accepted_concepts
+                    ):
+                        queue_state.accepted_concepts.append(inc)
+            if len(queue_state.accepted_concepts) >= MAX_ACCEPTED_PER_SET:
+                queue_state.stop_reason = "enough_matches"
+                break
+
+        minified_concepts = [_minify_concept(c) for c in concepts]
+
+        print("      🤖 LLM batch analysis...")
+        try:
+            analysis_prompt = f"""
+Search term: {concept_set.name}
+Intent: {concept_set.intent}
+Domain: {concept_set.domain}
+Queue depths: {depths}
+Candidate concepts (aligned with the queue order):
+{json.dumps(minified_concepts, indent=2)}
+"""
+            analysis_result = concept_analyzer_agent.run_sync(analysis_prompt)
+            decisions = analysis_result.output.decisions
+        except Exception as e:
+            print(f"        ❌ LLM analysis failed: {e}")
+            decisions = []
+            for _i, cid in enumerate(ids):
+                decisions.append(
+                    ConceptDecision(
+                        concept_id=cid,
+                        is_standard=False,
+                        is_correct_for_term=False,
+                        reasoning=f"Fallback decision due to LLM error: {e}",
+                    )
+                )
+
+        print(f"    ✅ Batch analysis complete: {len(decisions)} decisions")
+        for decision in decisions:
+            print(
+                f"      - {decision.concept_id}: {'✅' if decision.is_standard and decision.is_correct_for_term else '❌'} {decision.reasoning[:100]}..."
+            )
+
+        _update_queue_from_batch(queue_state, ids, depths, concepts, decisions)
+
+        if len(queue_state.accepted_concepts) >= MAX_ACCEPTED_PER_SET:
+            print(
+                f"    ✅ Collected {len(queue_state.accepted_concepts)} accepted anchors; stopping exploration"
+            )
+            queue_state.stop_reason = "enough_matches"
+            break
+
+        if queue_state.pending:
+            head_id = queue_state.pending[0].concept_id
+            if queue_state.last_head_id == head_id:
+                queue_state.stagnation_count += 1
+                if queue_state.stagnation_count >= 3:
+                    print("    ⚠️  Stagnation detected, exiting")
+                    queue_state.stop_reason = "stagnation"
+                    break
+            else:
+                queue_state.stagnation_count = 0
+            queue_state.last_head_id = head_id
+
+    # Finalize resolution
+    outcome = _finalize_resolution(queue_state)
+    print(
+        f"  ✅ Resolution: {outcome.status} ({outcome.reason}) after {outcome.visit_count} visits"
+    )
+
+    # Build final concept set
+    included_concepts = []
+    if outcome.status == "resolved" and outcome.accepted_concepts:
+        included_concepts = outcome.accepted_concepts
+
+    return {
+        "name": concept_set.name,
+        "intent": concept_set.intent,
+        "domain": concept_set.domain,
+        "included_concepts": included_concepts,
+        "excluded_concepts": [],
+        "resolution_outcome": outcome.model_dump(),
+    }
+
+
 def run_intelligent_concept_discovery(
     cohort_definition: str,
     max_visits: int = MAX_VISITS_DEFAULT,
@@ -737,240 +1004,39 @@ def run_intelligent_concept_discovery(
 
     # STEP 2: Intelligent candidate seeding for each concept set
     print("\n[Step 2] Intelligent candidate seeding...")
+    print(f"🚀 Phase 1 Optimization: Processing {len(plan.concept_sets)} concept sets in parallel (max_workers={PARALLEL_CONCEPT_SETS})")
     final_concept_sets = []
 
-    for concept_set in plan.concept_sets:
-        print(f"\nProcessing: {concept_set.name}")
-
-        # Search ATHENA for each query
-        all_search_results = []
-        for query in concept_set.queries[:MAX_QUERIES_PER_SET]:
-            print(f"    Searching: {query}")
+    # Phase 1: Parallel concept set processing
+    with ThreadPoolExecutor(max_workers=PARALLEL_CONCEPT_SETS) as executor:
+        futures = {
+            executor.submit(
+                _process_single_concept_set,
+                cs,
+                max_visits,
+                max_depth,
+                batch_size
+            ): cs
+            for cs in plan.concept_sets
+        }
+        
+        for future in as_completed(futures):
+            concept_set = futures[future]
             try:
-                search_result = search_athena(
-                    ctx={},  # Empty context for now
-                    query=query,
-                    domain=concept_set.domain,
-                    vocabulary=concept_set.vocabulary,
-                    standard_only=concept_set.standard_only,
-                    top_k=SEARCH_TOP_K,
-                )
-                if search_result.get("success") and search_result.get("candidates"):
-                    all_search_results.extend(search_result["candidates"])
-                    print(f"      ✅ Found {len(search_result['candidates'])} candidates")
-                else:
-                    print(
-                        f"      ⚠️  No candidates found: {search_result.get('error', 'Unknown error')}"
-                    )
+                result = future.result()
+                final_concept_sets.append(result)
+                print(f"✅ Completed: {concept_set.name}")
             except Exception as e:
-                print(f"      ❌ Search failed: {e}")
-                continue
-
-        if not all_search_results:
-            print(f"  ⚠️  No search results for {concept_set.name}")
-            final_concept_sets.append(
-                {
+                print(f"❌ Failed to process {concept_set.name}: {e}")
+                # Add empty concept set as fallback
+                final_concept_sets.append({
                     "name": concept_set.name,
                     "intent": concept_set.intent,
                     "domain": concept_set.domain,
                     "included_concepts": [],
                     "excluded_concepts": [],
-                }
-            )
-            continue
+                })
 
-        # LLM intelligently selects candidate IDs
-        print("  🤖 LLM candidate selection...")
-        try:
-            selection_result = candidate_aggregator_agent.run_sync(
-                f"Search term: {concept_set.name}\nIntent: {concept_set.intent}\nDomain: {concept_set.domain}\nAthena results: {json.dumps(all_search_results, indent=2)}"
-            )
-            selection = selection_result.output
-        except Exception as e:
-            print(f"  ❌ LLM selection failed: {e}")
-            # Fallback: use first few candidates
-            selection = CandidateSelection(
-                message="Fallback selection due to LLM error",
-                candidate_ids=[
-                    c.get("concept_id") for c in all_search_results[:5] if c.get("concept_id")
-                ],
-            )
-
-        print(f"  ✅ Selected {len(selection.candidate_ids)} candidates: {selection.message}")
-
-        # Initialize queue with selected candidates
-        queue_state = QueueState(
-            pending=[QueueItem(concept_id=cid, depth=0) for cid in selection.candidate_ids],
-            visited=[],
-            depth_map={str(cid): 0 for cid in selection.candidate_ids},
-            max_depth=max_depth,
-            max_visits=max_visits,
-            batch_size=batch_size,
-            initial_candidates=selection.candidate_ids,
-            initial_message=selection.message,
-        )
-
-        # STEP 3: Queue-based exploration
-        print(
-            f"  [Step 3] Queue-based exploration (max_depth={max_depth}, max_visits={max_visits})"
-        )
-
-        iteration = 0
-        start_time = time.time()
-        max_iteration_time = PER_SET_TIME_LIMIT_SEC  # per-set time budget
-
-        while (
-            not queue_state.resolved
-            and queue_state.visit_count < max_visits
-            and queue_state.pending
-        ):
-            iteration += 1
-
-            # Check timeout
-            if time.time() - start_time > max_iteration_time:
-                print(f"    ⏰ Timeout reached ({max_iteration_time}s), exiting")
-                queue_state.stop_reason = "timeout"
-                break
-
-            # Get next batch
-            batch_info = _queue_next_batch(queue_state)
-            if not batch_info["has_batch"]:
-                break
-
-            ids = batch_info["ids"]
-            depths = batch_info["depths"]
-
-            print(f"    [Iteration {iteration}] Processing batch: {ids} (depths: {depths})")
-
-            # Fetch concept details and relationships
-            concepts = []
-            for cid in ids:
-                print(f"      Fetching details for concept {cid}...")
-                try:
-                    details_result = get_concept_details(ctx={}, concept_ids=[cid])
-                    relationships_result = get_concept_relationships(ctx={}, concept_id=cid)
-
-                    concept_data = {
-                        "concept_id": cid,
-                        "details": (
-                            details_result.get("concepts", [{}])[0]
-                            if details_result.get("success")
-                            else {}
-                        ),
-                        "relationships": (
-                            relationships_result.get("relationships", [])
-                            if relationships_result.get("success")
-                            else []
-                        ),
-                    }
-                    concepts.append(concept_data)
-                except Exception as e:
-                    print(f"        ❌ Failed to fetch concept {cid}: {e}")
-                    concepts.append({"concept_id": cid, "details": {}, "relationships": []})
-
-            # Try short-circuit resolution
-            short_circuit = _try_short_circuit_resolution(concepts, concept_set.name, queue_state)
-            if short_circuit:
-                print(f"    ✅ Found strong match candidate: {short_circuit['reason']}")
-                sc_id = _coerce_int(short_circuit.get("concept_id"))
-                if sc_id is not None:
-                    # Find matching concept in this batch and add to accepted anchors
-                    matched = next(
-                        (c for c in concepts if _coerce_int(c.get("concept_id")) == sc_id), None
-                    )
-                    if matched:
-                        inc = _included_from_details(sc_id, matched.get("details", {}))
-                        if inc and all(
-                            (_coerce_int(x.get("concept_id")) != sc_id)
-                            for x in queue_state.accepted_concepts
-                        ):
-                            queue_state.accepted_concepts.append(inc)
-                if len(queue_state.accepted_concepts) >= MAX_ACCEPTED_PER_SET:
-                    queue_state.stop_reason = "enough_matches"
-                    break
-
-            # Minify concepts for LLM
-            minified_concepts = [_minify_concept(c) for c in concepts]
-
-            # Batch analysis with LLM
-            print("      🤖 LLM batch analysis...")
-            try:
-                analysis_prompt = f"""
-Search term: {concept_set.name}
-Intent: {concept_set.intent}
-Domain: {concept_set.domain}
-Queue depths: {depths}
-Candidate concepts (aligned with the queue order):
-{json.dumps(minified_concepts, indent=2)}
-"""
-
-                analysis_result = concept_analyzer_agent.run_sync(analysis_prompt)
-                decisions = analysis_result.output.decisions
-            except Exception as e:
-                print(f"        ❌ LLM analysis failed: {e}")
-                # Fallback: create basic decisions
-                decisions = []
-                for _i, cid in enumerate(ids):
-                    decisions.append(
-                        ConceptDecision(
-                            concept_id=cid,
-                            is_standard=False,
-                            is_correct_for_term=False,
-                            reasoning=f"Fallback decision due to LLM error: {e}",
-                        )
-                    )
-
-            print(f"    ✅ Batch analysis complete: {len(decisions)} decisions")
-            for decision in decisions:
-                print(
-                    f"      - {decision.concept_id}: {'✅' if decision.is_standard and decision.is_correct_for_term else '❌'} {decision.reasoning[:100]}..."
-                )
-
-            # Update queue state
-            _update_queue_from_batch(queue_state, ids, depths, concepts, decisions)
-
-            # If we have collected enough accepted anchors, stop early
-            if len(queue_state.accepted_concepts) >= MAX_ACCEPTED_PER_SET:
-                print(
-                    f"    ✅ Collected {len(queue_state.accepted_concepts)} accepted anchors; stopping exploration"
-                )
-                queue_state.stop_reason = "enough_matches"
-                break
-
-            # Check stagnation
-            if queue_state.pending:
-                head_id = queue_state.pending[0].concept_id
-                if queue_state.last_head_id == head_id:
-                    queue_state.stagnation_count += 1
-                    if queue_state.stagnation_count >= 3:
-                        print("    ⚠️  Stagnation detected, exiting")
-                        queue_state.stop_reason = "stagnation"
-                        break
-                else:
-                    queue_state.stagnation_count = 0
-                queue_state.last_head_id = head_id
-
-        # Finalize resolution
-        outcome = _finalize_resolution(queue_state)
-        print(
-            f"  ✅ Resolution: {outcome.status} ({outcome.reason}) after {outcome.visit_count} visits"
-        )
-
-        # Build final concept set: include all accepted anchors
-        included_concepts = []
-        if outcome.status == "resolved" and outcome.accepted_concepts:
-            included_concepts = outcome.accepted_concepts
-
-        final_concept_sets.append(
-            {
-                "name": concept_set.name,
-                "intent": concept_set.intent,
-                "domain": concept_set.domain,
-                "included_concepts": included_concepts,
-                "excluded_concepts": [],
-                "resolution_outcome": outcome.model_dump(),
-            }
-        )
 
     # Format for ATLAS (separate key) and show counts from raw sets
     atlas_formatted = format_for_atlas(final_concept_sets)
