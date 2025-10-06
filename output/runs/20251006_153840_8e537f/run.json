@@ -1,0 +1,87 @@
+{
+  "run_id": "20251006_153840_8e537f",
+  "name": "Prior heart failure...",
+  "created_at": "2025-10-06T15:38:40.174553",
+  "status": "succeeded",
+  "user_inputs": {
+    "cohort_description": "Prior heart failure diagnosis, end-stage renal disease",
+    "max_concept_sets": 5,
+    "max_queries_per_set": 3,
+    "search_top_k": 10,
+    "per_set_time_limit_sec": 30,
+    "max_accepted_per_set": 5,
+    "bigquery_project_id": "",
+    "omop_dataset_id": "",
+    "bigquery_location": "US",
+    "fast_mode": false
+  },
+  "stages": [
+    {
+      "stage": 1,
+      "status": "complete",
+      "started_at": "2025-10-06T15:38:46.488945",
+      "completed_at": "2025-10-06T15:40:02.622193",
+      "metrics": {
+        "duration_seconds": 76.131972,
+        "llm_calls": 0,
+        "athena_calls": 0,
+        "concepts_found": 0,
+        "error_message": ""
+      },
+      "artifact_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/stage1.json"
+    },
+    {
+      "stage": 2,
+      "status": "complete",
+      "started_at": "2025-10-06T15:40:02.623017",
+      "completed_at": "2025-10-06T15:42:13.860653",
+      "metrics": {
+        "duration_seconds": 131.236842,
+        "llm_calls": 0,
+        "athena_calls": 0,
+        "concepts_found": 13,
+        "error_message": ""
+      },
+      "artifact_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/stage2.json"
+    },
+    {
+      "stage": 3,
+      "status": "complete",
+      "started_at": "2025-10-06T15:42:13.861647",
+      "completed_at": "2025-10-06T15:43:06.439653",
+      "metrics": {
+        "duration_seconds": 52.577238,
+        "llm_calls": 0,
+        "athena_calls": 0,
+        "concepts_found": 0,
+        "error_message": ""
+      },
+      "artifact_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/query.sql"
+    },
+    {
+      "stage": 4,
+      "status": "complete",
+      "started_at": "2025-10-06T15:43:06.442103",
+      "completed_at": "2025-10-06T15:43:35.087177",
+      "metrics": {
+        "duration_seconds": 28.643661,
+        "llm_calls": 0,
+        "athena_calls": 0,
+        "concepts_found": 0,
+        "error_message": ""
+      },
+      "artifact_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/analytics.json"
+    }
+  ],
+  "error": "",
+  "total_duration_seconds": 288.599108,
+  "stage1_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/stage1.json",
+  "stage1_log_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/stage1_log.txt",
+  "stage2_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/stage2.json",
+  "stage2_log_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/stage2_log.txt",
+  "stage3_sql_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/query.sql",
+  "stage3_log_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/stage3_log.txt",
+  "stage3_validation_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/sql_validation.json",
+  "stage4_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/analytics.json",
+  "log_path": null
+}

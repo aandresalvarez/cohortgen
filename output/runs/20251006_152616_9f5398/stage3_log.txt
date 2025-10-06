@@ -20,19 +20,19 @@ STAGE 3: BIGQUERY SQL GENERATION
 
 [Step 1] Generating initial SQL...
 
-Generated SQL (2037 characters)
+Generated SQL (4313 characters)
 
 SQL Preview:
-WITH esrd_condition_concepts AS (
-  SELECT c.concept_id
+WITH dialysis_proc_concepts AS (
+  SELECT DISTINCT c.concept_id
   FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept` c
-  WHERE c.standard_concept = 'S'
-    AND c.domain_id = 'Condition'
-    AND c.concept_id IN (193782, 37018886, 46273164, 43020455)
+  WHERE c.concept_id IN (4120120, 4324124, 4050863)
+    AND c.standard_concept = 'S'
+    AND c.domain_id = 'Procedure'
   UNION DISTINCT
-  SELECT ca.descendant_co...
+  SELECT ca.descendant_conce...
 
 [Step 2] Validating SQL (dry run)...
 ✅ SQL is valid!
-   Estimated cost: $0.0405
-   Bytes to process: 8.29 GB
+   Estimated cost: $0.0607
+   Bytes to process: 12.44 GB

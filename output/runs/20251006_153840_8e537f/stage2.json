@@ -1,8 +1,8 @@
 {
   "concept_sets": [
     {
-      "name": "End-stage renal disease (ESRD) - diagnosis",
-      "intent": "Capture first recorded diagnosis of end-stage renal disease (ESRD) including synonyms and CKD stage 5 entries that signify end-stage renal failure.",
+      "name": "End-stage renal disease / CKD stage 5 (Condition, SNOMED)",
+      "intent": "Diagnostic codes capturing end-stage renal disease and equivalent concepts (ESRD, end-stage kidney disease, CKD stage 5, dialysis-dependent renal failure) to identify prior diagnosis of ESRD.",
       "domain": "Condition",
       "included_concepts": [
         {
@@ -22,20 +22,20 @@
           "concept_code": "111411000119103"
         },
         {
-          "concept_id": 46273164,
-          "concept_name": "End stage renal disease due to benign hypertension",
-          "domain_id": "Condition",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "712487000"
-        },
-        {
           "concept_id": 43020455,
           "concept_name": "Malignant hypertensive end stage renal disease",
           "domain_id": "Condition",
           "vocabulary_id": "SNOMED",
           "standard_concept": "Standard",
           "concept_code": "285841000119104"
+        },
+        {
+          "concept_id": 46273164,
+          "concept_name": "End stage renal disease due to benign hypertension",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "712487000"
         }
       ],
       "excluded_concepts": [],
@@ -66,27 +66,27 @@
             "concept_code": "111411000119103"
           },
           {
-            "concept_id": 46273164,
-            "concept_name": "End stage renal disease due to benign hypertension",
-            "domain_id": "Condition",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "712487000"
-          },
-          {
             "concept_id": 43020455,
             "concept_name": "Malignant hypertensive end stage renal disease",
             "domain_id": "Condition",
             "vocabulary_id": "SNOMED",
             "standard_concept": "Standard",
             "concept_code": "285841000119104"
+          },
+          {
+            "concept_id": 46273164,
+            "concept_name": "End stage renal disease due to benign hypertension",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "712487000"
           }
         ]
       }
     },
     {
-      "name": "Heart failure - diagnosis (history)",
-      "intent": "Capture any heart failure diagnosis (acute or chronic, systolic/diastolic, congestive) to identify cohort inclusion: history of heart failure any time prior to index ESRD diagnosis.",
+      "name": "Heart failure (Condition, SNOMED)",
+      "intent": "All diagnostic codes representing heart failure (acute, chronic, systolic, diastolic, left ventricular failure, congestive heart failure, HFrEF/HFpEF) to identify prior diagnosis of heart failure.",
       "domain": "Condition",
       "included_concepts": [
         {
@@ -145,7 +145,9 @@
         "reason": "enough_matches",
         "visit_count": 6,
         "stop_reason": "enough_matches",
-        "pending_candidates": [],
+        "pending_candidates": [
+          439698
+        ],
         "history": [],
         "evidence": null,
         "accepted_concepts": [
@@ -201,18 +203,10 @@
       }
     },
     {
-      "name": "Renal replacement therapy - dialysis procedures (supporting)",
-      "intent": "Support identification of ESRD by capturing dialysis and related renal replacement therapy procedure codes (inpatient/outpatient procedural records). Use both SNOMED and CPT4 where available.",
+      "name": "Dialysis procedures (Procedure, SNOMED / CPT4)",
+      "intent": "Procedure concepts indicating renal replacement therapy (hemodialysis, peritoneal dialysis, CRRT, dialysis access creation) to capture patients receiving dialysis as evidence of ESRD.",
       "domain": "Procedure",
       "included_concepts": [
-        {
-          "concept_id": 4146536,
-          "concept_name": "Renal dialysis",
-          "domain_id": "Procedure",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "265764009"
-        },
         {
           "concept_id": 4120120,
           "concept_name": "Hemodialysis",
@@ -222,28 +216,12 @@
           "concept_code": "302497006"
         },
         {
-          "concept_id": 4324124,
-          "concept_name": "Peritoneal dialysis",
+          "concept_id": 4146536,
+          "concept_name": "Renal dialysis",
           "domain_id": "Procedure",
           "vocabulary_id": "SNOMED",
           "standard_concept": "Standard",
-          "concept_code": "71192002"
-        },
-        {
-          "concept_id": 46273700,
-          "concept_name": "Maintenance hemodialysis",
-          "domain_id": "Procedure",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "708931003"
-        },
-        {
-          "concept_id": 4051326,
-          "concept_name": "Intermittent hemodialysis",
-          "domain_id": "Procedure",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "233575001"
+          "concept_code": "265764009"
         },
         {
           "concept_id": 4050863,
@@ -258,26 +236,22 @@
       "resolution_outcome": {
         "status": "resolved",
         "concept": null,
-        "reason": "enough_matches",
-        "visit_count": 6,
-        "stop_reason": "enough_matches",
+        "reason": "timeout",
+        "visit_count": 3,
+        "stop_reason": "timeout",
         "pending_candidates": [
+          4051326,
           4238836,
-          37155982,
-          762572,
-          4082257
+          4324124,
+          4323627,
+          4021976,
+          4080171,
+          4020892,
+          4289454
         ],
         "history": [],
         "evidence": null,
         "accepted_concepts": [
-          {
-            "concept_id": 4146536,
-            "concept_name": "Renal dialysis",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "265764009"
-          },
           {
             "concept_id": 4120120,
             "concept_name": "Hemodialysis",
@@ -287,28 +261,12 @@
             "concept_code": "302497006"
           },
           {
-            "concept_id": 4324124,
-            "concept_name": "Peritoneal dialysis",
+            "concept_id": 4146536,
+            "concept_name": "Renal dialysis",
             "domain_id": "Procedure",
             "vocabulary_id": "SNOMED",
             "standard_concept": "Standard",
-            "concept_code": "71192002"
-          },
-          {
-            "concept_id": 46273700,
-            "concept_name": "Maintenance hemodialysis",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "708931003"
-          },
-          {
-            "concept_id": 4051326,
-            "concept_name": "Intermittent hemodialysis",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "233575001"
+            "concept_code": "265764009"
           },
           {
             "concept_id": 4050863,
@@ -320,135 +278,12 @@
           }
         ]
       }
-    },
-    {
-      "name": "Kidney transplant - procedure (supporting)",
-      "intent": "Capture kidney/renal transplant procedures (useful for characterizing ESRD population and potential exclusions or subgrouping).",
-      "domain": "Procedure",
-      "included_concepts": [
-        {
-          "concept_id": 4322471,
-          "concept_name": "Transplant of kidney",
-          "domain_id": "Procedure",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "70536003"
-        },
-        {
-          "concept_id": 4021107,
-          "concept_name": "Cadaveric renal transplant",
-          "domain_id": "Procedure",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "175902000"
-        },
-        {
-          "concept_id": 4022805,
-          "concept_name": "Live donor renal transplant",
-          "domain_id": "Procedure",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "175901007"
-        },
-        {
-          "concept_id": 4343000,
-          "concept_name": "Xenograft renal transplant",
-          "domain_id": "Procedure",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "236138007"
-        },
-        {
-          "concept_id": 2109586,
-          "concept_name": "Renal allotransplantation, implantation of graft; without recipient nephrectomy",
-          "domain_id": "Procedure",
-          "vocabulary_id": "CPT4",
-          "standard_concept": "Standard",
-          "concept_code": "50360"
-        },
-        {
-          "concept_id": 2109587,
-          "concept_name": "Renal allotransplantation, implantation of graft; with recipient nephrectomy",
-          "domain_id": "Procedure",
-          "vocabulary_id": "CPT4",
-          "standard_concept": "Standard",
-          "concept_code": "50365"
-        }
-      ],
-      "excluded_concepts": [],
-      "resolution_outcome": {
-        "status": "resolved",
-        "concept": null,
-        "reason": "enough_matches",
-        "visit_count": 6,
-        "stop_reason": "enough_matches",
-        "pending_candidates": [
-          2109580,
-          2109581,
-          2109582,
-          2109583,
-          2109584,
-          4019782
-        ],
-        "history": [],
-        "evidence": null,
-        "accepted_concepts": [
-          {
-            "concept_id": 4322471,
-            "concept_name": "Transplant of kidney",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "70536003"
-          },
-          {
-            "concept_id": 4021107,
-            "concept_name": "Cadaveric renal transplant",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "175902000"
-          },
-          {
-            "concept_id": 4022805,
-            "concept_name": "Live donor renal transplant",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "175901007"
-          },
-          {
-            "concept_id": 4343000,
-            "concept_name": "Xenograft renal transplant",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "236138007"
-          },
-          {
-            "concept_id": 2109586,
-            "concept_name": "Renal allotransplantation, implantation of graft; without recipient nephrectomy",
-            "domain_id": "Procedure",
-            "vocabulary_id": "CPT4",
-            "standard_concept": "Standard",
-            "concept_code": "50360"
-          },
-          {
-            "concept_id": 2109587,
-            "concept_name": "Renal allotransplantation, implantation of graft; with recipient nephrectomy",
-            "domain_id": "Procedure",
-            "vocabulary_id": "CPT4",
-            "standard_concept": "Standard",
-            "concept_code": "50365"
-          }
-        ]
-      }
     }
   ],
   "atlas": {
     "concept_sets": [
       {
-        "name": "End-stage renal disease (ESRD) - diagnosis",
+        "name": "End-stage renal disease / CKD stage 5 (Condition, SNOMED)",
         "expression": {
           "items": [
             {
@@ -479,19 +314,6 @@
             },
             {
               "concept": {
-                "CONCEPT_ID": 46273164,
-                "CONCEPT_NAME": "End stage renal disease due to benign hypertension",
-                "DOMAIN_ID": "Condition",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "712487000"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
                 "CONCEPT_ID": 43020455,
                 "CONCEPT_NAME": "Malignant hypertensive end stage renal disease",
                 "DOMAIN_ID": "Condition",
@@ -502,12 +324,25 @@
               "isExcluded": false,
               "includeDescendants": true,
               "includeMapped": false
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": 46273164,
+                "CONCEPT_NAME": "End stage renal disease due to benign hypertension",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "712487000"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
             }
           ]
         }
       },
       {
-        "name": "Heart failure - diagnosis (history)",
+        "name": "Heart failure (Condition, SNOMED)",
         "expression": {
           "items": [
             {
@@ -592,22 +427,9 @@
         }
       },
       {
-        "name": "Renal replacement therapy - dialysis procedures (supporting)",
+        "name": "Dialysis procedures (Procedure, SNOMED / CPT4)",
         "expression": {
           "items": [
-            {
-              "concept": {
-                "CONCEPT_ID": 4146536,
-                "CONCEPT_NAME": "Renal dialysis",
-                "DOMAIN_ID": "Procedure",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "265764009"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
             {
               "concept": {
                 "CONCEPT_ID": 4120120,
@@ -623,38 +445,12 @@
             },
             {
               "concept": {
-                "CONCEPT_ID": 4324124,
-                "CONCEPT_NAME": "Peritoneal dialysis",
+                "CONCEPT_ID": 4146536,
+                "CONCEPT_NAME": "Renal dialysis",
                 "DOMAIN_ID": "Procedure",
                 "VOCABULARY_ID": "SNOMED",
                 "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "71192002"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 46273700,
-                "CONCEPT_NAME": "Maintenance hemodialysis",
-                "DOMAIN_ID": "Procedure",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "708931003"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 4051326,
-                "CONCEPT_NAME": "Intermittent hemodialysis",
-                "DOMAIN_ID": "Procedure",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "233575001"
+                "CONCEPT_CODE": "265764009"
               },
               "isExcluded": false,
               "includeDescendants": true,
@@ -675,96 +471,11 @@
             }
           ]
         }
-      },
-      {
-        "name": "Kidney transplant - procedure (supporting)",
-        "expression": {
-          "items": [
-            {
-              "concept": {
-                "CONCEPT_ID": 4322471,
-                "CONCEPT_NAME": "Transplant of kidney",
-                "DOMAIN_ID": "Procedure",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "70536003"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 4021107,
-                "CONCEPT_NAME": "Cadaveric renal transplant",
-                "DOMAIN_ID": "Procedure",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "175902000"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 4022805,
-                "CONCEPT_NAME": "Live donor renal transplant",
-                "DOMAIN_ID": "Procedure",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "175901007"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 4343000,
-                "CONCEPT_NAME": "Xenograft renal transplant",
-                "DOMAIN_ID": "Procedure",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "236138007"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 2109586,
-                "CONCEPT_NAME": "Renal allotransplantation, implantation of graft; without recipient nephrectomy",
-                "DOMAIN_ID": "Procedure",
-                "VOCABULARY_ID": "CPT4",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "50360"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 2109587,
-                "CONCEPT_NAME": "Renal allotransplantation, implantation of graft; with recipient nephrectomy",
-                "DOMAIN_ID": "Procedure",
-                "VOCABULARY_ID": "CPT4",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "50365"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            }
-          ]
-        }
       }
     ],
     "summary": {
-      "total_concept_sets": 4,
-      "total_included_concepts": 22,
+      "total_concept_sets": 3,
+      "total_included_concepts": 13,
       "total_excluded_concepts": 0
     }
   }

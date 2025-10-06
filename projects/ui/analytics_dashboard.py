@@ -47,16 +47,16 @@ def generate_summary_cards_html(analytics: Dict[str, Any]) -> str:
             cohort_size = results["cohort_size"][0].get("n", 0)
     
     # Get mean/median age
-    mean_age = median_age = "N/A"
+    mean_age = "N/A"
     if "age_stats" in results and isinstance(results["age_stats"], list):
         if results["age_stats"]:
             stats = results["age_stats"][0]
-            mean_age = f"{stats.get('mean_age', 0):.1f} years"
-            median_age = f"{stats.get('median_age', 0):.0f} years"
+            if stats.get('mean_age') is not None:
+                mean_age = f"{stats.get('mean_age', 0):.1f} years"
     
     # Get gender ratio
     gender_ratio = "N/A"
-    if "by_gender" in results and isinstance(results["by_gender"], list):
+    if "by_gender" in results and isinstance(results["by_gender"], list) and cohort_size > 0:
         female = male = 0
         for row in results["by_gender"]:
             if row.get("gender") == "female":
@@ -64,7 +64,7 @@ def generate_summary_cards_html(analytics: Dict[str, Any]) -> str:
             elif row.get("gender") == "male":
                 male = row.get("n", 0)
         
-        if cohort_size > 0:
+        if female > 0 or male > 0:
             female_pct = (female / cohort_size) * 100
             male_pct = (male / cohort_size) * 100
             gender_ratio = f"{female_pct:.0f}% F / {male_pct:.0f}% M"

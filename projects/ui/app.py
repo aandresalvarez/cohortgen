@@ -397,73 +397,14 @@ def render_stage(stage_result, run) -> str:
                         output.extend(lines)
                     output.append("```")
         elif stage_result.stage == 4:
-            # Show analytics complete
+            # Show analytics complete with link to dashboard
             output.append("")
-            output.append("**Analytics Summary:**")
+            output.append("**✅ Analytics Complete**")
             output.append(f"- Duration: {format_duration(stage_result.metrics.duration_seconds)}")
-            
-            # Display analytics results
-            if run.stage4_path:
-                try:
-                    import json
-                    with open(run.stage4_path) as f:
-                        analytics = json.load(f)
-                    
-                    if analytics.get("status") == "complete":
-                        results = analytics.get("results", {})
-                        
-                        # Check if all queries failed
-                        all_errors = all(isinstance(v, dict) and "error" in v for v in results.values())
-                        
-                        if all_errors:
-                            output.append(f"\n⚠️ **Analytics queries failed**")
-                            output.append(f"\nThe generated SQL has syntax issues that prevented analytics from running.")
-                            output.append(f"See Stage 4 JSON artifact for error details.")
-                        else:
-                            # Display successful results
-                            if "cohort_size" in results:
-                                if isinstance(results["cohort_size"], list) and results["cohort_size"]:
-                                    cohort_size = results["cohort_size"][0].get("n", 0)
-                                    output.append(f"\n**📊 Cohort Size:** {cohort_size:,} patients")
-                                elif isinstance(results["cohort_size"], dict) and "error" in results["cohort_size"]:
-                                    output.append(f"\n**📊 Cohort Size:** ❌ Query failed")
-                            
-                            if "by_gender" in results:
-                                if isinstance(results["by_gender"], list):
-                                    output.append(f"\n**👥 Gender Distribution:**")
-                                    for row in results["by_gender"]:
-                                        gender = row.get("gender", "unknown")
-                                        count = row.get("n", 0)
-                                        output.append(f"- {gender.capitalize()}: {count:,}")
-                                elif isinstance(results["by_gender"], dict) and "error" in results["by_gender"]:
-                                    output.append(f"\n**👥 Gender Distribution:** ❌ Query failed")
-                            
-                            if "age_buckets" in results:
-                                if isinstance(results["age_buckets"], list):
-                                    output.append(f"\n**🎂 Age Distribution:**")
-                                    for row in results["age_buckets"]:
-                                        age_bucket = row.get("age_bucket", "unknown")
-                                        count = row.get("n", 0)
-                                        output.append(f"- {age_bucket}: {count:,}")
-                                elif isinstance(results["age_buckets"], dict) and "error" in results["age_buckets"]:
-                                    output.append(f"\n**🎂 Age Distribution:** ❌ Query failed")
-                            
-                            if "index_year" in results:
-                                if isinstance(results["index_year"], list):
-                                    output.append(f"\n**📅 Index Year Distribution:**")
-                                    for row in sorted(results["index_year"], key=lambda x: x.get("index_year", 0))[:5]:
-                                        year = row.get("index_year")
-                                        count = row.get("n", 0)
-                                        if year:
-                                            output.append(f"- {int(year)}: {count:,}")
-                                elif isinstance(results["index_year"], dict) and "error" in results["index_year"]:
-                                    output.append(f"\n**📅 Index Year Distribution:** ❌ Query failed")
-                    
-                    elif analytics.get("status") == "skipped":
-                        output.append(f"\n⚠️ {analytics.get('message', 'Analytics skipped')}")
-                
-                except Exception as e:
-                    output.append(f"\n⚠️ Could not load analytics: {str(e)}")
+            output.append("")
+            output.append("📊 **View the interactive dashboard below** ⬇️")
+            output.append("")
+            output.append("*The full analytics dashboard with visualizations, AI insights, and exports is available in the 'Analytics Dashboard' section below this summary.*")
 
     elif stage_result.status == StageStatus.RUNNING:
         output.append("")
@@ -692,6 +633,103 @@ with gr.Blocks(
                 elem_classes=["run-display"],
             )
             
+            # Analytics Dashboard - Prominent placement!
+            with gr.Accordion("📊 Analytics Dashboard", open=False, visible=True):
+                gr.Markdown("### Interactive Cohort Analytics")
+                gr.Markdown("*Click 'Load Dashboard' to view visualizations, AI insights, and export options*")
+                
+                with gr.Tabs():
+                    with gr.Tab("📈 Overview"):
+                        # Summary cards
+                        stage4_summary_cards_main = gr.HTML(label="Summary Metrics")
+                        
+                        # Quick stats
+                        stage4_quick_stats_main = gr.Markdown(value="*Click 'Load Dashboard' button below*")
+                        
+                        # Data quality indicators
+                        gr.Markdown("#### Data Quality")
+                        stage4_quality_main = gr.HTML(label="Quality Indicators")
+                    
+                    with gr.Tab("👥 Demographics"):
+                        with gr.Row():
+                            with gr.Column():
+                                gr.Markdown("#### Gender Distribution")
+                                stage4_gender_chart_main = gr.BarPlot(
+                                    x="Gender",
+                                    y="Count",
+                                    title="Gender Distribution",
+                                    tooltip=["Gender", "Count", "Percentage"],
+                                    y_title="Number of Patients",
+                                    height=300,
+                                    show_label=False
+                                )
+                            
+                            with gr.Column():
+                                gr.Markdown("#### Age Distribution")
+                                stage4_age_chart_main = gr.BarPlot(
+                                    x="Age Group",
+                                    y="Count",
+                                    title="Age Distribution",
+                                    tooltip=["Age Group", "Count", "Percentage"],
+                                    y_title="Number of Patients",
+                                    height=300,
+                                    show_label=False
+                                )
+                        
+                        gr.Markdown("#### Detailed Characteristics")
+                        stage4_characteristics_table_main = gr.DataFrame(
+                            headers=["Characteristic", "Count", "Percentage", "95% CI"],
+                            label="Cohort Characteristics with Confidence Intervals",
+                            interactive=False
+                        )
+                    
+                    with gr.Tab("📅 Temporal Trends"):
+                        with gr.Row():
+                            with gr.Column():
+                                gr.Markdown("#### Annual Enrollment")
+                                stage4_year_chart_main = gr.LinePlot(
+                                    x="Year",
+                                    y="Patients",
+                                    title="Patients by Index Year",
+                                    tooltip=["Year", "Patients"],
+                                    height=300,
+                                    show_label=False
+                                )
+                            
+                            with gr.Column():
+                                gr.Markdown("#### Monthly Trend")
+                                stage4_monthly_chart_main = gr.LinePlot(
+                                    x="Month",
+                                    y="Patients",
+                                    title="Monthly Enrollment Pattern",
+                                    tooltip=["Month", "Patients"],
+                                    height=300,
+                                    show_label=False
+                                )
+                    
+                    with gr.Tab("🔍 AI Insights"):
+                        gr.Markdown("### AI-Powered Analysis")
+                        stage4_insights_main = gr.Markdown(
+                            value="*Click 'Load Dashboard' button below*"
+                        )
+                    
+                    with gr.Tab("💾 Export & Raw Data"):
+                        gr.Markdown("#### Export Options")
+                        
+                        with gr.Row():
+                            export_csv_btn_main = gr.Button("📥 Download CSV (Characteristics)", size="sm")
+                            export_json_btn_main = gr.Button("📥 Download JSON (Full Analytics)", size="sm")
+                        
+                        stage4_csv_download_main = gr.File(label="CSV Download", visible=False)
+                        stage4_json_download_main = gr.File(label="JSON Download", visible=False)
+                        
+                        gr.Markdown("#### Raw JSON Data")
+                        stage4_output_main = gr.Code(
+                            language="json", interactive=False, lines=10
+                        )
+                
+                load_stage4_btn_main = gr.Button("🔄 Load/Refresh Dashboard", variant="primary", size="lg")
+            
             # Individual stage testing
             with gr.Accordion("🔬 Individual Stage Testing", open=False):
                 gr.Markdown("Run or re-run individual stages for debugging (requires existing run)")
@@ -702,7 +740,7 @@ with gr.Blocks(
                     test_stage4_btn = gr.Button("Test Stage 4")
                 test_stage_status = gr.Markdown("")
 
-            with gr.Accordion("📥 Download Artifacts", open=False):
+            with gr.Accordion("📥 Download Artifacts & Logs", open=False):
                 with gr.Tabs():
                     with gr.Tab("Stage 1 Conversation"):
                         stage1_log_output = gr.Textbox(
@@ -1071,6 +1109,38 @@ with gr.Blocks(
         outputs=stage3_sql_formatted,
     )
 
+    # Main dashboard (visible in main panel)
+    load_stage4_btn_main.click(
+        load_stage4_dashboard,
+        inputs=selected_run_id,
+        outputs=[
+            stage4_summary_cards_main,
+            stage4_quick_stats_main,
+            stage4_quality_main,
+            stage4_insights_main,
+            stage4_gender_chart_main,
+            stage4_age_chart_main,
+            stage4_year_chart_main,
+            stage4_monthly_chart_main,
+            stage4_characteristics_table_main,
+            stage4_output_main,
+        ],
+    )
+    
+    # Export buttons for main dashboard
+    export_csv_btn_main.click(
+        lambda run_id: export_csv_handler(run_id),
+        inputs=selected_run_id,
+        outputs=stage4_csv_download_main,
+    )
+    
+    export_json_btn_main.click(
+        lambda run_id: export_json_handler(run_id),
+        inputs=selected_run_id,
+        outputs=stage4_json_download_main,
+    )
+    
+    # Backup dashboard in artifacts section (keep for compatibility)
     load_stage4_btn.click(
         load_stage4_dashboard,
         inputs=selected_run_id,
