@@ -71,6 +71,20 @@
         "error_message": ""
       },
       "artifact_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/analytics.json"
+    },
+    {
+      "stage": 4,
+      "status": "complete",
+      "started_at": "2025-10-06T15:49:55.083719",
+      "completed_at": "2025-10-06T15:50:01.632999",
+      "metrics": {
+        "duration_seconds": 6.542766,
+        "llm_calls": 0,
+        "athena_calls": 0,
+        "concepts_found": 0,
+        "error_message": ""
+      },
+      "artifact_path": "/Users/alvaro1/Documents/Coral/Code/cohortgen/output/runs/20251006_153840_8e537f/analytics.json"
     }
   ],
   "error": "",
