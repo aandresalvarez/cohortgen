@@ -846,9 +846,11 @@ def _process_single_concept_set(
         try:
             batch_details_result = get_concept_details(ctx={}, concept_ids=ids)
             if batch_details_result.get("success"):
+                # Use conceptId (CamelCase) as returned by _get_concept_details_cached
                 all_details = {
-                    c["concept_id"]: c 
+                    c.get("conceptId") or c.get("concept_id"): c 
                     for c in batch_details_result.get("concepts", [])
+                    if c.get("conceptId") or c.get("concept_id")
                 }
         except Exception as e:
             print(f"        ⚠️  Batch details failed: {e}, falling back to individual")
