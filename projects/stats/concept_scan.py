@@ -1,5 +1,3 @@
-
-from google.cloud import bigquery  # optional; execution by caller
 from typing import List, Optional
 
 
@@ -129,6 +127,7 @@ def generate_concept_presence_sql(
     FROM combined
     """
     return sql.strip()
+
 
 ## This function:
 

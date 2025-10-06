@@ -17,6 +17,7 @@ except Exception:  # pragma: no cover
 try:
     from google.api_core.exceptions import BadRequest  # type: ignore
 except Exception:  # pragma: no cover
+
     class BadRequest(Exception):  # type: ignore
         pass
 
@@ -26,4 +27,3 @@ def _ensure_client(project_id: Optional[str] = None, credentials_path: Optional[
     if bigquery is None:  # pragma: no cover
         raise RuntimeError("google-cloud-bigquery not installed")
     return bigquery.Client(project=project_id)
-

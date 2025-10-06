@@ -22,16 +22,17 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 # Local analytics generators
 import sys
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 project_root_for_stats = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root_for_stats / "projects" / "stats"))
-from concept_freq import generate_concept_frequency_sql
-from concept_scan import generate_concept_presence_sql
-from omop_scan import generate_omop_presence_sql_from_table
+from concept_freq import generate_concept_frequency_sql  # noqa: E402
+from concept_scan import generate_concept_presence_sql  # noqa: E402
+from omop_scan import generate_omop_presence_sql_from_table  # noqa: E402
 
 
 def _clean_sql(sql: str) -> str:
@@ -130,14 +131,17 @@ WITH cohort AS (
     queries = {}
 
     # 1) Cohort size
-    queries["cohort_size"] = f"""
+    queries["cohort_size"] = (
+        f"""
 {base_cte}
 SELECT COUNT(DISTINCT person_id) AS n
 FROM cohort
 """.strip()
+    )
 
     # 2) Gender distribution
-    queries["by_gender"] = f"""
+    queries["by_gender"] = (
+        f"""
 {base_cte}
 SELECT
   CASE p.gender_concept_id
@@ -151,10 +155,12 @@ JOIN {person} p ON p.person_id = c.person_id
 GROUP BY 1
 ORDER BY 1
 """.strip()
+    )
 
     # 3) Age-at-index buckets (if index_date available)
     if have_index:
-        queries["age_buckets"] = f"""
+        queries["age_buckets"] = (
+            f"""
 {base_cte}
 SELECT
   CASE
@@ -171,9 +177,11 @@ JOIN {person} p ON p.person_id = c.person_id
 GROUP BY 1
 ORDER BY 1
 """.strip()
+        )
 
         # 4) Index year distribution
-        queries["index_year"] = f"""
+        queries["index_year"] = (
+            f"""
 {base_cte}
 SELECT EXTRACT(YEAR FROM i.index_date) AS index_year, COUNT(DISTINCT c.person_id) AS n
 FROM cohort c
@@ -181,15 +189,18 @@ FROM cohort c
 GROUP BY 1
 ORDER BY 1
 """.strip()
+        )
 
     return queries
 
 
 def main():
     import sys
+
     project_root = Path(__file__).parent.parent.parent
     sys.path.insert(0, str(project_root / "projects" / "shared"))
     from secrets import setup_bigquery_auth  # type: ignore
+
     try:
         setup_bigquery_auth()
     except Exception:
@@ -227,6 +238,7 @@ def main():
 
     # Run queries
     from google.cloud import bigquery  # type: ignore
+
     client = bigquery.Client(project=project_id, location=location)
 
     results: Dict[str, Any] = {}
@@ -247,7 +259,7 @@ def main():
     print("\n[Info] Inspecting dataset tables...")
     ds_id = dataset if "." in dataset else f"{project_id}.{dataset}"
     try:
-        from google.cloud.bigquery import DatasetReference
+
         proj, dset = ds_id.split(".", 1)
         ds_ref = client.dataset(dset, project=proj)
         existing = {t.table_id for t in client.list_tables(ds_ref)}
@@ -323,7 +335,9 @@ def main():
                 continue
             src, alias = col
             agg_cols.append(f"SUM({src}) AS {alias}")
-        agg_select = ",\n          ".join(agg_cols + ["COUNT(*) AS n_total"]) or "COUNT(*) AS n_total"
+        agg_select = (
+            ",\n          ".join(agg_cols + ["COUNT(*) AS n_total"]) or "COUNT(*) AS n_total"
+        )
 
         agg_sql = f"""
         WITH base AS (
@@ -342,9 +356,19 @@ def main():
 
     # Stage 4c: OMOP table presence summary for the cohort (aggregate)
     print("\n[Run] omop_presence_summary...")
-    include_tables_for_omop = list(existing) if existing else [
-        "observation","condition_occurrence","procedure_occurrence","drug_exposure","care_site","visit_occurrence","measurement"
-    ]
+    include_tables_for_omop = (
+        list(existing)
+        if existing
+        else [
+            "observation",
+            "condition_occurrence",
+            "procedure_occurrence",
+            "drug_exposure",
+            "care_site",
+            "visit_occurrence",
+            "measurement",
+        ]
+    )
     # care_site summary depends on visit_occurrence; if missing, drop care_site
     if "care_site" in include_tables_for_omop and "visit_occurrence" not in include_tables_for_omop:
         include_tables_for_omop = [t for t in include_tables_for_omop if t != "care_site"]
@@ -369,7 +393,9 @@ def main():
             continue
         src, alias = col
         omop_agg_cols.append(f"SUM({src}) AS {alias}")
-    omop_agg_select = ",\n      ".join(omop_agg_cols + ["COUNT(*) AS n_total"]) or "COUNT(*) AS n_total"
+    omop_agg_select = (
+        ",\n      ".join(omop_agg_cols + ["COUNT(*) AS n_total"]) or "COUNT(*) AS n_total"
+    )
 
     omop_sql = f"""
     WITH base AS (
@@ -382,7 +408,7 @@ def main():
     om_rows = list(client.query(omop_sql).result())
     if om_rows:
         results["omop_presence_summary"] = {k: om_rows[0][k] for k in om_rows[0].keys()}
-        print(f"  → summary ready")
+        print("  → summary ready")
 
     # Save outputs
     out_dir = project_root / "projects" / "stats"

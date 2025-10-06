@@ -1,4 +1,3 @@
-from google.cloud import bigquery  # optional; execution handled by caller
 from typing import List, Optional
 
 

@@ -3,31 +3,27 @@ Pydantic AI tools for BigQuery SQL validation.
 Uses google-cloud-bigquery directly for dry run validation.
 """
 
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
-from typing import Dict, Any, Optional, List
-import os
 
 # Import BigQuery and secrets management
 try:
-    from google.cloud import bigquery
     from google.api_core import exceptions as google_exceptions
+    from google.cloud import bigquery
+
     BIGQUERY_AVAILABLE = True
 except ImportError:
     bigquery = None  # type: ignore
     google_exceptions = None  # type: ignore
     BIGQUERY_AVAILABLE = False
 
-# Try to import secrets management
+# Import secrets management (typed import via package path)
 try:
-    import sys
-    from pathlib import Path
-    # Add shared to path
-    shared_path = Path(__file__).parent.parent / "shared"
-    if str(shared_path) not in sys.path:
-        sys.path.insert(0, str(shared_path))
-    from secrets import setup_bigquery_auth, get_secret
+    from projects.shared.secrets import get_secret, setup_bigquery_auth  # type: ignore
+
     SECRETS_AVAILABLE = True
-except ImportError:
+except Exception:
     setup_bigquery_auth = None  # type: ignore
     get_secret = None  # type: ignore
     SECRETS_AVAILABLE = False
@@ -41,20 +37,30 @@ except Exception:  # pragma: no cover
 
 class DryRunInput(BaseModel):
     """Input for BigQuery dry run validation."""
+
     sql: str = Field(..., description="The BigQuery SQL query to validate.")
     project_id: Optional[str] = Field(None, description="GCP project ID (optional).")
-    default_dataset: Optional[str] = Field(None, description="Default dataset for unqualified table names.")
+    default_dataset: Optional[str] = Field(
+        None, description="Default dataset for unqualified table names."
+    )
     location: Optional[str] = Field("US", description="BigQuery location/region.")
-    credentials_path: Optional[str] = Field(None, description="Path to GCP service account JSON (optional).")
+    credentials_path: Optional[str] = Field(
+        None, description="Path to GCP service account JSON (optional)."
+    )
 
 
 class DryRunResult(BaseModel):
     """Result from BigQuery dry run."""
+
     success: bool = Field(..., description="Whether the SQL is valid.")
-    errors: List[str] = Field(default_factory=list, description="List of error messages if validation failed.")
+    errors: List[str] = Field(
+        default_factory=list, description="List of error messages if validation failed."
+    )
     total_bytes_processed: int = Field(0, description="Estimated bytes to be processed.")
     estimated_cost_usd: Optional[float] = Field(None, description="Estimated query cost in USD.")
-    summary: Optional[str] = Field(None, description="Human-readable summary of the validation result.")
+    summary: Optional[str] = Field(
+        None, description="Human-readable summary of the validation result."
+    )
     job_id: Optional[str] = Field(None, description="BigQuery job ID.")
     statistics: Optional[Dict[str, Any]] = Field(None, description="Raw BigQuery statistics.")
 
@@ -62,7 +68,7 @@ class DryRunResult(BaseModel):
 def validate_bigquery_sql(input: DryRunInput) -> DryRunResult:
     """
     Validate BigQuery SQL using dry run.
-    
+
     This checks SQL syntax and estimates query cost without executing the query.
     """
     # Empty SQL handling per tests
@@ -70,7 +76,11 @@ def validate_bigquery_sql(input: DryRunInput) -> DryRunResult:
         return DryRunResult(
             success=False,
             errors=["Empty SQL"],
-            summary="❌ Validation error: Empty SQL"
+            total_bytes_processed=0,
+            estimated_cost_usd=None,
+            summary="❌ Validation error: Empty SQL",
+            job_id=None,
+            statistics=None,
         )
 
     # Library availability (or shim). Import shim lazily so tests that
@@ -85,28 +95,36 @@ def validate_bigquery_sql(input: DryRunInput) -> DryRunResult:
     if not BIGQUERY_AVAILABLE and not use_shim:
         return DryRunResult(
             success=False,
-            errors=["google-cloud-bigquery library not available. Install with: pip install google-cloud-bigquery"]
+            errors=[
+                "google-cloud-bigquery library not available. Install with: pip install google-cloud-bigquery"
+            ],
+            total_bytes_processed=0,
+            estimated_cost_usd=None,
+            summary="❌ Validation error: Missing google-cloud-bigquery",
+            job_id=None,
+            statistics=None,
         )
-    
+
     try:
         # Set up authentication if available
-        if SECRETS_AVAILABLE and setup_bigquery_auth:
+        if SECRETS_AVAILABLE and setup_bigquery_auth is not None:
             setup_bigquery_auth()
-        
+
         # Get project ID
         project_id = input.project_id
-        if not project_id and SECRETS_AVAILABLE and get_secret:
+        if not project_id and SECRETS_AVAILABLE and get_secret is not None:
             project_id = get_secret("GOOGLE_CLOUD_PROJECT", required=False)
         # Fallback: detect from ADC if still not set (only when not using shim)
         if not project_id and not use_shim:
             try:
                 from google.auth import default as google_auth_default
+
                 credentials, detected_project = google_auth_default()
                 if detected_project:
                     project_id = detected_project
             except Exception:
                 pass
-        
+
         # Create BigQuery client (via shim if available so tests can inject fakes)
         if use_shim:
             client = bq_shim._ensure_client(project_id=project_id, credentials_path=input.credentials_path)  # type: ignore[attr-defined]
@@ -117,65 +135,69 @@ def validate_bigquery_sql(input: DryRunInput) -> DryRunResult:
             if not project_id:
                 return DryRunResult(
                     success=False,
-                    errors=["No GCP project ID provided. Set GOOGLE_CLOUD_PROJECT or pass project_id parameter."]
+                    errors=[
+                        "No GCP project ID provided. Set GOOGLE_CLOUD_PROJECT or pass project_id parameter."
+                    ],
+                    total_bytes_processed=0,
+                    estimated_cost_usd=None,
+                    summary="❌ Validation error: Missing project id",
+                    job_id=None,
+                    statistics=None,
                 )
             client = bigquery.Client(project=project_id, location=input.location)
             BQ = bigquery
-        
+
         # Configure job
-        job_config = BQ.QueryJobConfig(
-            dry_run=True,
-            use_query_cache=False
-        )
-        
+        job_config = BQ.QueryJobConfig(dry_run=True, use_query_cache=False)
+
         if input.default_dataset:
             job_config.default_dataset = input.default_dataset
-        
+
         # Run dry run
         query_job = client.query(input.sql, job_config=job_config, location=input.location)
-        
+
         # Extract statistics
         total_bytes = query_job.total_bytes_processed or 0
-        
-        # Estimate cost (tests expect ~$6 per TB)
+
+        # Estimate cost using on-demand pricing $5 per TB
         if total_bytes > 0:
-            tb_processed = total_bytes / (1024 ** 4)  # Convert bytes to TB
-            estimated_cost = tb_processed * 6.0
+            tb_processed = total_bytes / (1024**4)  # Convert bytes to TB
+            estimated_cost = tb_processed * 5.0
         else:
             estimated_cost = 0.0
-        
+
         # Build summary
         if total_bytes > 0:
             if total_bytes < 1024:
                 size_str = f"{total_bytes} bytes"
-            elif total_bytes < 1024 ** 2:
+            elif total_bytes < 1024**2:
                 size_str = f"{total_bytes / 1024:.2f} KB"
-            elif total_bytes < 1024 ** 3:
+            elif total_bytes < 1024**3:
                 size_str = f"{total_bytes / (1024 ** 2):.2f} MB"
-            elif total_bytes < 1024 ** 4:
+            elif total_bytes < 1024**4:
                 size_str = f"{total_bytes / (1024 ** 3):.2f} GB"
             else:
                 size_str = f"{total_bytes / (1024 ** 4):.4f} TB"
-            
+
             summary = f"✅ SQL is valid. Estimated to process {size_str}"
             if estimated_cost:
                 summary += f" (≈${estimated_cost:.4f})"
         else:
             summary = "✅ SQL is valid (no data to process)"
-        
+
         return DryRunResult(
             success=True,
             errors=[],
             total_bytes_processed=total_bytes,
             estimated_cost_usd=estimated_cost,
             summary=summary,
-            job_id=query_job.job_id if hasattr(query_job, 'job_id') else None,
+            job_id=query_job.job_id if hasattr(query_job, "job_id") else None,
             statistics={
                 "total_bytes_processed": total_bytes,
-                "total_bytes_billed": total_bytes  # Dry run doesn't bill
-            }
+                "total_bytes_billed": total_bytes,  # Dry run doesn't bill
+            },
         )
-        
+
     except Exception as e:
         # Tests may inject a BadRequest via shim
         BadReq = getattr(bq_shim, "BadRequest", None) if bq_shim else None
@@ -198,28 +220,40 @@ def validate_bigquery_sql(input: DryRunInput) -> DryRunResult:
             return DryRunResult(
                 success=False,
                 errors=messages,
-                summary=f"❌ SQL validation failed: {primary}"
+                total_bytes_processed=0,
+                estimated_cost_usd=None,
+                summary=f"❌ SQL validation failed: {primary}",
+                job_id=None,
+                statistics=None,
             )
         # Real Google API error
         if google_exceptions is not None and isinstance(e, google_exceptions.GoogleAPIError):
-            error_msg = getattr(e, 'message', str(e))
+            error_msg = getattr(e, "message", str(e))
             return DryRunResult(
                 success=False,
                 errors=[f"BigQuery API error: {error_msg}"],
-                summary=f"❌ SQL validation failed: {error_msg}"
+                total_bytes_processed=0,
+                estimated_cost_usd=None,
+                summary=f"❌ SQL validation failed: {error_msg}",
+                job_id=None,
+                statistics=None,
             )
         # Other errors (auth, network, etc.)
         error_msg = str(e)
-        
+
         # Check for common auth errors
         if "credentials" in error_msg.lower() or "authenticate" in error_msg.lower():
             error_msg = (
                 f"{error_msg}. "
                 "Run 'gcloud auth application-default login' or set GOOGLE_APPLICATION_CREDENTIALS"
             )
-        
+
         return DryRunResult(
             success=False,
             errors=[error_msg],
-            summary=f"❌ Validation error: {error_msg}"
+            total_bytes_processed=0,
+            estimated_cost_usd=None,
+            summary=f"❌ Validation error: {error_msg}",
+            job_id=None,
+            statistics=None,
         )

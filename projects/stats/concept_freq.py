@@ -1,6 +1,4 @@
-
-from google.cloud import bigquery  # optional; imported for symmetry with other modules
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 
 def generate_concept_frequency_sql(
@@ -66,5 +64,6 @@ def generate_concept_frequency_sql(
     ORDER BY cc.domain, cc.person_count DESC
     """
     return final_sql.strip()
+
 
 ## this function pulls the most common concepts from each domain for a given cohort
