@@ -40,13 +40,13 @@ class InteractiveClarificationSession:
         # Import the clarification module
         from hitl_clarification_working import (
             agent, ClarificationDecision, CohortDefinition, 
-            extract_demographics_agent, DemographicsExtraction
+            demographics_extractor, DemographicsExtraction
         )
         
         self.agent = agent
         self.ClarificationDecision = ClarificationDecision
         self.CohortDefinition = CohortDefinition
-        self.extract_demographics_agent = extract_demographics_agent
+        self.demographics_extractor = demographics_extractor
         self.DemographicsExtraction = DemographicsExtraction
         
         # Track current state
@@ -62,10 +62,10 @@ class InteractiveClarificationSession:
     
     def _extract_initial_demographics(self):
         """Extract demographics from initial description."""
-        result = self.extract_demographics_agent.run_sync(
-            f"Extract demographics from: {self.initial_description}"
+        result = self.demographics_extractor.run_sync(
+            self.initial_description
         )
-        extracted: DemographicsExtraction = result.output
+        extracted = result.output
         
         demographics = {}
         if extracted.age:
