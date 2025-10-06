@@ -1198,67 +1198,11 @@ with gr.Blocks(
         outputs=stage4_json_download_main,
     )
     
-    # Backup dashboard in artifacts section (keep for compatibility)
+    # Simple JSON loader for artifacts section
     load_stage4_btn.click(
-        load_stage4_dashboard,
-        inputs=selected_run_id,
-        outputs=[
-            stage4_summary_cards,
-            stage4_quick_stats,
-            stage4_quality,
-            stage4_insights,
-            stage4_gender_chart,
-            stage4_age_chart,
-            stage4_year_chart,
-            stage4_monthly_chart,
-            stage4_characteristics_table,
-            stage4_output,
-        ],
-    )
-    
-    # Export buttons
-    def export_csv_handler(run_id: str) -> Optional[str]:
-        """Export analytics to CSV."""
-        if not run_id:
-            return None
-        run = service.get_run(run_id)
-        if not run or not run.stage4_path:
-            return None
-        try:
-            with open(run.stage4_path) as f:
-                analytics = json.load(f)
-            
-            # Create temp file
-            temp_dir = tempfile.gettempdir()
-            csv_path = Path(temp_dir) / f"cohort_{run_id}_characteristics.csv"
-            export_analytics_csv(analytics, csv_path)
-            return str(csv_path)
-        except Exception:
-            return None
-    
-    def export_json_handler(run_id: str) -> Optional[str]:
-        """Export analytics to JSON."""
-        if not run_id:
-            return None
-        run = service.get_run(run_id)
-        if not run or not run.stage4_path:
-            return None
-        try:
-            # Just return the existing analytics file path
-            return str(run.stage4_path)
-        except Exception:
-            return None
-    
-    export_csv_btn.click(
-        export_csv_handler,
-        inputs=selected_run_id,
-        outputs=stage4_csv_download,
-    )
-    
-    export_json_btn.click(
-        export_json_handler,
-        inputs=selected_run_id,
-        outputs=stage4_json_download,
+        load_artifact,
+        inputs=[selected_run_id, gr.State("analytics")],
+        outputs=stage4_output,
     )
 
     # Auto-refresh runs and current run display (including dashboard)
