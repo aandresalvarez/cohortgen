@@ -271,15 +271,18 @@ def get_run_display(run_id: Optional[str]) -> Tuple[str, bool]:
     return "\n".join(output), stage4_complete
 
 
-def update_display_and_dashboard(run_id):
-    """Update run display and show dashboard accordion if Stage 4 complete (manual refresh required)."""
+def update_display_and_dashboard(run_id, auto_load=True):
+    """Update run display and auto-load dashboard if Stage 4 complete (first time only)."""
     display_text, stage4_complete = get_run_display(run_id)
     
-    # Show dashboard accordion if Stage 4 is complete, but don't auto-load data
-    # User will click the refresh button to load data
-    if stage4_complete and run_id:
+    # Auto-load dashboard data if Stage 4 is complete and auto_load is True
+    if stage4_complete and run_id and auto_load:
+        dashboard_data = load_stage4_dashboard(run_id)
+        return (display_text, gr.update(visible=True, open=True)) + dashboard_data
+    elif stage4_complete and run_id:
+        # Stage 4 complete but don't auto-load (timer refresh)
         empty_df = pd.DataFrame()
-        return (display_text, gr.update(visible=True, open=True)) + ("", "*Click the 🔄 Refresh button to load analytics*", "", "", empty_df, empty_df, empty_df, empty_df, empty_df, "")
+        return (display_text, gr.update(visible=True, open=True)) + ("", "", "", "", empty_df, empty_df, empty_df, empty_df, empty_df, "")
     else:
         # Return empty dashboard data when not visible
         empty_df = pd.DataFrame()
@@ -1076,7 +1079,7 @@ with gr.Blocks(
         return None
 
     runs_table.select(select_run, outputs=selected_run_id).then(
-        update_display_and_dashboard,
+        lambda run_id: update_display_and_dashboard(run_id, auto_load=True),
         inputs=selected_run_id,
         outputs=[
             run_display,
@@ -1302,12 +1305,12 @@ with gr.Blocks(
         outputs=stage4_output,
     )
 
-    # Auto-refresh runs and current run display (including dashboard)
+    # Auto-refresh runs list and run display (but NOT dashboard data)
     refresh_timer.tick(
         lambda: get_runs_list(),
         outputs=runs_table,
     ).then(
-        update_display_and_dashboard,
+        lambda run_id: update_display_and_dashboard(run_id, auto_load=False),
         inputs=selected_run_id,
         outputs=[
             run_display,
