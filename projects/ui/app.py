@@ -425,9 +425,9 @@ def render_stage(stage_result, run) -> str:
                         if fixes_needed:
                             output.append("**Note:** SQL was automatically fixed after initial validation errors")
                         
-                        if "estimated_cost_usd" in validation:
+                        if validation.get("estimated_cost_usd") is not None:
                             output.append(f"- **Estimated query cost:** ${validation['estimated_cost_usd']:.4f}")
-                        if "total_bytes_processed" in validation:
+                        if validation.get("total_bytes_processed"):
                             gb = validation["total_bytes_processed"] / (1024**3)
                             output.append(f"- **Data to process:** {gb:.2f} GB")
                         validation_shown = True
