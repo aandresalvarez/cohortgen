@@ -76,63 +76,64 @@ def generate_summary_cards_html(analytics: Dict[str, Any]) -> str:
         if years:
             date_range = f"{int(min(years))} - {int(max(years))}"
     
-    html = """
+    # Use f-string instead of .format() to avoid CSS curly brace conflicts
+    html = f"""
     <style>
-        .metric-cards {
+        .metric-cards {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin: 20px 0;
-        }
-        .metric-card {
+        }}
+        .metric-card {{
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 12px;
             padding: 20px;
             color: white;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .metric-card.secondary {
+        }}
+        .metric-card.secondary {{
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        .metric-card.tertiary {
+        }}
+        .metric-card.tertiary {{
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        .metric-card.quaternary {
+        }}
+        .metric-card.quaternary {{
             background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-        .metric-label {
+        }}
+        .metric-label {{
             font-size: 14px;
             opacity: 0.9;
             margin-bottom: 8px;
             text-transform: uppercase;
             letter-spacing: 1px;
-        }
-        .metric-value {
+        }}
+        .metric-value {{
             font-size: 32px;
             font-weight: bold;
             margin-bottom: 0;
-        }
+        }}
     </style>
     
     <div class="metric-cards">
         <div class="metric-card">
             <div class="metric-label">Total Patients</div>
-            <div class="metric-value">{:,}</div>
+            <div class="metric-value">{cohort_size:,}</div>
         </div>
         <div class="metric-card secondary">
             <div class="metric-label">Mean Age at Entry</div>
-            <div class="metric-value">{}</div>
+            <div class="metric-value">{mean_age}</div>
         </div>
         <div class="metric-card tertiary">
             <div class="metric-label">Gender Ratio</div>
-            <div class="metric-value">{}</div>
+            <div class="metric-value">{gender_ratio}</div>
         </div>
         <div class="metric-card quaternary">
             <div class="metric-label">Date Range</div>
-            <div class="metric-value">{}</div>
+            <div class="metric-value">{date_range}</div>
         </div>
     </div>
-    """.format(cohort_size, mean_age, gender_ratio, date_range)
+    """
     
     return html
 
@@ -445,31 +446,36 @@ def generate_data_quality_html(analytics: Dict[str, Any]) -> str:
         known_dates = sum(row.get("n", 0) for row in results["index_year"])
         date_complete = (known_dates / cohort_size * 100) if cohort_size > 0 else 0
     
-    html = """
+    # Use f-string with escaped braces for CSS
+    gender_class = "excellent" if gender_complete >= 95 else "good" if gender_complete >= 80 else "warning"
+    age_class = "excellent" if age_complete >= 95 else "good" if age_complete >= 80 else "warning"
+    date_class = "excellent" if date_complete >= 95 else "good" if date_complete >= 80 else "warning"
+    
+    html = f"""
     <style>
-        .quality-grid {
+        .quality-grid {{
             display: grid;
             grid-template-columns: 1fr;
             gap: 15px;
             margin: 20px 0;
-        }
-        .quality-item {
+        }}
+        .quality-item {{
             display: flex;
             align-items: center;
             gap: 15px;
-        }
-        .quality-label {
+        }}
+        .quality-label {{
             min-width: 200px;
             font-weight: 500;
-        }
-        .quality-bar-container {
+        }}
+        .quality-bar-container {{
             flex: 1;
             background: #e0e0e0;
             border-radius: 8px;
             height: 24px;
             overflow: hidden;
-        }
-        .quality-bar {
+        }}
+        .quality-bar {{
             height: 100%;
             border-radius: 8px;
             transition: width 0.3s ease;
@@ -479,46 +485,39 @@ def generate_data_quality_html(analytics: Dict[str, Any]) -> str:
             color: white;
             font-size: 12px;
             font-weight: bold;
-        }
-        .quality-bar.excellent {
+        }}
+        .quality-bar.excellent {{
             background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
-        }
-        .quality-bar.good {
+        }}
+        .quality-bar.good {{
             background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
-        }
-        .quality-bar.warning {
+        }}
+        .quality-bar.warning {{
             background: linear-gradient(90deg, #fa709a 0%, #fee140 100%);
-        }
+        }}
     </style>
     
     <div class="quality-grid">
         <div class="quality-item">
             <div class="quality-label">✅ Gender Completeness</div>
             <div class="quality-bar-container">
-                <div class="quality-bar {}" style="width: {}%">{:.1f}%</div>
+                <div class="quality-bar {gender_class}" style="width: {gender_complete}%">{gender_complete:.1f}%</div>
             </div>
         </div>
         <div class="quality-item">
             <div class="quality-label">✅ Age Completeness</div>
             <div class="quality-bar-container">
-                <div class="quality-bar {}" style="width: {}%">{:.1f}%</div>
+                <div class="quality-bar {age_class}" style="width: {age_complete}%">{age_complete:.1f}%</div>
             </div>
         </div>
         <div class="quality-item">
             <div class="quality-label">✅ Date Completeness</div>
             <div class="quality-bar-container">
-                <div class="quality-bar {}" style="width: {}%">{:.1f}%</div>
+                <div class="quality-bar {date_class}" style="width: {date_complete}%">{date_complete:.1f}%</div>
             </div>
         </div>
     </div>
-    """.format(
-        "excellent" if gender_complete >= 95 else "good" if gender_complete >= 80 else "warning",
-        gender_complete, gender_complete,
-        "excellent" if age_complete >= 95 else "good" if age_complete >= 80 else "warning",
-        age_complete, age_complete,
-        "excellent" if date_complete >= 95 else "good" if date_complete >= 80 else "warning",
-        date_complete, date_complete
-    )
+    """
     
     return html
 
