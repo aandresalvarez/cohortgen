@@ -163,10 +163,10 @@ def start_selected_run(selected_run_id: str) -> tuple[str, gr.update, list, str]
         return f"❌ Error: {str(e)}", gr.update(visible=False), [], ""
 
 
-def send_clarification_message_handler(run_id: str, message: str, chat_history: list) -> tuple[list, str, gr.update]:
+def send_clarification_message_handler(run_id: str, message: str, chat_history: list) -> tuple[list, str, gr.update, gr.update]:
     """Handle sending a clarification message."""
     if not run_id or not message.strip():
-        return chat_history, "", gr.update()
+        return chat_history, "", gr.update(), gr.update()
     
     # Add user message to history
     chat_history.append({"role": "user", "content": message})
@@ -191,17 +191,23 @@ def send_clarification_message_handler(run_id: str, message: str, chat_history: 
             except Exception as e:
                 chat_history.append({"role": "assistant", "content": f"⚠️ Error starting Stage 2: {str(e)}"})
             
-            return chat_history, "", gr.update(value=final_def_md, visible=True)
+            # Hide chat accordion and show final definition
+            return (
+                chat_history, 
+                "", 
+                gr.update(value=final_def_md, visible=True),
+                gr.update(visible=False)  # Hide the chat accordion
+            )
         else:
             # Add next question
             if next_question:
                 chat_history.append({"role": "assistant", "content": next_question})
             
-            return chat_history, "", gr.update()
+            return chat_history, "", gr.update(), gr.update()
     
     except Exception as e:
         chat_history.append({"role": "assistant", "content": f"❌ Error: {str(e)}"})
-        return chat_history, "", gr.update()
+        return chat_history, "", gr.update(), gr.update()
 
 
 def format_cohort_definition(cohort_def: dict) -> str:
@@ -1322,7 +1328,7 @@ with gr.Blocks(
     stage1_send_btn.click(
         send_clarification_message_handler,
         inputs=[selected_run_id, stage1_input, stage1_chatbot],
-        outputs=[stage1_chatbot, stage1_input, stage1_final_def],
+        outputs=[stage1_chatbot, stage1_input, stage1_final_def, stage1_chat_accordion],
     )
 
     # Delete run
