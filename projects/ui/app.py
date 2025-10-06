@@ -581,24 +581,24 @@ def load_artifact(run_id: str, artifact_type: str) -> str:
     return content
 
 
-def load_stage4_dashboard(run_id: str) -> Tuple[str, str, str, str, Any, Any, Any, Any, Any, str, str]:
+def load_stage4_dashboard(run_id: str) -> Tuple[str, str, str, str, Any, Any, Any, Any, Any, str]:
     """
     Load and prepare Stage 4 analytics dashboard.
     
     Returns: (summary_cards_html, quick_stats, quality_html, insights_md, 
               gender_chart_df, age_chart_df, year_chart_df, monthly_chart_df, 
-              characteristics_table_df, raw_json, export_status)
+              characteristics_table_df, raw_json)
     """
     if not run_id:
         empty_df = pd.DataFrame()
         return ("", "*No run selected*", "", "*No run selected*", 
-                empty_df, empty_df, empty_df, empty_df, empty_df, "", "No run selected")
+                empty_df, empty_df, empty_df, empty_df, empty_df, "")
     
     run = service.get_run(run_id)
     if not run or not run.stage4_path:
         empty_df = pd.DataFrame()
         return ("", "*Analytics not available yet*", "", "*Analytics not available yet*", 
-                empty_df, empty_df, empty_df, empty_df, empty_df, "", "Analytics not available")
+                empty_df, empty_df, empty_df, empty_df, empty_df, "")
     
     try:
         # Load analytics JSON
@@ -609,7 +609,7 @@ def load_stage4_dashboard(run_id: str) -> Tuple[str, str, str, str, Any, Any, An
             empty_df = pd.DataFrame()
             return ("", "*Analytics incomplete*", "", "*Analytics incomplete*", 
                     empty_df, empty_df, empty_df, empty_df, empty_df, 
-                    json.dumps(analytics, indent=2), "Analytics incomplete")
+                    json.dumps(analytics, indent=2))
         
         # Generate all dashboard components
         summary_html = generate_summary_cards_html(analytics)
@@ -635,13 +635,12 @@ def load_stage4_dashboard(run_id: str) -> Tuple[str, str, str, str, Any, Any, An
         raw_json = json.dumps(analytics, indent=2)
         
         return (summary_html, quick_stats, quality_html, insights, 
-                gender_df, age_df, year_df, monthly_df, char_df, raw_json, 
-                "✅ Dashboard loaded successfully")
+                gender_df, age_df, year_df, monthly_df, char_df, raw_json)
     
     except Exception as e:
         empty_df = pd.DataFrame()
         return ("", f"*Error loading dashboard: {str(e)}*", "", f"*Error: {str(e)}*", 
-                empty_df, empty_df, empty_df, empty_df, empty_df, "", f"Error: {str(e)}")
+                empty_df, empty_df, empty_df, empty_df, empty_df, "")
 
 
 # Build Gradio interface
@@ -1086,7 +1085,6 @@ with gr.Blocks(
             stage4_monthly_chart,
             stage4_characteristics_table,
             stage4_output,
-            run_status_display,  # Show status message
         ],
     )
     
