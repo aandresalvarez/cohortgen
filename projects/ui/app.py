@@ -217,14 +217,14 @@ def test_individual_stage(run_id: str, stage_num: int) -> str:
         return f"❌ Stage {stage_num} failed: {str(e)}"
 
 
-def get_run_display(run_id: Optional[str]) -> str:
-    """Get formatted display for a run."""
+def get_run_display(run_id: Optional[str]) -> Tuple[str, bool]:
+    """Get formatted display for a run and whether Stage 4 is complete."""
     if not run_id:
-        return "⬅️ Select a run from the list to view details"
+        return "⬅️ Select a run from the list to view details", False
 
     run = service.get_run(run_id)
     if not run:
-        return f"⚠️ Run {run_id} not found"
+        return f"⚠️ Run {run_id} not found", False
 
     # Build display
     output = []
@@ -251,10 +251,13 @@ def get_run_display(run_id: Optional[str]) -> str:
     # Stages
     output.append("\n---\n")
 
+    stage4_complete = False
     if not run.stages:
         output.append("*No stages started yet. Click 'Start Run' to begin.*")
     else:
         for stage in run.stages:
+            if stage.stage == 4 and stage.status == StageStatus.COMPLETE:
+                stage4_complete = True
             output.append(render_stage(stage, run))
             output.append("")
 
@@ -264,7 +267,21 @@ def get_run_display(run_id: Optional[str]) -> str:
         output.append("## ❌ Error")
         output.append(f"```\n{run.error}\n```")
 
-    return "\n".join(output)
+    return "\n".join(output), stage4_complete
+
+
+def update_display_and_dashboard(run_id):
+    """Update run display and auto-load dashboard if Stage 4 complete."""
+    display_text, stage4_complete = get_run_display(run_id)
+    
+    # Auto-load dashboard data if Stage 4 is complete
+    if stage4_complete and run_id:
+        dashboard_data = load_stage4_dashboard(run_id)
+        return (display_text, gr.update(visible=True, open=True)) + dashboard_data
+    else:
+        # Return empty dashboard data when not visible
+        empty_df = pd.DataFrame()
+        return (display_text, gr.update(visible=False)) + ("", "", "", "", empty_df, empty_df, empty_df, empty_df, empty_df, "")
 
 
 def format_sql(sql_text: str) -> str:
