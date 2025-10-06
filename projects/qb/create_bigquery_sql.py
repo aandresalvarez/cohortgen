@@ -86,6 +86,13 @@ REQUIREMENTS:
 7. **Include descendants**: If `include_descendants=true`, use `concept_ancestor` table to expand to descendant concepts
 8. **Standard concepts**: Prefer `standard_concept='S'` unless specified otherwise
 9. **Demographics filtering**: ALWAYS include age/gender filters from clinical definition if specified
+   AGE FILTERING RULES (CRITICAL):
+   - "Adults" / "age 18+" / "18 and older" → `EXTRACT(YEAR FROM index_date) - p.year_of_birth >= 18`
+   - "65+" / "elderly" → `EXTRACT(YEAR FROM index_date) - p.year_of_birth >= 65`
+   - "< 18" / "pediatric" / "children" → `EXTRACT(YEAR FROM index_date) - p.year_of_birth < 18`
+   - "20-30" / "between 20 and 30" → `EXTRACT(YEAR FROM index_date) - p.year_of_birth BETWEEN 20 AND 30`
+   - Calculate age AT THE INDEX DATE, not current date
+   - Use >= for "X and older" or "X+", use < for "under X"
 10. **Single SELECT statement**: Use CTEs if needed, but end with one final SELECT
 11. **No commentary**: Output ONLY SQL, no markdown or explanations
 
@@ -99,10 +106,12 @@ WITH measurement_concepts AS (
   AND EXTRACT(YEAR FROM m.measurement_date) = 2020
 ),
 demographics AS (
-  SELECT person_id
-  FROM `project.dataset.person` p
-  WHERE EXTRACT(YEAR FROM CURRENT_DATE()) - p.year_of_birth BETWEEN 20 AND 30
-  AND p.gender_concept_id = 8507  -- Male
+  -- Age at index date (not current age!)
+  SELECT fi.person_id
+  FROM first_index fi  -- CTE with person_id and index_date
+  JOIN `project.dataset.person` p ON p.person_id = fi.person_id
+  WHERE EXTRACT(YEAR FROM fi.index_date) - p.year_of_birth >= 18  -- Adults 18+
+  -- Note: Use >= for "X+" or "and older", use < for "under X"
 )
 SELECT DISTINCT mc.person_id
 FROM measurement_concepts mc
@@ -133,7 +142,12 @@ CRITICAL RULES:
    - Some datasets have typos (e.g., "procedure_dat" instead of "procedure_date")
    - Date columns might be DATE or DATETIME type
    - Always check the schema for exact column names
-4. **Fix strategies**:
+4. **AGE LOGIC**:
+   - "Adults 18+" / "18 and older" → `EXTRACT(YEAR FROM index_date) - p.year_of_birth >= 18` (NOT < 18!)
+   - "Under 18" / "pediatric" → `EXTRACT(YEAR FROM index_date) - p.year_of_birth < 18`
+   - ALWAYS use >= for "X and older" or "X+", use < for "under X"
+   - Calculate age at index date, not current date
+5. **Fix strategies**:
    - Column not found → Check schema, use correct column name
    - Table not found → Verify project.dataset.table path
    - Type mismatch → Cast or convert as needed
