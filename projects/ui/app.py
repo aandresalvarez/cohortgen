@@ -341,7 +341,7 @@ def get_run_display(run_id: Optional[str]) -> Tuple[str, bool]:
     if run.status == RunStatus.RUNNING:
         current_stage = None
         for stage in run.stages:
-            if stage.status == StageStatus.IN_PROGRESS or stage.status == StageStatus.WAITING_FOR_INPUT:
+            if stage.status == StageStatus.RUNNING or stage.status == StageStatus.WAITING_FOR_INPUT:
                 current_stage = stage.stage
                 break
         
