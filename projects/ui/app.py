@@ -141,16 +141,26 @@ def create_new_run(
         return f"❌ Error: {str(e)}", get_runs_list()
 
 
-def start_selected_run(selected_run_id: str) -> str:
-    """Start executing the selected run."""
+def start_selected_run(selected_run_id: str) -> tuple[str, gr.update, list, str]:
+    """Start executing the selected run with interactive clarification."""
     if not selected_run_id:
-        return "⚠️ Please select a run first"
+        return "⚠️ Please select a run first", gr.update(visible=False), [], ""
 
     try:
-        service.start_run(selected_run_id)
-        return f"▶️ Started run #{selected_run_id[:6]}"
+        # Start interactive clarification session
+        first_question, is_complete = service.start_interactive_clarification(selected_run_id)
+        
+        # Build initial chat history
+        chat_history = [{"role": "assistant", "content": first_question}]
+        
+        return (
+            f"▶️ Started run #{selected_run_id[:6]} - Please answer the clarification questions",
+            gr.update(visible=True, open=True),  # Show chat accordion
+            chat_history,
+            ""  # Clear input
+        )
     except Exception as e:
-        return f"❌ Error: {str(e)}"
+        return f"❌ Error: {str(e)}", gr.update(visible=False), [], ""
 
 
 def delete_selected_run(selected_run_id: str) -> tuple[str, list[list[str]]]:
@@ -754,6 +764,29 @@ with gr.Blocks(
                 elem_classes=["run-display"],
             )
             
+            # Stage 1 Interactive Clarification Chat (only visible when waiting for input)
+            stage1_chat_accordion = gr.Accordion("💬 Stage 1: Clinical Clarification Chat", open=True, visible=False)
+            with stage1_chat_accordion:
+                gr.Markdown("Answer the questions below to refine your cohort definition:")
+                
+                stage1_chatbot = gr.Chatbot(
+                    label="Clarification Conversation",
+                    height=400,
+                    type="messages"  # Use messages format for better styling
+                )
+                
+                with gr.Row():
+                    stage1_input = gr.Textbox(
+                        placeholder="Type your answer here...",
+                        show_label=False,
+                        scale=4,
+                        container=False
+                    )
+                    stage1_send_btn = gr.Button("Send", size="sm", scale=1, variant="primary")
+                
+                # Final cohort definition display (shown after completion)
+                stage1_final_def = gr.Markdown(visible=False)
+            
             # Analytics Dashboard - Only visible when Stage 4 is complete
             analytics_dashboard_accordion = gr.Accordion("📊 Analytics Dashboard", open=True, visible=False)
             with analytics_dashboard_accordion:
@@ -1154,11 +1187,18 @@ with gr.Blocks(
         outputs=new_run_panel,
     )
 
-    # Start run
+    # Start run with interactive clarification
     start_btn.click(
         start_selected_run,
         inputs=selected_run_id,
-        outputs=action_status,
+        outputs=[action_status, stage1_chat_accordion, stage1_chatbot, stage1_input],
+    )
+    
+    # Send clarification message
+    stage1_send_btn.click(
+        send_clarification_message_handler,
+        inputs=[selected_run_id, stage1_input, stage1_chatbot],
+        outputs=[stage1_chatbot, stage1_input, stage1_final_def],
     )
 
     # Delete run
