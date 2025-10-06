@@ -1072,8 +1072,8 @@ with gr.Blocks(
                 label="Status", interactive=False, show_label=False
             )
 
-    # Auto-refresh for running runs
-    refresh_timer = gr.Timer(value=2.0, active=True)
+    # Auto-refresh for running runs (every 2 minutes)
+    refresh_timer = gr.Timer(value=120.0, active=True)
 
     # Event handlers
 
