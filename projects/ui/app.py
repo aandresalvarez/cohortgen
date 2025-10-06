@@ -561,11 +561,23 @@ def load_stage4_dashboard(run_id: str) -> Tuple[str, str, str, str, Any, Any, An
             cohort_description = run.user_inputs.cohort_description
         insights = generate_ai_insights(analytics, cohort_description)
         
-        # Prepare chart data
-        gender_df = prepare_gender_chart_data(analytics) or pd.DataFrame()
-        age_df = prepare_age_chart_data(analytics) or pd.DataFrame()
-        year_df = prepare_year_trend_data(analytics) or pd.DataFrame()
-        monthly_df = prepare_monthly_trend_data(analytics) or pd.DataFrame()
+        # Prepare chart data (use 'is None' to avoid DataFrame ambiguity)
+        gender_df = prepare_gender_chart_data(analytics)
+        if gender_df is None:
+            gender_df = pd.DataFrame()
+        
+        age_df = prepare_age_chart_data(analytics)
+        if age_df is None:
+            age_df = pd.DataFrame()
+        
+        year_df = prepare_year_trend_data(analytics)
+        if year_df is None:
+            year_df = pd.DataFrame()
+        
+        monthly_df = prepare_monthly_trend_data(analytics)
+        if monthly_df is None:
+            monthly_df = pd.DataFrame()
+        
         char_df = prepare_characteristics_table(analytics)
         
         # Generate quick stats text
