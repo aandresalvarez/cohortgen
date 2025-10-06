@@ -163,6 +163,88 @@ def start_selected_run(selected_run_id: str) -> tuple[str, gr.update, list, str]
         return f"❌ Error: {str(e)}", gr.update(visible=False), [], ""
 
 
+def send_clarification_message_handler(run_id: str, message: str, chat_history: list) -> tuple[list, str, gr.update]:
+    """Handle sending a clarification message."""
+    if not run_id or not message.strip():
+        return chat_history, "", gr.update()
+    
+    # Add user message to history
+    chat_history.append({"role": "user", "content": message})
+    
+    try:
+        # Send message to service
+        next_question, is_complete, cohort_def = service.send_clarification_message(run_id, message)
+        
+        if is_complete:
+            # Show completion message
+            chat_history.append({
+                "role": "assistant", 
+                "content": "✅ **Clarification complete!** Generating your cohort definition..."
+            })
+            
+            # Format final definition
+            final_def_md = format_cohort_definition(cohort_def)
+            
+            return chat_history, "", gr.update(value=final_def_md, visible=True)
+        else:
+            # Add next question
+            if next_question:
+                chat_history.append({"role": "assistant", "content": next_question})
+            
+            return chat_history, "", gr.update()
+    
+    except Exception as e:
+        chat_history.append({"role": "assistant", "content": f"❌ Error: {str(e)}"})
+        return chat_history, "", gr.update()
+
+
+def format_cohort_definition(cohort_def: dict) -> str:
+    """Format cohort definition for display."""
+    if not cohort_def:
+        return ""
+    
+    output = ["## 📋 Final Cohort Definition", ""]
+    
+    if cohort_def.get("index_event"):
+        output.append(f"**✅ Index Event:** {cohort_def['index_event']}")
+        output.append("")
+    
+    if cohort_def.get("inclusion_criteria"):
+        output.append("**✅ Inclusion Criteria:**")
+        for criterion in cohort_def["inclusion_criteria"]:
+            output.append(f"- {criterion}")
+        output.append("")
+    
+    if cohort_def.get("exclusion_criteria"):
+        output.append("**✅ Exclusion Criteria:**")
+        for criterion in cohort_def["exclusion_criteria"]:
+            output.append(f"- {criterion}")
+        output.append("")
+    
+    if cohort_def.get("observation_window"):
+        output.append(f"**✅ Observation Window:** {cohort_def['observation_window']}")
+        output.append("")
+    
+    if cohort_def.get("demographics"):
+        output.append("**✅ Demographics:**")
+        for key, value in cohort_def["demographics"].items():
+            output.append(f"- {key.title()}: {value}")
+        output.append("")
+    
+    if cohort_def.get("prior_observation"):
+        output.append(f"**✅ Prior Observation:** {cohort_def['prior_observation']}")
+        output.append("")
+    
+    if cohort_def.get("cohort_exit"):
+        output.append(f"**✅ Cohort Exit:** {cohort_def['cohort_exit']}")
+        output.append("")
+    
+    output.append("---")
+    output.append("*This definition will be used to generate OMOP concepts in Stage 2.*")
+    
+    return "\n".join(output)
+
+
 def delete_selected_run(selected_run_id: str) -> tuple[str, list[list[str]]]:
     """Delete the selected run."""
     if not selected_run_id:
