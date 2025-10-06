@@ -179,11 +179,17 @@ def send_clarification_message_handler(run_id: str, message: str, chat_history: 
             # Show completion message
             chat_history.append({
                 "role": "assistant", 
-                "content": "✅ **Clarification complete!** Generating your cohort definition..."
+                "content": "✅ **Clarification complete!** Starting Stage 2: Concept Discovery..."
             })
             
             # Format final definition
             final_def_md = format_cohort_definition(cohort_def)
+            
+            # Trigger Stage 2 to start
+            try:
+                service.start_run(run_id, stages=[2, 3, 4])
+            except Exception as e:
+                chat_history.append({"role": "assistant", "content": f"⚠️ Error starting Stage 2: {str(e)}"})
             
             return chat_history, "", gr.update(value=final_def_md, visible=True)
         else:
@@ -330,6 +336,19 @@ def get_run_display(run_id: Optional[str]) -> Tuple[str, bool]:
     )
     if run.total_duration_seconds > 0:
         output.append(f"**Duration:** {format_duration(run.total_duration_seconds)}")
+    
+    # Show current stage if running
+    if run.status == RunStatus.RUNNING:
+        current_stage = None
+        for stage in run.stages:
+            if stage.status == StageStatus.IN_PROGRESS or stage.status == StageStatus.WAITING_FOR_INPUT:
+                current_stage = stage.stage
+                break
+        
+        if current_stage:
+            stage_names = {1: "Clinical Clarification", 2: "Concept Discovery", 3: "SQL Generation", 4: "Analytics"}
+            output.append(f"\n### 🔄 Currently Running: **Stage {current_stage} - {stage_names.get(current_stage, 'Unknown')}**\n")
+    
     output.append("\n---\n")
 
     # Input
