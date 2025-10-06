@@ -396,11 +396,11 @@ def render_stage(stage_result, run) -> str:
                     output.append("```")
                     
         elif stage_result.stage == 3:
-            # Show SQL generated
+            # Show SQL generated with FINAL validation status prominently
             output.append("")
-            output.append("**BigQuery SQL Generated**")
             
-            # Show validation if available
+            # Show validation if available - THIS IS THE FINAL RESULT
+            validation_shown = False
             if run.stage3_validation_path:
                 try:
                     import json
@@ -408,20 +408,44 @@ def render_stage(stage_result, run) -> str:
                         validation = json.load(f)
                     
                     if validation.get("is_valid"):
+                        output.append("## ✅ **SQL GENERATION SUCCESSFUL**")
                         output.append("")
-                        output.append(f"✅ **SQL Validated** (BigQuery dry run successful)")
-                        if "estimated_cost" in validation:
-                            output.append(f"- Estimated query cost: ${validation['estimated_cost']:.4f}")
-                        if "bytes_processed" in validation:
-                            gb = validation["bytes_processed"] / (1024**3)
-                            output.append(f"- Data to process: {gb:.2f} GB")
+                        output.append("**BigQuery Validation:** ✅ Passed (dry run successful)")
+                        
+                        # Check if fixes were needed by looking at the log
+                        fixes_needed = False
+                        if run.stage3_log_path:
+                            try:
+                                log_content = get_stage_log(run.run_id, 3)
+                                if "validation failed (attempt" in log_content.lower():
+                                    fixes_needed = True
+                            except Exception:
+                                pass
+                        
+                        if fixes_needed:
+                            output.append("**Note:** SQL was automatically fixed after initial validation errors")
+                        
+                        if "estimated_cost_usd" in validation:
+                            output.append(f"- **Estimated query cost:** ${validation['estimated_cost_usd']:.4f}")
+                        if "total_bytes_processed" in validation:
+                            gb = validation["total_bytes_processed"] / (1024**3)
+                            output.append(f"- **Data to process:** {gb:.2f} GB")
+                        validation_shown = True
                     else:
+                        output.append("## ❌ **SQL GENERATION FAILED**")
                         output.append("")
-                        output.append("❌ **SQL Validation Failed**")
+                        output.append("**BigQuery Validation:** ❌ Failed after all fix attempts")
                         if validation.get("errors"):
-                            output.append(f"```\n{validation['errors'][0]}\n```")
+                            output.append("")
+                            output.append("**Errors:**")
+                            for error in validation.get("errors", [])[:3]:  # Show up to 3 errors
+                                output.append(f"- {error}")
+                        validation_shown = True
                 except Exception:
                     pass
+            
+            if not validation_shown:
+                output.append("**BigQuery SQL Generated**")
             
             # Show formatted SQL automatically
             if run.stage3_sql_path:
@@ -448,20 +472,24 @@ def render_stage(stage_result, run) -> str:
                 except Exception:
                     pass
             
-            # Show log if available
+            # Show log summary (collapsed by default in user's mind - just show key info)
             if run.stage3_log_path:
                 log_content = get_stage_log(run.run_id, 3)
                 if log_content:
+                    # Count validation attempts
+                    attempts = log_content.count("Validating SQL (dry run)")
+                    fixes = log_content.count("Attempting to fix SQL")
+                    
                     output.append("")
-                    output.append("**Generation Log:**")
-                    output.append("```")
-                    lines = log_content.strip().split("\n")
-                    if len(lines) > 20:
-                        output.append("...")
-                        output.extend(lines[-20:])
+                    output.append("**Process Summary:**")
+                    if attempts > 1:
+                        output.append(f"- Generated SQL and validated in {attempts} iterations")
+                        output.append(f"- Applied {fixes} automatic fix{'es' if fixes != 1 else ''}")
                     else:
-                        output.extend(lines)
-                    output.append("```")
+                        output.append("- Generated SQL and validated successfully on first attempt")
+                    
+                    output.append("")
+                    output.append("*💡 View full generation log in 'Download Artifacts & Logs' section below for detailed fix history*")
         elif stage_result.stage == 4:
             # Show analytics complete with link to dashboard
             output.append("")
