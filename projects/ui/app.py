@@ -996,7 +996,22 @@ with gr.Blocks(
         return None
 
     runs_table.select(select_run, outputs=selected_run_id).then(
-        get_run_display, inputs=selected_run_id, outputs=run_display
+        update_display_and_dashboard,
+        inputs=selected_run_id,
+        outputs=[
+            run_display,
+            analytics_dashboard_accordion,
+            stage4_summary_cards_main,
+            stage4_quick_stats_main,
+            stage4_quality_main,
+            stage4_insights_main,
+            stage4_gender_chart_main,
+            stage4_age_chart_main,
+            stage4_year_chart_main,
+            stage4_monthly_chart_main,
+            stage4_characteristics_table_main,
+            stage4_output_main,
+        ],
     )
 
     # New run button shows the form
