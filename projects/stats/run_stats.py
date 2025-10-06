@@ -191,6 +191,37 @@ GROUP BY 1
 ORDER BY 1
 """.strip()
         )
+        
+        # 5) Age statistics (for summary cards)
+        queries["age_stats"] = (
+            f"""
+{base_cte}
+SELECT
+  AVG(EXTRACT(YEAR FROM i.index_date) - p.year_of_birth) AS mean_age,
+  APPROX_QUANTILES(EXTRACT(YEAR FROM i.index_date) - p.year_of_birth, 100)[OFFSET(50)] AS median_age,
+  STDDEV(EXTRACT(YEAR FROM i.index_date) - p.year_of_birth) AS std_age,
+  MIN(EXTRACT(YEAR FROM i.index_date) - p.year_of_birth) AS min_age,
+  MAX(EXTRACT(YEAR FROM i.index_date) - p.year_of_birth) AS max_age
+FROM cohort c
+{join_index}
+JOIN {person} p ON p.person_id = c.person_id
+""".strip()
+        )
+        
+        # 6) Monthly enrollment trend
+        queries["monthly_trend"] = (
+            f"""
+{base_cte}
+SELECT
+  FORMAT_DATE('%Y-%m', i.index_date) AS month,
+  COUNT(DISTINCT c.person_id) AS n
+FROM cohort c
+{join_index}
+GROUP BY 1
+ORDER BY 1
+LIMIT 100
+""".strip()
+        )
 
     return queries
 
