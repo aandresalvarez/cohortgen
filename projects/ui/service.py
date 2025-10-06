@@ -628,11 +628,11 @@ class CohortService:
             run.stage3_sql_path = sql_path
             run.stage3_log_path = stage3_log_path
 
-            # Save validation artifact
+            # Save validation artifact (sql_output already contains all validation info)
             validation_path = self.storage.save_artifact(
                 run.run_id,
                 "sql_validation.json",
-                json.dumps(sql_output.get("validation", {}), indent=2),
+                json.dumps(sql_output, indent=2),
             )
             run.stage3_validation_path = validation_path
 
