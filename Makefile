@@ -1,71 +1,147 @@
-.PHONY: install sync test lint typecheck format clean update-flujo run validate doctor which-flujo openai-version
-.PHONY: validate-% run-% fmt
+.PHONY: install sync test lint typecheck format clean run run-log doctor check-credentials setup-bigquery help
 
-# Create/refresh the venv and install deps
-# Also ensure Flujo git source is bumped to latest main
-install: update-flujo sync
+# Default target
+help:
+	@echo "╔═══════════════════════════════════════════════════════════════════╗"
+	@echo "║           OMOP Cohort Workflow - Makefile Commands               ║"
+	@echo "╚═══════════════════════════════════════════════════════════════════╝"
+	@echo ""
+	@echo "Setup:"
+	@echo "  make install           Install/sync dependencies with uv"
+	@echo "  make sync              Sync dependencies (uv sync)"
+	@echo "  make check-credentials Check OpenAI and BigQuery credentials"
+	@echo "  make setup-bigquery    Setup BigQuery authentication (interactive)"
+	@echo ""
+	@echo "Running:"
+	@echo "  make run               Run full workflow (all 3 stages)"
+	@echo "  make run-log           Run full workflow WITH LOGGING to timestamped file"
+	@echo "  make run-clar          Run Stage 1 (Clinical Clarification)"
+	@echo "  make run-cd            Run Stage 2 (Concept Discovery)"
+	@echo "  make run-qb            Run Stage 3 (BigQuery SQL Generation)"
+	@echo ""
+	@echo "Testing:"
+	@echo "  make test              Run all tests"
+	@echo "  make test-verbose      Run tests with verbose output"
+	@echo ""
+	@echo "Code Quality:"
+	@echo "  make lint              Run linters (ruff)"
+	@echo "  make typecheck         Type check code (mypy)"
+	@echo "  make format            Format code (black)"
+	@echo "  make fmt               Alias for format"
+	@echo ""
+	@echo "Development:"
+	@echo "  make doctor            Check environment setup"
+	@echo "  make clean             Remove virtual environment"
+	@echo "  make deploy-cloudrun   Deploy to Google Cloud Run"
+	@echo ""
 
-# Update Flujo pin in pyproject.toml to latest commit on main
-update-flujo:
-	@echo "Updating Flujo revision to latest main..."
-	@uv run python scripts/update_flujo.py
+# Install dependencies using uv (creates .venv if missing)
+install: sync
 
-# Sync dependencies using uv (creates .venv if missing)
+# Sync dependencies using uv
 sync:
 	uv sync
 
-# Validate orchestrator pipeline (projects/main)
-validate:
-	cd projects/main && uv run flujo dev validate --strict
+# Check credentials setup
+check-credentials:
+	@echo "Checking credentials..."
+	@uv run python projects/shared/secrets.py
 
-# Run orchestrator pipeline with correct project venv
+# Setup BigQuery authentication
+setup-bigquery:
+	@./setup_bigquery_auth.sh
+
+# Run full workflow (all 3 stages)
 run:
-	cd projects/main && uv run flujo run --debug-export
+	@cd projects/run && ./run_full_workflow.sh
 
-# Environment doctor: ensure you're using this project's venv and SDKs
-doctor:
-	@echo "Python used by uv:" && uv run python -c 'import sys; print(sys.executable)'
-	@echo "OpenAI SDK version (project venv):" && uv run python -c 'import openai,inspect; print(getattr(openai, "__version__", "unknown"), inspect.getfile(openai))'
-	@echo "flujo status (providers):" && uv run flujo status || true
-	@echo "Which flujo binary:" && command -v flujo || true
-	@echo "Env file configured in flujo.toml (projects/main):" && sed -n '1,80p' projects/main/flujo.toml | sed -n '1,40p' | grep -i '^env_file' || true
+# Run full workflow WITH LOGGING to timestamped file
+run-log:
+	@TIMESTAMP=$$(date +"%Y%m%d_%H%M%S") && \
+	LOG_FILE="run_log_$${TIMESTAMP}.txt" && \
+	echo "════════════════════════════════════════════════════════════════" && \
+	echo "OMOP Cohort Workflow - Logging Run" && \
+	echo "Log file: $${LOG_FILE}" && \
+	echo "════════════════════════════════════════════════════════════════" && \
+	echo "" && \
+	$(MAKE) run 2>&1 | tee "$${LOG_FILE}" && \
+	echo "" && \
+	echo "════════════════════════════════════════════════════════════════" && \
+	echo "✅ Complete log saved to: $${LOG_FILE}" && \
+	echo "════════════════════════════════════════════════════════════════"
 
-# Convenience helpers
-which-flujo:
-	@command -v flujo || true
+# Run Stage 1: Clinical Clarification
+run-clar:
+	@cd projects/clar && python3 hitl_clarification_working.py
 
-openai-version:
-	uv run python -c 'import openai,inspect; print(getattr(openai, "__version__", "unknown"), inspect.getfile(openai))'
+# Run Stage 2: Concept Discovery
+run-cd:
+	@cd projects/cd && ./run_discovery.sh
+
+# Run Stage 3: BigQuery SQL Generation
+run-qb:
+	@cd projects/qb && ./run_query_builder.sh
 
 # Run tests
 test:
-	uv run pytest -q
+	@cd projects/tests && ./run_tests.sh
+
+# Run tests with verbose output
+test-verbose:
+	uv run pytest projects/tests/ -v --tb=long
 
 # Lint code
 lint:
-	uv run ruff check .
-	uv run mypy src
+	uv run ruff check projects/
 
 # Type-check code
 typecheck:
-	uv run mypy src
+	uv run mypy projects/ --ignore-missing-imports
 
 # Format code
 format:
-	uv run black .
+	uv run black projects/
+
+# Alias for formatter
+fmt: format
+
+# Environment doctor: check setup
+doctor:
+	@echo "╔═══════════════════════════════════════════════════════════════════╗"
+	@echo "║              Environment Health Check                             ║"
+	@echo "╚═══════════════════════════════════════════════════════════════════╝"
+	@echo ""
+	@echo "Python executable:"
+	@which python3 || echo "  ❌ python3 not found"
+	@echo ""
+	@echo "Python version:"
+	@python3 --version || echo "  ❌ Cannot get version"
+	@echo ""
+	@echo "UV version:"
+	@uv --version || echo "  ❌ uv not found (install from: https://docs.astral.sh/uv/)"
+	@echo ""
+	@echo "Virtual environment:"
+	@test -d .venv && echo "  ✅ .venv exists" || echo "  ⚠️  .venv not found (run: make install)"
+	@echo ""
+	@echo "Checking credentials..."
+	@uv run python projects/shared/secrets.py
+	@echo ""
+	@echo "Project structure:"
+	@test -d projects/clar && echo "  ✅ Stage 1 (clar) exists" || echo "  ❌ Stage 1 missing"
+	@test -d projects/cd && echo "  ✅ Stage 2 (cd) exists" || echo "  ❌ Stage 2 missing"
+	@test -d projects/qb && echo "  ✅ Stage 3 (qb) exists" || echo "  ❌ Stage 3 missing"
+	@test -d projects/run && echo "  ✅ Orchestration (run) exists" || echo "  ❌ Orchestration missing"
+	@test -d projects/shared && echo "  ✅ Shared utilities exist" || echo "  ❌ Shared utilities missing"
+	@test -d projects/tests && echo "  ✅ Tests exist" || echo "  ❌ Tests missing"
+	@echo ""
+
+# Deploy to Google Cloud Run
+deploy-cloudrun:
+	@test -f deploy/cloud_run_deploy.sh || (echo "❌ Deploy script not found" && exit 1)
+	@./deploy/cloud_run_deploy.sh
 
 # Remove the virtual environment
 clean:
 	rm -rf .venv
 	rm -f uv.lock
-
-# Validate a specific subproject: make validate-<name>
-validate-%:
-	cd projects/$* && uv run flujo dev validate --strict
-
-# Run a specific subproject: make run-<name>
-run-%:
-	cd projects/$* && uv run flujo run
-
-# Alias for formatter
-fmt: format
+	@echo "✅ Virtual environment removed"

@@ -1,0 +1,31 @@
+# Replit Configuration for OMOP Cohort Workflow
+
+run = "python projects/run/run_complete_workflow.py"
+language = "python3"
+
+# Virtual environment
+[nix]
+channel = "stable-23_11"
+
+[env]
+PYTHONPATH = "/home/runner/${REPL_SLUG}/projects"
+
+[unitTest]
+language = "python3"
+
+[deployment]
+run = ["sh", "-c", "python projects/run/run_complete_workflow.py"]
+deploymentTarget = "cloudrun"
+
+[packages]
+python = "3.11"
+
+# Auto-detect Python packages from imports
+[packager]
+language = "python3"
+ignoredPaths = [".git", ".cache", "__pycache__", ".pytest_cache"]
+
+[[ports]]
+localPort = 8080
+externalPort = 80
+
