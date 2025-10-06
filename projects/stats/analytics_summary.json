@@ -1,0 +1,812 @@
+{
+  "cohort_size": [
+    {
+      "n": 290259
+    }
+  ],
+  "by_gender": [
+    {
+      "gender": "female",
+      "n": 168112
+    },
+    {
+      "gender": "male",
+      "n": 122147
+    }
+  ],
+  "age_buckets": [
+    {
+      "age_bucket": "18-39",
+      "n": 6602
+    },
+    {
+      "age_bucket": "40-64",
+      "n": 39941
+    },
+    {
+      "age_bucket": "65-74",
+      "n": 92268
+    },
+    {
+      "age_bucket": "75+",
+      "n": 151448
+    }
+  ],
+  "index_year": [
+    {
+      "index_year": 2007,
+      "n": 352
+    },
+    {
+      "index_year": 2008,
+      "n": 103014
+    },
+    {
+      "index_year": 2009,
+      "n": 113679
+    },
+    {
+      "index_year": 2010,
+      "n": 73214
+    }
+  ],
+  "concept_frequency_top25": [
+    {
+      "concept_id": 201826,
+      "concept_name": "Type 2 diabetes mellitus",
+      "domain": "condition_occurrence",
+      "person_count": 286233,
+      "rn": 1
+    },
+    {
+      "concept_id": 193782,
+      "concept_name": "End stage renal disease",
+      "domain": "condition_occurrence",
+      "person_count": 284118,
+      "rn": 2
+    },
+    {
+      "concept_id": 319835,
+      "concept_name": "Congestive heart failure",
+      "domain": "condition_occurrence",
+      "person_count": 275563,
+      "rn": 3
+    },
+    {
+      "concept_id": 313217,
+      "concept_name": "Atrial fibrillation",
+      "domain": "condition_occurrence",
+      "person_count": 263257,
+      "rn": 4
+    },
+    {
+      "concept_id": 437827,
+      "concept_name": "Pure hypercholesterolemia",
+      "domain": "condition_occurrence",
+      "person_count": 258615,
+      "rn": 5
+    },
+    {
+      "concept_id": 439777,
+      "concept_name": "Anemia",
+      "domain": "condition_occurrence",
+      "person_count": 255768,
+      "rn": 6
+    },
+    {
+      "concept_id": 140673,
+      "concept_name": "Hypothyroidism",
+      "domain": "condition_occurrence",
+      "person_count": 251720,
+      "rn": 7
+    },
+    {
+      "concept_id": 77670,
+      "concept_name": "Chest pain",
+      "domain": "condition_occurrence",
+      "person_count": 249888,
+      "rn": 8
+    },
+    {
+      "concept_id": 42872402,
+      "concept_name": "Coronary arteriosclerosis in native artery",
+      "domain": "condition_occurrence",
+      "person_count": 246271,
+      "rn": 9
+    },
+    {
+      "concept_id": 439926,
+      "concept_name": "Malaise and fatigue",
+      "domain": "condition_occurrence",
+      "person_count": 244462,
+      "rn": 10
+    },
+    {
+      "concept_id": 81902,
+      "concept_name": "Urinary tract infectious disease",
+      "domain": "condition_occurrence",
+      "person_count": 243195,
+      "rn": 11
+    },
+    {
+      "concept_id": 317576,
+      "concept_name": "Coronary arteriosclerosis",
+      "domain": "condition_occurrence",
+      "person_count": 237278,
+      "rn": 12
+    },
+    {
+      "concept_id": 138525,
+      "concept_name": "Pain in limb",
+      "domain": "condition_occurrence",
+      "person_count": 227128,
+      "rn": 13
+    },
+    {
+      "concept_id": 312437,
+      "concept_name": "Dyspnea",
+      "domain": "condition_occurrence",
+      "person_count": 227068,
+      "rn": 14
+    },
+    {
+      "concept_id": 194133,
+      "concept_name": "Low back pain",
+      "domain": "condition_occurrence",
+      "person_count": 212648,
+      "rn": 15
+    },
+    {
+      "concept_id": 318800,
+      "concept_name": "Gastroesophageal reflux disease",
+      "domain": "condition_occurrence",
+      "person_count": 208988,
+      "rn": 16
+    },
+    {
+      "concept_id": 200219,
+      "concept_name": "Abdominal pain",
+      "domain": "condition_occurrence",
+      "person_count": 203200,
+      "rn": 17
+    },
+    {
+      "concept_id": 0,
+      "concept_name": "No matching concept",
+      "domain": "condition_occurrence",
+      "person_count": 197816,
+      "rn": 18
+    },
+    {
+      "concept_id": 140648,
+      "concept_name": "Onychomycosis due to dermatophyte",
+      "domain": "condition_occurrence",
+      "person_count": 193888,
+      "rn": 19
+    },
+    {
+      "concept_id": 316999,
+      "concept_name": "Conduction disorder of the heart",
+      "domain": "condition_occurrence",
+      "person_count": 188972,
+      "rn": 20
+    },
+    {
+      "concept_id": 313878,
+      "concept_name": "Respiratory symptom",
+      "domain": "condition_occurrence",
+      "person_count": 186258,
+      "rn": 21
+    },
+    {
+      "concept_id": 80502,
+      "concept_name": "Osteoporosis",
+      "domain": "condition_occurrence",
+      "person_count": 166682,
+      "rn": 22
+    },
+    {
+      "concept_id": 80180,
+      "concept_name": "Osteoarthritis",
+      "domain": "condition_occurrence",
+      "person_count": 163837,
+      "rn": 23
+    },
+    {
+      "concept_id": 315286,
+      "concept_name": "Chronic ischemic heart disease",
+      "domain": "condition_occurrence",
+      "person_count": 161080,
+      "rn": 24
+    },
+    {
+      "concept_id": 436659,
+      "concept_name": "Iron deficiency anemia",
+      "domain": "condition_occurrence",
+      "person_count": 160817,
+      "rn": 25
+    },
+    {
+      "concept_id": 0,
+      "concept_name": "No matching concept",
+      "domain": "drug_exposure",
+      "person_count": 224423,
+      "rn": 1
+    },
+    {
+      "concept_id": 2213440,
+      "concept_name": "Influenza virus vaccine, trivalent (IIV3), split virus, 0.5 mL dosage, for intramuscular use",
+      "domain": "drug_exposure",
+      "person_count": 165051,
+      "rn": 2
+    },
+    {
+      "concept_id": 19025280,
+      "concept_name": "Oxygen 99 % Gas for Inhalation",
+      "domain": "drug_exposure",
+      "person_count": 122116,
+      "rn": 3
+    },
+    {
+      "concept_id": 19019418,
+      "concept_name": "Omeprazole 20 MG Delayed Release Oral Capsule",
+      "domain": "drug_exposure",
+      "person_count": 90889,
+      "rn": 4
+    },
+    {
+      "concept_id": 40080069,
+      "concept_name": "Sodium Chloride Injectable Solution",
+      "domain": "drug_exposure",
+      "person_count": 90329,
+      "rn": 5
+    },
+    {
+      "concept_id": 19077577,
+      "concept_name": "Gemfibrozil 600 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 79385,
+      "rn": 6
+    },
+    {
+      "concept_id": 1301125,
+      "concept_name": "Epoetin Alfa",
+      "domain": "drug_exposure",
+      "person_count": 75179,
+      "rn": 7
+    },
+    {
+      "concept_id": 1309010,
+      "concept_name": "Vitamin B 12 1 MG",
+      "domain": "drug_exposure",
+      "person_count": 73906,
+      "rn": 8
+    },
+    {
+      "concept_id": 19019116,
+      "concept_name": "Lovastatin 20 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 70984,
+      "rn": 9
+    },
+    {
+      "concept_id": 708298,
+      "concept_name": "Midazolam",
+      "domain": "drug_exposure",
+      "person_count": 70674,
+      "rn": 10
+    },
+    {
+      "concept_id": 1518606,
+      "concept_name": "Dexamethasone 1 MG",
+      "domain": "drug_exposure",
+      "person_count": 69014,
+      "rn": 11
+    },
+    {
+      "concept_id": 957136,
+      "concept_name": "Furosemide 40 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 67436,
+      "rn": 12
+    },
+    {
+      "concept_id": 1539407,
+      "concept_name": "Simvastatin 40 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 66934,
+      "rn": 13
+    },
+    {
+      "concept_id": 1000560,
+      "concept_name": "Ondansetron",
+      "domain": "drug_exposure",
+      "person_count": 66931,
+      "rn": 14
+    },
+    {
+      "concept_id": 19076600,
+      "concept_name": "Dipyridamole 25 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 66242,
+      "rn": 15
+    },
+    {
+      "concept_id": 1154186,
+      "concept_name": "Fentanyl 0.1 MG",
+      "domain": "drug_exposure",
+      "person_count": 66036,
+      "rn": 16
+    },
+    {
+      "concept_id": 40164929,
+      "concept_name": "Metformin hydrochloride 500 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 65310,
+      "rn": 17
+    },
+    {
+      "concept_id": 19019044,
+      "concept_name": "Hydrochlorothiazide 50 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 65287,
+      "rn": 18
+    },
+    {
+      "concept_id": 1331312,
+      "concept_name": "Dipyridamole 50 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 63353,
+      "rn": 19
+    },
+    {
+      "concept_id": 1539411,
+      "concept_name": "Simvastatin 20 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 63186,
+      "rn": 20
+    },
+    {
+      "concept_id": 19019117,
+      "concept_name": "Lovastatin 40 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 62707,
+      "rn": 21
+    },
+    {
+      "concept_id": 19077682,
+      "concept_name": "Glyburide 5 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 62640,
+      "rn": 22
+    },
+    {
+      "concept_id": 19076623,
+      "concept_name": "Dipyridamole 75 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 61697,
+      "rn": 23
+    },
+    {
+      "concept_id": 19078106,
+      "concept_name": "Hydrochlorothiazide 25 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 61620,
+      "rn": 24
+    },
+    {
+      "concept_id": 19077546,
+      "concept_name": "Furosemide 20 MG Oral Tablet",
+      "domain": "drug_exposure",
+      "person_count": 58572,
+      "rn": 25
+    },
+    {
+      "concept_id": 4214956,
+      "concept_name": "History of clinical finding in subject",
+      "domain": "observation",
+      "person_count": 256336,
+      "rn": 1
+    },
+    {
+      "concept_id": 0,
+      "concept_name": "No matching concept",
+      "domain": "observation",
+      "person_count": 245986,
+      "rn": 2
+    },
+    {
+      "concept_id": 440927,
+      "concept_name": "High risk drug monitoring status",
+      "domain": "observation",
+      "person_count": 243111,
+      "rn": 3
+    },
+    {
+      "concept_id": 4015724,
+      "concept_name": "Vaccination required",
+      "domain": "observation",
+      "person_count": 240328,
+      "rn": 4
+    },
+    {
+      "concept_id": 2614666,
+      "concept_name": "Ground mileage, per statute mile",
+      "domain": "observation",
+      "person_count": 194205,
+      "rn": 5
+    },
+    {
+      "concept_id": 4046550,
+      "concept_name": "Postoperative care",
+      "domain": "observation",
+      "person_count": 163268,
+      "rn": 6
+    },
+    {
+      "concept_id": 2614669,
+      "concept_name": "Ambulance service, basic life support, non-emergency transport, (bls)",
+      "domain": "observation",
+      "person_count": 147938,
+      "rn": 7
+    },
+    {
+      "concept_id": 2614668,
+      "concept_name": "Ambulance service, advanced life support, emergency transport, level 1 (als 1 - emergency)",
+      "domain": "observation",
+      "person_count": 129874,
+      "rn": 8
+    },
+    {
+      "concept_id": 440922,
+      "concept_name": "Diabetic on insulin",
+      "domain": "observation",
+      "person_count": 126575,
+      "rn": 9
+    },
+    {
+      "concept_id": 4167217,
+      "concept_name": "Family history of clinical finding",
+      "domain": "observation",
+      "person_count": 117297,
+      "rn": 10
+    },
+    {
+      "concept_id": 4058431,
+      "concept_name": "H/O: artificial joint",
+      "domain": "observation",
+      "person_count": 116988,
+      "rn": 11
+    },
+    {
+      "concept_id": 4186037,
+      "concept_name": "Aftercare",
+      "domain": "observation",
+      "person_count": 115742,
+      "rn": 12
+    },
+    {
+      "concept_id": 439405,
+      "concept_name": "Walking disability",
+      "domain": "observation",
+      "person_count": 105482,
+      "rn": 13
+    },
+    {
+      "concept_id": 40479553,
+      "concept_name": "Cardiac pacemaker in situ",
+      "domain": "observation",
+      "person_count": 95428,
+      "rn": 14
+    },
+    {
+      "concept_id": 2720870,
+      "concept_name": "Low osmolar contrast material, 300-399 mg/ml iodine concentration, per ml",
+      "domain": "observation",
+      "person_count": 86956,
+      "rn": 15
+    },
+    {
+      "concept_id": 4090651,
+      "concept_name": "Dialysis finding",
+      "domain": "observation",
+      "person_count": 83789,
+      "rn": 16
+    },
+    {
+      "concept_id": 2614670,
+      "concept_name": "Ambulance service, basic life support, emergency transport (bls-emergency)",
+      "domain": "observation",
+      "person_count": 81077,
+      "rn": 17
+    },
+    {
+      "concept_id": 4059467,
+      "concept_name": "H/O: artificial eye lens",
+      "domain": "observation",
+      "person_count": 78247,
+      "rn": 18
+    },
+    {
+      "concept_id": 4059356,
+      "concept_name": "History of renal transplant",
+      "domain": "observation",
+      "person_count": 71640,
+      "rn": 19
+    },
+    {
+      "concept_id": 436583,
+      "concept_name": "Fall",
+      "domain": "observation",
+      "person_count": 59176,
+      "rn": 20
+    },
+    {
+      "concept_id": 4307024,
+      "concept_name": "Follow-up encounter",
+      "domain": "observation",
+      "person_count": 59023,
+      "rn": 21
+    },
+    {
+      "concept_id": 4060089,
+      "concept_name": "H/O: artificial heart valve",
+      "domain": "observation",
+      "person_count": 56928,
+      "rn": 22
+    },
+    {
+      "concept_id": 4058419,
+      "concept_name": "H/O: surgery",
+      "domain": "observation",
+      "person_count": 52836,
+      "rn": 23
+    },
+    {
+      "concept_id": 2720581,
+      "concept_name": "Set-up portable x-ray equipment",
+      "domain": "observation",
+      "person_count": 52331,
+      "rn": 24
+    },
+    {
+      "concept_id": 2101868,
+      "concept_name": "Tobacco use assessed (CAD, CAP, COPD, PV) (DM)",
+      "domain": "observation",
+      "person_count": 49653,
+      "rn": 25
+    },
+    {
+      "concept_id": 2414397,
+      "concept_name": "Office or other outpatient visit for the evaluation and management of an established patient, which requires at least 2 of these 3 key components: An expanded problem focused history; An expanded problem focused examination; Medical decision making of low",
+      "domain": "procedure_occurrence",
+      "person_count": 288707,
+      "rn": 1
+    },
+    {
+      "concept_id": 2002291,
+      "concept_name": "Other diagnostic procedures on lymphatic structures",
+      "domain": "procedure_occurrence",
+      "person_count": 288672,
+      "rn": 2
+    },
+    {
+      "concept_id": 2108115,
+      "concept_name": "Collection of venous blood by venipuncture",
+      "domain": "procedure_occurrence",
+      "person_count": 287902,
+      "rn": 3
+    },
+    {
+      "concept_id": 2414398,
+      "concept_name": "Office or other outpatient visit for the evaluation and management of an established patient, which requires at least 2 of these 3 key components: A detailed history; A detailed examination; Medical decision making of moderate complexity. Counseling and/o",
+      "domain": "procedure_occurrence",
+      "person_count": 287293,
+      "rn": 4
+    },
+    {
+      "concept_id": 2002290,
+      "concept_name": "Biopsy of lymphatic structure",
+      "domain": "procedure_occurrence",
+      "person_count": 285662,
+      "rn": 5
+    },
+    {
+      "concept_id": 2001200,
+      "concept_name": "Biopsy of mouth, unspecified structure",
+      "domain": "procedure_occurrence",
+      "person_count": 282574,
+      "rn": 6
+    },
+    {
+      "concept_id": 0,
+      "concept_name": "No matching concept",
+      "domain": "procedure_occurrence",
+      "person_count": 279931,
+      "rn": 7
+    },
+    {
+      "concept_id": 2514408,
+      "concept_name": "Subsequent hospital care, per day, for the evaluation and management of a patient, which requires at least 2 of these 3 key components: An expanded problem focused interval history; An expanded problem focused examination; Medical decision making of moder",
+      "domain": "procedure_occurrence",
+      "person_count": 266294,
+      "rn": 8
+    },
+    {
+      "concept_id": 4141759,
+      "concept_name": "Long-term drug therapy",
+      "domain": "procedure_occurrence",
+      "person_count": 261211,
+      "rn": 9
+    },
+    {
+      "concept_id": 2414396,
+      "concept_name": "Office or other outpatient visit for the evaluation and management of an established patient, which requires at least 2 of these 3 key components: A problem focused history; A problem focused examination; Straightforward medical decision making. Counselin",
+      "domain": "procedure_occurrence",
+      "person_count": 252704,
+      "rn": 10
+    },
+    {
+      "concept_id": 2211359,
+      "concept_name": "Radiologic examination, chest; single view, frontal",
+      "domain": "procedure_occurrence",
+      "person_count": 247859,
+      "rn": 11
+    },
+    {
+      "concept_id": 2211361,
+      "concept_name": "Radiologic examination, chest, 2 views, frontal and lateral",
+      "domain": "procedure_occurrence",
+      "person_count": 244947,
+      "rn": 12
+    },
+    {
+      "concept_id": 2003090,
+      "concept_name": "Excision of anus",
+      "domain": "procedure_occurrence",
+      "person_count": 239838,
+      "rn": 13
+    },
+    {
+      "concept_id": 2314284,
+      "concept_name": "Therapeutic procedure, 1 or more areas, each 15 minutes; therapeutic exercises to develop strength and endurance, range of motion and flexibility",
+      "domain": "procedure_occurrence",
+      "person_count": 233874,
+      "rn": 14
+    },
+    {
+      "concept_id": 2514409,
+      "concept_name": "Subsequent hospital care, per day, for the evaluation and management of a patient, which requires at least 2 of these 3 key components: A detailed interval history; A detailed examination; Medical decision making of high complexity. Counseling and/or coor",
+      "domain": "procedure_occurrence",
+      "person_count": 223845,
+      "rn": 15
+    },
+    {
+      "concept_id": 2414395,
+      "concept_name": "Office or other outpatient visit for the evaluation and management of an established patient, that may not require the presence of a physician or other qualified health care professional. Usually, the presenting problem(s) are minimal. Typically, 5 minute",
+      "domain": "procedure_occurrence",
+      "person_count": 203592,
+      "rn": 16
+    },
+    {
+      "concept_id": 2001198,
+      "concept_name": "Biopsy of uvula and soft palate",
+      "domain": "procedure_occurrence",
+      "person_count": 199016,
+      "rn": 17
+    },
+    {
+      "concept_id": 2514437,
+      "concept_name": "Emergency department visit for the evaluation and management of a patient, which requires these 3 key components within the constraints imposed by the urgency of the patient's clinical condition and/or mental status: A comprehensive history; A comprehensi",
+      "domain": "procedure_occurrence",
+      "person_count": 196016,
+      "rn": 18
+    },
+    {
+      "concept_id": 2213283,
+      "concept_name": "Level IV - Surgical pathology, gross and microscopic examination Abortion - spontaneous/missed Artery, biopsy Bone marrow, biopsy Bone exostosis Brain/meninges, other than for tumor resection Breast, biopsy, not requiring microscopic evaluation of surgica",
+      "domain": "procedure_occurrence",
+      "person_count": 193633,
+      "rn": 19
+    },
+    {
+      "concept_id": 2002987,
+      "concept_name": "Other resection of rectum",
+      "domain": "procedure_occurrence",
+      "person_count": 193296,
+      "rn": 20
+    },
+    {
+      "concept_id": 2514407,
+      "concept_name": "Subsequent hospital care, per day, for the evaluation and management of a patient, which requires at least 2 of these 3 key components: A problem focused interval history; A problem focused examination; Medical decision making that is straightforward or o",
+      "domain": "procedure_occurrence",
+      "person_count": 191302,
+      "rn": 21
+    },
+    {
+      "concept_id": 2514399,
+      "concept_name": "Office or other outpatient visit for the evaluation and management of an established patient, which requires at least 2 of these 3 key components: A comprehensive history; A comprehensive examination; Medical decision making of high complexity. Counseling",
+      "domain": "procedure_occurrence",
+      "person_count": 178188,
+      "rn": 22
+    },
+    {
+      "concept_id": 2514436,
+      "concept_name": "Emergency department visit for the evaluation and management of a patient, which requires these 3 key components: A detailed history; A detailed examination; and Medical decision making of moderate complexity. Counseling and/or coordination of care with o",
+      "domain": "procedure_occurrence",
+      "person_count": 175982,
+      "rn": 23
+    },
+    {
+      "concept_id": 2314290,
+      "concept_name": "Manual therapy techniques (eg, mobilization/ manipulation, manual lymphatic drainage, manual traction), 1 or more regions, each 15 minutes",
+      "domain": "procedure_occurrence",
+      "person_count": 175687,
+      "rn": 24
+    },
+    {
+      "concept_id": 2005317,
+      "concept_name": "Removal of implanted devices from bone, humerus",
+      "domain": "procedure_occurrence",
+      "person_count": 174899,
+      "rn": 25
+    }
+  ],
+  "concept_presence_summary": [
+    {
+      "concept_id": 193782,
+      "n_condition": 284118,
+      "n_observation": 0,
+      "n_procedure": 0,
+      "n_drug_exposure": 0,
+      "n_total": 290259
+    },
+    {
+      "concept_id": 37018886,
+      "n_condition": 0,
+      "n_observation": 0,
+      "n_procedure": 0,
+      "n_drug_exposure": 0,
+      "n_total": 290259
+    },
+    {
+      "concept_id": 43020455,
+      "n_condition": 17043,
+      "n_observation": 0,
+      "n_procedure": 0,
+      "n_drug_exposure": 0,
+      "n_total": 290259
+    },
+    {
+      "concept_id": 316139,
+      "n_condition": 0,
+      "n_observation": 0,
+      "n_procedure": 0,
+      "n_drug_exposure": 0,
+      "n_total": 290259
+    },
+    {
+      "concept_id": 319835,
+      "n_condition": 275563,
+      "n_observation": 0,
+      "n_procedure": 0,
+      "n_drug_exposure": 0,
+      "n_total": 290259
+    },
+    {
+      "concept_id": 4229440,
+      "n_condition": 0,
+      "n_observation": 0,
+      "n_procedure": 0,
+      "n_drug_exposure": 0,
+      "n_total": 290259
+    }
+  ],
+  "omop_presence_summary": {
+    "n_procedure": 290259,
+    "n_condition": 290259,
+    "n_drug_exposure": 290007,
+    "n_observation": 290110,
+    "n_total": 290259
+  }
+}
