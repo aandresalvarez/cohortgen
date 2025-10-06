@@ -555,7 +555,11 @@ def load_stage4_dashboard(run_id: str) -> Tuple[str, str, str, str, Any, Any, An
         # Generate all dashboard components
         summary_html = generate_summary_cards_html(analytics)
         quality_html = generate_data_quality_html(analytics)
-        insights = generate_ai_insights(analytics, run.inputs.description if run.inputs else "")
+        # Get description from user_inputs if available
+        cohort_description = ""
+        if hasattr(run, 'user_inputs') and run.user_inputs:
+            cohort_description = run.user_inputs.description
+        insights = generate_ai_insights(analytics, cohort_description)
         
         # Prepare chart data
         gender_df = prepare_gender_chart_data(analytics) or pd.DataFrame()
