@@ -1,0 +1,207 @@
+======================================================================
+Stage 2: Concept Discovery
+Run ID: 20251006_165740_0f67c7
+======================================================================
+
+
+======================================================================
+OMOP CONCEPT DISCOVERY - NORMAL MODE
+======================================================================
+
+Cohort Definition:
+Index Event: To be specified (choose A–D)
+Demographics: use_pre_extracted_demographics: True
+Inclusion Criteria: History of heart failure documented prior to the index event, Evidence of end-stage renal disease (ESRD) — exact index event to be specified based on choice A–D
+Observation Window: Not yet specified
+Prior Observation: Not yet specified
+Cohort Exit: Not yet specified
+
+[Step 1] Decomposing cohort definition into concept sets...
+
+✅ Decomposed into 5 concept sets:
+  1. Heart failure (Condition) (Condition)
+     Intent: Capture any documented history of heart failure prior to the index date (includes acute, chronic, systolic, diastolic, congestive, left ventricular failure and acute-on-chronic presentations).
+     Queries: heart failure, congestive heart failure, CHF...
+  2. End-stage renal disease (ESRD) - Condition (Condition)
+     Intent: Identify diagnosis codes indicating end-stage renal disease / end-stage kidney disease, chronic kidney disease stage 5, or kidney failure requiring dialysis or renal replacement therapy prior to the index date.
+     Queries: end stage renal disease, end-stage renal disease, ESRD...
+  3. Dialysis procedures (Hemodialysis & Peritoneal dialysis) (Procedure)
+     Intent: Capture procedural evidence of dialysis (in-center or home hemodialysis, peritoneal dialysis), which is commonly used as evidence of ESRD/renal replacement therapy.
+     Queries: hemodialysis, hemo dialysis, renal dialysis...
+  4. ESRD-related laboratory measurements (eGFR and Serum Creatinine) (Measurement)
+     Intent: Capture laboratory measurements used to document kidney failure/ESRD: estimated glomerular filtration rate (eGFR) and serum/plasma creatinine. Include method variants (CKD-EPI, MDRD) and creatinine assay methods (enzymatic, Jaffe) to maximize capture.
+     Queries: Estimated glomerular filtration rate (eGFR), eGFR, Glomerular filtration rate/1.73 sq m...
+  5. Kidney replacement therapy / ESRD indicators (Procedure & Observation) (Observation)
+     Intent: Additional signals of ESRD: records of chronic dialysis modalities, dialysis adequacy measurements, permanent vascular access procedures, and observations documenting dialysis dependence or renal replacement therapy status.
+     Queries: on dialysis, dialysis dependent, dialysis dependence...
+
+[Step 2] Intelligent candidate seeding...
+🚀 Phase 1 Optimization: Processing 5 concept sets in parallel (max_workers=5)
+
+Processing: Heart failure (Condition)
+
+Processing: Dialysis procedures (Hemodialysis & Peritoneal dialysis)
+
+Processing: End-stage renal disease (ESRD) - Condition
+
+Processing: Kidney replacement therapy / ESRD indicators (Procedure & Observation)
+
+Processing: ESRD-related laboratory measurements (eGFR and Serum Creatinine)
+    Searching: heart failure
+    Searching: on dialysis
+    Searching: hemodialysis
+    Searching: Estimated glomerular filtration rate (eGFR)
+    Searching: end stage renal disease
+ℹ️  Note: Query 'estimated glomerular filtration rate (egfr)' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'hemodialysis' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'on dialysis' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'end stage renal disease' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'heart failure' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: eGFR
+ℹ️  Note: Query 'egfr' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ✅ Found 4 candidates
+    Searching: end-stage renal disease
+ℹ️  Note: Query 'end-stage renal disease' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ✅ Found 2 candidates
+    Searching: dialysis dependent
+ℹ️  Note: Query 'dialysis dependent' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ✅ Found 1 candidates
+    Searching: ESRD
+ℹ️  Note: Query 'esrd' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: Glomerular filtration rate/1.73 sq m
+      ✅ Found 4 candidates
+    Searching: hemo dialysis
+ℹ️  Note: Query 'hemo dialysis' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+  🤖 LLM candidate selection...
+      ✅ Found 7 candidates
+    Searching: dialysis dependence
+ℹ️  Note: Query 'dialysis dependence' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: renal dialysis
+ℹ️  Note: Query 'renal dialysis' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ✅ Found 2 candidates
+    Searching: congestive heart failure
+ℹ️  Note: Query 'congestive heart failure' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ✅ Found 1 candidates
+  🤖 LLM candidate selection...
+      ✅ Found 4 candidates
+  🤖 LLM candidate selection...
+      ✅ Found 5 candidates
+    Searching: CHF
+      ✅ Found 2 candidates
+  🤖 LLM candidate selection...
+ℹ️  Note: Query 'chf' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+  🤖 LLM candidate selection...
+  ✅ Selected 5 candidates: Top pick is 193782 (End-stage renal disease) — exact lexical match, SNOMED standard, Condition domain. Next are ESRD due to hypertension variants (37018886, 46273164, 43020455) because they explicitly indicate end‑stage renal disease with etiologic qualifiers and are SNOMED standard Condition concepts. Included 45768813 (Anemia in end stage renal disease) last as a complication-coded concept that may indicate ESRD context but is not a primary diagnosis of ESRD. All picks are standard SNOMED Condition concepts and ordered by exactness/clinical specificity, then by concept_id tie-breaker.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [193782, 37018886, 46273164] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+  ✅ Selected 6 candidates: Selected SNOMED standard procedure concepts prioritized for direct evidence of dialysis. Top candidate is Hemodialysis (4120120) — exact lexical and procedural match. Second is Renal dialysis (4146536) to capture broader dialysis procedures including peritoneal dialysis when an explicit PD code is not present. Next are modality-specific hemodialysis procedures (continuous 4050863, intermittent 4051326, initial 4238836) as they indicate dialysis delivery. Last is Venous catheterization for renal dialysis (4289454) as supportive evidence (vascular access for dialysis). All are Procedure domain, SNOMED and standard concepts.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [4120120, 4146536, 4050863] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+  ✅ Selected 5 candidates: Top pick is 4019967 (Dependence on renal dialysis) because it directly documents dialysis dependence (broad RRT indicator). Next are modality-specific observations: 40482357 (Dependence on peritoneal dialysis) then the two continuous peritoneal variants 46269984 (continuous ambulatory) and 46269985 (continuous cycling) — these capture specific chronic dialysis modalities. I include 765776 (Dialysis regime) as an observation of dialysis modality/regimen. I excluded non-specific/irrelevant "dependent" concepts (dependent edema, dependent patient, functionally dependent, dependent for personal grooming, traveling dependent, dependent attachment) as they reflect functional status or unrelated findings rather than ESRD/RRT status. Ordering follows lexical/semantic closeness to ESRD indicators, domain alignment (Observation), preference for standard SNOMED concepts, then ascending concept_id as tie-breaker. Top candidates explicitly: 4019967, 40482357, 46269984, 46269985, 765776.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [4019967, 40482357, 46269984] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+      🤖 LLM batch analysis...
+  ✅ Selected 6 candidates: Picked SNOMED Condition concepts that best capture documented history of heart failure and common subtypes. Top pick is 316139 (Heart failure) — exact lexical match and standard. Next are common clinical subtypes: 319835 (Congestive heart failure), 4023479 (Acute congestive heart failure), 4229440 (Chronic congestive heart failure), 4242669 (Biventricular congestive heart failure), and 44784442 (Symptomatic congestive heart failure). I excluded fetal heart failure (43021735) as contextually irrelevant. Ordering follows lexical/semantic closeness, preference for standard SNOMED Condition concepts, and deterministic tie-break by ascending concept_id.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [316139, 319835, 4023479] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+  ✅ Selected 9 candidates: Selected concepts focus on measured/estimated GFR and serum/plasma creatinine measurements including method variants. Top pick is 46236975 (Isotopic GFR, standard LOINC) since it directly captures GFR measurement; remaining candidates are other standard measurement concepts covering eGFR (CKD-EPI/MDRD where available) and serum creatinine including enzymatic/Jaffe assay variants to maximize capture. Order follows lexical/semantic closeness and prefers standard measurement concepts; ties broken by ascending concept_id. Top candidates explicitly: 46236975, 3013678, 3013680.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [46236975, 3013678, 3013680] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+    ✅ Batch analysis complete: 3 decisions
+      - 193782: ✅ ConceptName = "End-stage renal disease", standardConcept = 'Standard', domainId = 'Condition', vocab...
+      - 37018886: ✅ ConceptName = "End stage renal disease due to hypertension", standardConcept = 'Standard', domainId ...
+      - 46273164: ✅ ConceptName = "End stage renal disease due to benign hypertension", standardConcept = 'Standard', do...
+    [Iteration 2] Processing batch: [43020455, 45768813] (depths: [0, 0])
+      Fetching details for 2 concepts (batched)...
+      🤖 LLM batch analysis...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 3 decisions
+      - 4120120: ✅ ConceptName: 'Hemodialysis'; standardConcept: 'Standard'; domain: Procedure; vocabulary: SNOMED. Thi...
+      - 4146536: ✅ ConceptName: 'Renal dialysis'; standardConcept: 'Standard'; domain: Procedure; vocabulary: SNOMED. T...
+      - 4050863: ✅ ConceptName: 'Continuous hemodialysis'; standardConcept: 'Standard'; domain: Procedure; vocabulary: ...
+    [Iteration 2] Processing batch: [4051326, 4238836, 4289454] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+    ✅ Batch analysis complete: 3 decisions
+      - 4019967: ✅ conceptName = 'Dependence on renal dialysis'; summary/details show standardConcept = 'Standard', dom...
+      - 40482357: ✅ conceptName = 'Dependence on peritoneal dialysis'; details show standardConcept = 'Standard', domain...
+      - 46269984: ✅ conceptName = 'Dependence on continuous ambulatory peritoneal dialysis'; details show standardConcep...
+    [Iteration 2] Processing batch: [46269985, 765776] (depths: [0, 0])
+      Fetching details for 2 concepts (batched)...
+      🤖 LLM batch analysis...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 3 decisions
+      - 316139: ✅ conceptName = 'Heart failure'; domainId = 'Condition'; standardConcept = 'Standard' (SNOMED). This i...
+      - 319835: ✅ conceptName = 'Congestive heart failure'; domain = Condition; standardConcept = 'Standard' (SNOMED)....
+      - 4023479: ✅ conceptName = 'Acute congestive heart failure'; domain = Condition; standardConcept = 'Standard' (SN...
+    [Iteration 2] Processing batch: [4229440, 4242669, 44784442] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 2 decisions
+      - 43020455: ✅ Concept 43020455 is a SNOMED Condition with standardConcept='Standard' and conceptName 'Malignant hy...
+      - 45768813: ❌ Concept 45768813 is a SNOMED Condition with standardConcept='Standard' and conceptName 'Anemia in en...
+  ✅ Resolution: resolved (accepted_matches) after 5 visits
+✅ Completed: End-stage renal disease (ESRD) - Condition
+    ✅ Batch analysis complete: 3 decisions
+      - 46236975: ❌ Concept is marked Standard (standardConcept = 'Standard') in the Measurement domain and vocabulary L...
+      - 3013678: ❌ Concept is Standard LOINC Measurement: 'Triglyceride [Mass/volume] in Serum or Plasma --12 hours fas...
+      - 3013680: ❌ Concept is Standard LOINC Measurement: 'Calcium [Mass/volume] in Serum or Plasma --6th specimen post...
+    [Iteration 2] Processing batch: [3020001, 3020002, 3025310] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+    ✅ Batch analysis complete: 2 decisions
+      - 46269985: ✅ Concept is marked Standard (standardConcept = 'Standard'), domain = Observation, vocabulary = SNOMED...
+      - 765776: ✅ Concept is marked Standard, domain = Observation, vocabulary = SNOMED, conceptName = 'Dialysis regim...
+    ✅ Collected 5 accepted anchors; stopping exploration
+  ✅ Resolution: resolved (enough_matches) after 5 visits
+✅ Completed: Kidney replacement therapy / ESRD indicators (Procedure & Observation)
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 3 decisions
+      - 4051326: ✅ Concept 4051326 is marked Standard (standardConcept: 'Standard'), domain Procedure (vocabulary SNOME...
+      - 4238836: ✅ Concept 4238836 is Standard (SNOMED Procedure) with name 'Initial hemodialysis'. Although narrower (...
+      - 4289454: ❌ Concept 4289454 is Standard (SNOMED Procedure) named 'Venous catheterization for renal dialysis'. Th...
+    ✅ Collected 5 accepted anchors; stopping exploration
+  ✅ Resolution: resolved (enough_matches) after 6 visits
+✅ Completed: Dialysis procedures (Hemodialysis & Peritoneal dialysis)
+    ✅ Batch analysis complete: 3 decisions
+      - 3020001: ❌ Concept 3020001 is marked standard (standardConcept = 'Standard') and in the Measurement domain (dom...
+      - 3020002: ❌ Concept 3020002 is standard and in the Measurement domain (LOINC) but the conceptName 'Candida albic...
+      - 3025310: ❌ Concept 3025310 is standard (LOINC Measurement) with conceptName 'Parvovirus B19 RNA [Presence] in S...
+    ⏰ Timeout reached (30s), exiting
+  ✅ Resolution: unresolved (timeout) after 6 visits
+✅ Completed: ESRD-related laboratory measurements (eGFR and Serum Creatinine)
+    ✅ Batch analysis complete: 3 decisions
+      - 4229440: ✅ Concept is SNOMED 'Chronic congestive heart failure' (standard concept = Standard, domain = Conditio...
+      - 4242669: ✅ Concept is SNOMED 'Biventricular congestive heart failure' (standard, Condition). The name denotes a...
+      - 44784442: ✅ Concept is SNOMED 'Symptomatic congestive heart failure' (standard, Condition). The qualifier 'sympt...
+    ✅ Collected 6 accepted anchors; stopping exploration
+  ✅ Resolution: resolved (enough_matches) after 6 visits
+✅ Completed: Heart failure (Condition)
+
+[Final Concept Sets]
+  - End-stage renal disease (ESRD) - Condition: 4 concepts
+  - Kidney replacement therapy / ESRD indicators (Procedure & Observation): 5 concepts
+  - Dialysis procedures (Hemodialysis & Peritoneal dialysis): 5 concepts
+  - ESRD-related laboratory measurements (eGFR and Serum Creatinine): 0 concepts
+  - Heart failure (Condition): 6 concepts
+
+======================================================================
+✅ INTELLIGENT CONCEPT DISCOVERY COMPLETE
+======================================================================
+
+Output is ready!
+
+======================================================================
+Stage 2 Complete
+======================================================================

@@ -1,0 +1,14 @@
+{
+  "index_event": "To be specified (choose A\u2013D)",
+  "demographics": {
+    "use_pre_extracted_demographics": true
+  },
+  "inclusion_criteria": [
+    "History of heart failure documented prior to the index event",
+    "Evidence of end-stage renal disease (ESRD) \u2014 exact index event to be specified based on choice A\u2013D"
+  ],
+  "exclusion_criteria": [],
+  "observation_window": "Not yet specified",
+  "prior_observation": "Not yet specified",
+  "cohort_exit": "Not yet specified"
+}
