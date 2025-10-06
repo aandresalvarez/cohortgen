@@ -1,97 +1,23 @@
 {
   "clinical_definition": {
-    "index_event": "First recorded diagnosis of end-stage renal disease (ESRD)",
+    "index_event": "First date when a patient with a prior history of heart failure receives a diagnosis of end-stage renal disease (ESRD). (Entry = first ESRD diagnosis that occurs after an earlier heart failure diagnosis.)",
     "inclusion_criteria": [
-      "Prior diagnosis of heart failure (recorded any time before the ESRD index date)",
-      "Diagnosis of end-stage renal disease (ESRD) on the index date"
+      "History of heart failure prior to index (heart failure diagnosis at any time before the ESRD diagnosis).",
+      "Diagnosis of end-stage renal disease (ESRD) on the index date (first recorded ESRD diagnosis after the prior heart failure)."
     ],
     "exclusion_criteria": [],
-    "observation_window": "Require 365 days continuous observation prior to index to assess prior heart failure; follow-up from index date until end of continuous observation or death (no fixed follow-up duration).",
+    "observation_window": "No specific observation window was provided by the user. (If a default is desired, a common choice is: require 365 days continuous observation before index and follow-up from index until end of observation or death.)",
     "demographics": {
       "pre_extracted": true,
-      "notes": "No additional demographic constraints provided"
+      "notes": "No additional age or gender constraints specified; use dataset's pre-extracted demographics"
     },
-    "prior_observation": "365 days continuous observation required before index date",
-    "cohort_exit": "End of continuous observation or death"
+    "prior_observation": "Not specified by user.",
+    "cohort_exit": "Not specified by user. Recommended default: exit at end of continuous observation or at death; alternatively use a fixed follow-up period if required."
   },
   "concept_sets": [
     {
-      "name": "End-stage renal disease (ESRD) - Condition (SNOMED)",
-      "intent": "Identify diagnoses indicating end-stage renal disease on the index date. Include explicit ESRD terms and CKD stage 5 synonyms to capture common coding variants.",
-      "domain": "Condition",
-      "included_concepts": [
-        {
-          "concept_id": 193782,
-          "concept_name": "End-stage renal disease",
-          "domain_id": "Condition",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "46177005"
-        },
-        {
-          "concept_id": 37018886,
-          "concept_name": "End stage renal disease due to hypertension",
-          "domain_id": "Condition",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "111411000119103"
-        },
-        {
-          "concept_id": 43020455,
-          "concept_name": "Malignant hypertensive end stage renal disease",
-          "domain_id": "Condition",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "285841000119104"
-        }
-      ],
-      "excluded_concepts": [],
-      "resolution_outcome": {
-        "status": "resolved",
-        "concept": null,
-        "reason": "enough_matches",
-        "visit_count": 3,
-        "stop_reason": "enough_matches",
-        "pending_candidates": [
-          46273164,
-          45768813,
-          192359,
-          4128067,
-          443919
-        ],
-        "history": [],
-        "evidence": null,
-        "accepted_concepts": [
-          {
-            "concept_id": 193782,
-            "concept_name": "End-stage renal disease",
-            "domain_id": "Condition",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "46177005"
-          },
-          {
-            "concept_id": 37018886,
-            "concept_name": "End stage renal disease due to hypertension",
-            "domain_id": "Condition",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "111411000119103"
-          },
-          {
-            "concept_id": 43020455,
-            "concept_name": "Malignant hypertensive end stage renal disease",
-            "domain_id": "Condition",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "285841000119104"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Heart failure - Condition (SNOMED)",
-      "intent": "Identify any prior diagnosis of heart failure (chronic, acute, systolic, diastolic, congestive, or acute decompensated) at any time before the ESRD index date.",
+      "name": "Heart failure (condition)",
+      "intent": "Identify prior history of heart failure diagnoses any time before index. Include chronic, acute, systolic, diastolic, congestive and decompensated heart failure terms.",
       "domain": "Condition",
       "included_concepts": [
         {
@@ -128,10 +54,12 @@
         "stop_reason": "enough_matches",
         "pending_candidates": [
           4023479,
-          4108245,
           4242669,
           44784442,
-          4184497
+          443580,
+          40479192,
+          40480603,
+          40480602
         ],
         "history": [],
         "evidence": null,
@@ -164,18 +92,80 @@
       }
     },
     {
-      "name": "Dialysis / Renal replacement therapy - Procedure (SNOMED, CPT4)",
-      "intent": "Optional/supporting concept set to identify dialysis and other renal replacement therapies (hemodialysis, peritoneal dialysis, continuous RRT) that may indicate ESRD management. Useful for sensitivity analyses or validation.",
-      "domain": "Procedure",
+      "name": "End-stage renal disease (ESRD) / CKD stage 5 (condition)",
+      "intent": "Capture index ESRD diagnosis events. Include end-stage renal disease, end-stage kidney disease, CKD stage 5, ESRD/ESKD terms, dialysis-dependent CKD and chronic renal failure stage 5 concepts.",
+      "domain": "Condition",
       "included_concepts": [
         {
-          "concept_id": 4032243,
-          "concept_name": "Dialysis procedure",
-          "domain_id": "Procedure",
+          "concept_id": 193782,
+          "concept_name": "End-stage renal disease",
+          "domain_id": "Condition",
           "vocabulary_id": "SNOMED",
           "standard_concept": "Standard",
-          "concept_code": "108241001"
+          "concept_code": "46177005"
         },
+        {
+          "concept_id": 37018886,
+          "concept_name": "End stage renal disease due to hypertension",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "111411000119103"
+        },
+        {
+          "concept_id": 43020455,
+          "concept_name": "Malignant hypertensive end stage renal disease",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "285841000119104"
+        }
+      ],
+      "excluded_concepts": [],
+      "resolution_outcome": {
+        "status": "resolved",
+        "concept": null,
+        "reason": "enough_matches",
+        "visit_count": 3,
+        "stop_reason": "enough_matches",
+        "pending_candidates": [
+          46273164
+        ],
+        "history": [],
+        "evidence": null,
+        "accepted_concepts": [
+          {
+            "concept_id": 193782,
+            "concept_name": "End-stage renal disease",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "46177005"
+          },
+          {
+            "concept_id": 37018886,
+            "concept_name": "End stage renal disease due to hypertension",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "111411000119103"
+          },
+          {
+            "concept_id": 43020455,
+            "concept_name": "Malignant hypertensive end stage renal disease",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "285841000119104"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Dialysis procedures (hemodialysis, peritoneal, CRRT)",
+      "intent": "Supplemental procedure-based markers for ESRD: capture in-procedure codes indicating chronic dialysis (hemodialysis, peritoneal dialysis), continuous renal replacement therapy and chronic ambulatory dialysis. Use both SNOMED and CPT4 where available.",
+      "domain": "Procedure",
+      "included_concepts": [
         {
           "concept_id": 4120120,
           "concept_name": "Hemodialysis",
@@ -183,6 +173,14 @@
           "vocabulary_id": "SNOMED",
           "standard_concept": "Standard",
           "concept_code": "302497006"
+        },
+        {
+          "concept_id": 46273700,
+          "concept_name": "Maintenance hemodialysis",
+          "domain_id": "Procedure",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "708931003"
         },
         {
           "concept_id": 4050863,
@@ -202,26 +200,16 @@
         "stop_reason": "enough_matches",
         "pending_candidates": [
           4051326,
-          4238836,
+          2213572,
+          2213573,
           4324124,
-          4080171,
-          4323627,
           4021976,
-          2213576,
-          2213577,
-          2213601
+          4323627,
+          4080171
         ],
         "history": [],
         "evidence": null,
         "accepted_concepts": [
-          {
-            "concept_id": 4032243,
-            "concept_name": "Dialysis procedure",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "108241001"
-          },
           {
             "concept_id": 4120120,
             "concept_name": "Hemodialysis",
@@ -229,6 +217,14 @@
             "vocabulary_id": "SNOMED",
             "standard_concept": "Standard",
             "concept_code": "302497006"
+          },
+          {
+            "concept_id": 46273700,
+            "concept_name": "Maintenance hemodialysis",
+            "domain_id": "Procedure",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "708931003"
           },
           {
             "concept_id": 4050863,
@@ -242,128 +238,57 @@
       }
     },
     {
-      "name": "Kidney transplant - Procedure (SNOMED, CPT4)",
-      "intent": "Optional concept set to capture renal transplantation procedures (useful to exclude or characterize patients who have received a transplant).",
+      "name": "Kidney transplant procedures (renal transplant)",
+      "intent": "Optional: capture kidney/renal transplant procedures which indicate prior ESRD management or endpoint in some definitions (useful for sensitivity analyses). Include living and deceased donor transplant terms.",
       "domain": "Procedure",
       "included_concepts": [
         {
-          "concept_id": 4197300,
-          "concept_name": "Donor renal transplantation",
+          "concept_id": 4322471,
+          "concept_name": "Transplant of kidney",
           "domain_id": "Procedure",
           "vocabulary_id": "SNOMED",
           "standard_concept": "Standard",
-          "concept_code": "313030004"
+          "concept_code": "70536003"
         },
         {
-          "concept_id": 36717743,
-          "concept_name": "Transplantation of kidney and pancreas",
+          "concept_id": 4021107,
+          "concept_name": "Cadaveric renal transplant",
           "domain_id": "Procedure",
           "vocabulary_id": "SNOMED",
           "standard_concept": "Standard",
-          "concept_code": "6471000179103"
+          "concept_code": "175902000"
         }
       ],
       "excluded_concepts": [],
       "resolution_outcome": {
         "status": "resolved",
         "concept": null,
-        "reason": "accepted_matches",
+        "reason": "timeout",
         "visit_count": 3,
-        "stop_reason": null,
-        "pending_candidates": [],
-        "history": [],
-        "evidence": null,
-        "accepted_concepts": [
-          {
-            "concept_id": 4197300,
-            "concept_name": "Donor renal transplantation",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "313030004"
-          },
-          {
-            "concept_id": 36717743,
-            "concept_name": "Transplantation of kidney and pancreas",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "6471000179103"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Chronic kidney disease (all stages) - Condition (SNOMED)",
-      "intent": "Supplementary concept set to capture chronic kidney disease diagnoses across stages for cohort characterization and sensitivity checks (includes stage-specific CKD codes).",
-      "domain": "Condition",
-      "included_concepts": [
-        {
-          "concept_id": 46271022,
-          "concept_name": "Chronic kidney disease",
-          "domain_id": "Condition",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "709044004"
-        },
-        {
-          "concept_id": 443601,
-          "concept_name": "Chronic kidney disease stage 2",
-          "domain_id": "Condition",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "431856006"
-        },
-        {
-          "concept_id": 443614,
-          "concept_name": "Chronic kidney disease stage 1",
-          "domain_id": "Condition",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "431855005"
-        }
-      ],
-      "excluded_concepts": [],
-      "resolution_outcome": {
-        "status": "resolved",
-        "concept": null,
-        "reason": "enough_matches",
-        "visit_count": 3,
-        "stop_reason": "enough_matches",
+        "stop_reason": "timeout",
         "pending_candidates": [
-          44792226,
-          44792227,
-          44792228,
-          44792229,
-          43021853,
-          43021854
+          4019782,
+          4346505,
+          4010418
         ],
         "history": [],
         "evidence": null,
         "accepted_concepts": [
           {
-            "concept_id": 46271022,
-            "concept_name": "Chronic kidney disease",
-            "domain_id": "Condition",
+            "concept_id": 4322471,
+            "concept_name": "Transplant of kidney",
+            "domain_id": "Procedure",
             "vocabulary_id": "SNOMED",
             "standard_concept": "Standard",
-            "concept_code": "709044004"
+            "concept_code": "70536003"
           },
           {
-            "concept_id": 443601,
-            "concept_name": "Chronic kidney disease stage 2",
-            "domain_id": "Condition",
+            "concept_id": 4021107,
+            "concept_name": "Cadaveric renal transplant",
+            "domain_id": "Procedure",
             "vocabulary_id": "SNOMED",
             "standard_concept": "Standard",
-            "concept_code": "431856006"
-          },
-          {
-            "concept_id": 443614,
-            "concept_name": "Chronic kidney disease stage 1",
-            "domain_id": "Condition",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "431855005"
+            "concept_code": "175902000"
           }
         ]
       }

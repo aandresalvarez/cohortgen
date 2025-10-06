@@ -1,4 +1,4 @@
-.PHONY: install sync test lint typecheck format clean run run-log doctor check-credentials setup-bigquery help
+.PHONY: install sync test lint typecheck format clean run run-log run-stats doctor check-credentials setup-bigquery help
 
 # Default target
 help:
@@ -15,6 +15,7 @@ help:
 	@echo "Running:"
 	@echo "  make run               Run full workflow (all 3 stages)"
 	@echo "  make run-log           Run full workflow WITH LOGGING to timestamped file"
+	@echo "  make run-stats         Run Stage 4 (Analytics) on latest SQL"
 	@echo "  make run-clar          Run Stage 1 (Clinical Clarification)"
 	@echo "  make run-cd            Run Stage 2 (Concept Discovery)"
 	@echo "  make run-qb            Run Stage 3 (BigQuery SQL Generation)"
@@ -81,6 +82,10 @@ run-cd:
 # Run Stage 3: BigQuery SQL Generation
 run-qb:
 	@cd projects/qb && ./run_query_builder.sh
+
+# Run Stage 4: Analytics
+run-stats:
+	@uv run python projects/stats/run_stats.py
 
 # Run tests
 test:

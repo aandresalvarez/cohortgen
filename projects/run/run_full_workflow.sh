@@ -51,8 +51,9 @@ echo "  3) Run Stage 1 only (clinical clarification)"
 echo "  4) Run Stage 2 only (concept discovery)"
 echo "  5) Run Stage 3 only (BigQuery SQL generation)"
 echo "  6) Run demo (Stage 2 with test data)"
+echo "  7) Run Stage 4 only (Analytics)"
 echo ""
-read -p "Enter choice [1-6]: " choice
+read -p "Enter choice [1-7]: " choice
 
 case $choice in
     1)
@@ -79,6 +80,15 @@ case $choice in
         echo ""
         cd "$PROJECT_ROOT/projects/qb"
         uv run python create_bigquery_sql.py
+
+        # Offer Stage 4 analytics
+        echo ""
+        echo "═══════════════════════════════════════════════════════════════════"
+        echo "Proceeding to Stage 4: Analytics..."
+        echo "═══════════════════════════════════════════════════════════════════"
+        echo ""
+        cd "$PROJECT_ROOT"
+        make run-stats
         ;;
         
     2)
@@ -150,6 +160,16 @@ case $choice in
         echo "For a full demo with Stage 1 clarification, run Stage 1 manually"
         echo "and answer the interactive questions."
         ;;
+
+    7)
+        echo ""
+        echo "═══════════════════════════════════════════════════════════════════"
+        echo "STAGE 4: ANALYTICS"
+        echo "═══════════════════════════════════════════════════════════════════"
+        echo ""
+        cd "$PROJECT_ROOT"
+        make run-stats
+        ;;
         
     *)
         echo "Invalid choice. Exiting."
@@ -162,5 +182,3 @@ echo "════════════════════════�
 echo "✅ WORKFLOW COMPLETE"
 echo "═══════════════════════════════════════════════════════════════════"
 echo ""
-
-

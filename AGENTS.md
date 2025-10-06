@@ -4,6 +4,7 @@
 - `projects/clar/` Stage 1: clinical clarification (`hitl_clarification_working.py`).
 - `projects/cd/` Stage 2: concept discovery (`find_concepts.py`, `tools.py`).
 - `projects/qb/` Stage 3: BigQuery SQL generation (`create_bigquery_sql.py`, `tools.py`).
+- `projects/stats/` Stage 4: analytics over the generated cohort (`run_stats.py`).
 - `projects/run/` Orchestration (`run_complete_workflow.py`, shell runners).
 - `projects/shared/` Shared utilities (`secrets.py`).
 - `projects/tests/` Pytest suite (unit + integration).
@@ -12,7 +13,8 @@
 
 ## Build, Test, and Development Commands
 - `make install` Sync deps with uv (creates `.venv`).
-- `make run` Run all stages; `make run-clar|run-cd|run-qb` for individual stages.
+- `make run` Run all stages; `make run-clar|run-cd|run-qb|run-stats` for individual stages.
+- `make run-log` Run full workflow with logging to timestamped file.
 - `make test` Run tests; `make test-verbose` for detailed output.
 - `make lint` Ruff checks; `make typecheck` Mypy; `make format` Black.
 - `make doctor` Env health check; `make check-credentials` verify secrets.
@@ -45,3 +47,4 @@
 - Place new code under the appropriate `projects/*` stage or `projects/shared/`.
 - Prefer Makefile tasks; don’t bypass configured tooling.
 - Keep changes minimal and scoped; avoid broad refactors without discussion.
+- Stage 4 analytics: `projects/stats/run_stats.py` reads `projects/run/complete_cohort_output.json` and `projects/qb/generated_cohort_query.sql`, runs aggregate queries in BigQuery (ADC credentials), and saves `projects/stats/analytics_summary.json`. To use external analytics scripts, point `STATS_DIR` to a local path and extend `run_stats.py` to import and execute custom modules.

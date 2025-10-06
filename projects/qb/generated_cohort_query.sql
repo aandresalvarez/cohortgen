@@ -1,86 +1,115 @@
 WITH
+-- Ancestor lists provided
+heart_ancestor_ids AS (
+  SELECT 316139 AS concept_id UNION ALL SELECT 319835 UNION ALL SELECT 4229440
+),
+esrd_ancestor_ids AS (
+  SELECT 193782 AS concept_id UNION ALL SELECT 37018886 UNION ALL SELECT 43020455
+),
+dialysis_ancestor_ids AS (
+  SELECT 4120120 AS concept_id UNION ALL SELECT 46273700 UNION ALL SELECT 4050863
+),
+transplant_ancestor_ids AS (
+  SELECT 4322471 AS concept_id UNION ALL SELECT 4021107
+),
+
+-- Expand to descendant standard concepts using concept_ancestor and concept (include descendants; standard only)
+heart_concepts AS (
+  SELECT DISTINCT c.concept_id
+  FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept_ancestor` ca
+  JOIN `bigquery-public-data.cms_synthetic_patient_data_omop.concept` c
+    ON ca.descendant_concept_id = c.concept_id
+  WHERE ca.ancestor_concept_id IN (SELECT concept_id FROM heart_ancestor_ids)
+    AND c.standard_concept = 'S'
+  UNION DISTINCT
+  SELECT concept_id FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept`
+  WHERE concept_id IN (SELECT concept_id FROM heart_ancestor_ids) AND standard_concept = 'S'
+),
+
 esrd_concepts AS (
-  SELECT DISTINCT ca.descendant_concept_id AS concept_id
+  SELECT DISTINCT c.concept_id
   FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept_ancestor` ca
   JOIN `bigquery-public-data.cms_synthetic_patient_data_omop.concept` c
     ON ca.descendant_concept_id = c.concept_id
-  WHERE ca.ancestor_concept_id IN (193782, 37018886, 43020455)
+  WHERE ca.ancestor_concept_id IN (SELECT concept_id FROM esrd_ancestor_ids)
     AND c.standard_concept = 'S'
   UNION DISTINCT
   SELECT concept_id FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept`
-  WHERE concept_id IN (193782, 37018886, 43020455) AND standard_concept = 'S'
+  WHERE concept_id IN (SELECT concept_id FROM esrd_ancestor_ids) AND standard_concept = 'S'
 ),
-heart_failure_concepts AS (
-  SELECT DISTINCT ca.descendant_concept_id AS concept_id
-  FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept_ancestor` ca
-  JOIN `bigquery-public-data.cms_synthetic_patient_data_omop.concept` c
-    ON ca.descendant_concept_id = c.concept_id
-  WHERE ca.ancestor_concept_id IN (316139, 319835, 4229440)
-    AND c.standard_concept = 'S'
-  UNION DISTINCT
-  SELECT concept_id FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept`
-  WHERE concept_id IN (316139, 319835, 4229440) AND standard_concept = 'S'
-),
-ckd_concepts AS (
-  SELECT DISTINCT ca.descendant_concept_id AS concept_id
-  FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept_ancestor` ca
-  JOIN `bigquery-public-data.cms_synthetic_patient_data_omop.concept` c
-    ON ca.descendant_concept_id = c.concept_id
-  WHERE ca.ancestor_concept_id IN (46271022, 443601, 443614)
-    AND c.standard_concept = 'S'
-  UNION DISTINCT
-  SELECT concept_id FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept`
-  WHERE concept_id IN (46271022, 443601, 443614) AND standard_concept = 'S'
-),
+
 dialysis_concepts AS (
-  SELECT DISTINCT ca.descendant_concept_id AS concept_id
+  SELECT DISTINCT c.concept_id
   FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept_ancestor` ca
   JOIN `bigquery-public-data.cms_synthetic_patient_data_omop.concept` c
     ON ca.descendant_concept_id = c.concept_id
-  WHERE ca.ancestor_concept_id IN (4032243, 4120120, 4050863)
+  WHERE ca.ancestor_concept_id IN (SELECT concept_id FROM dialysis_ancestor_ids)
     AND c.standard_concept = 'S'
   UNION DISTINCT
   SELECT concept_id FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept`
-  WHERE concept_id IN (4032243, 4120120, 4050863) AND standard_concept = 'S'
+  WHERE concept_id IN (SELECT concept_id FROM dialysis_ancestor_ids) AND standard_concept = 'S'
 ),
+
 transplant_concepts AS (
-  SELECT DISTINCT ca.descendant_concept_id AS concept_id
+  SELECT DISTINCT c.concept_id
   FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept_ancestor` ca
   JOIN `bigquery-public-data.cms_synthetic_patient_data_omop.concept` c
     ON ca.descendant_concept_id = c.concept_id
-  WHERE ca.ancestor_concept_id IN (4197300, 36717743)
+  WHERE ca.ancestor_concept_id IN (SELECT concept_id FROM transplant_ancestor_ids)
     AND c.standard_concept = 'S'
   UNION DISTINCT
   SELECT concept_id FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept`
-  WHERE concept_id IN (4197300, 36717743) AND standard_concept = 'S'
+  WHERE concept_id IN (SELECT concept_id FROM transplant_ancestor_ids) AND standard_concept = 'S'
 ),
-esrd_events AS (
-  SELECT co.person_id, co.condition_occurrence_id, co.condition_start_date
-  FROM `bigquery-public-data.cms_synthetic_patient_data_omop.condition_occurrence` co
-  WHERE co.condition_concept_id IN (SELECT concept_id FROM esrd_concepts)
+
+-- Condition occurrences for heart failure and ESRD
+heart_occurrences AS (
+  SELECT person_id, condition_start_date
+  FROM `bigquery-public-data.cms_synthetic_patient_data_omop.condition_occurrence`
+  WHERE condition_concept_id IN (SELECT concept_id FROM heart_concepts)
 ),
-index_per_person AS (
-  SELECT person_id, MIN(condition_start_date) AS index_date
-  FROM esrd_events
-  GROUP BY person_id
+
+esrd_occurrences AS (
+  SELECT person_id, condition_start_date
+  FROM `bigquery-public-data.cms_synthetic_patient_data_omop.condition_occurrence`
+  WHERE condition_concept_id IN (SELECT concept_id FROM esrd_concepts)
 ),
-valid_observation AS (
-  SELECT ip.person_id, ip.index_date
-  FROM index_per_person ip
-  JOIN `bigquery-public-data.cms_synthetic_patient_data_omop.observation_period` op
-    ON ip.person_id = op.person_id
-   AND op.observation_period_start_date <= DATE_SUB(ip.index_date, INTERVAL 365 DAY)
-   AND op.observation_period_end_date >= ip.index_date
+
+-- Procedure occurrences for dialysis and transplant (captured but not required for cohort entry)
+dialysis_occurrences AS (
+  SELECT person_id, procedure_datetime AS procedure_date
+  FROM `bigquery-public-data.cms_synthetic_patient_data_omop.procedure_occurrence`
+  WHERE procedure_concept_id IN (SELECT concept_id FROM dialysis_concepts)
 ),
-heart_failure_prior AS (
-  SELECT DISTINCT ip.person_id
-  FROM valid_observation ip
-  JOIN `bigquery-public-data.cms_synthetic_patient_data_omop.condition_occurrence` ch
-    ON ch.person_id = ip.person_id
-   AND ch.condition_start_date < ip.index_date
-  JOIN heart_failure_concepts hfc
-    ON ch.condition_concept_id = hfc.concept_id
+
+transplant_occurrences AS (
+  SELECT person_id, procedure_datetime AS procedure_date
+  FROM `bigquery-public-data.cms_synthetic_patient_data_omop.procedure_occurrence`
+  WHERE procedure_concept_id IN (SELECT concept_id FROM transplant_concepts)
+),
+
+-- ESRD occurrences that have at least one prior heart failure diagnosis (heart failure at any time before ESRD)
+esrd_after_prior_heart AS (
+  SELECT e.person_id, e.condition_start_date AS index_date
+  FROM esrd_occurrences e
+  WHERE EXISTS (
+    SELECT 1
+    FROM heart_occurrences h
+    WHERE h.person_id = e.person_id
+      AND h.condition_start_date < e.condition_start_date
+  )
+),
+
+-- For each person, take the first ESRD occurrence that occurs after an earlier heart failure diagnosis
+first_esrd_after_heart AS (
+  SELECT person_id, index_date,
+    ROW_NUMBER() OVER (PARTITION BY person_id ORDER BY index_date) AS rn
+  FROM esrd_after_prior_heart
 )
-SELECT DISTINCT vo.person_id
-FROM valid_observation vo
-JOIN heart_failure_prior hf ON vo.person_id = hf.person_id;
+
+-- Final cohort: persons with the first ESRD after prior heart failure; include only persons present in person table (use pre-extracted demographics)
+SELECT p.person_id, fe.index_date AS cohort_entry_date
+FROM first_esrd_after_heart fe
+JOIN `bigquery-public-data.cms_synthetic_patient_data_omop.person` p
+  ON p.person_id = fe.person_id
+WHERE fe.rn = 1;
