@@ -272,13 +272,14 @@ def get_run_display(run_id: Optional[str]) -> Tuple[str, bool]:
 
 
 def update_display_and_dashboard(run_id):
-    """Update run display and auto-load dashboard if Stage 4 complete."""
+    """Update run display and show dashboard accordion if Stage 4 complete (manual refresh required)."""
     display_text, stage4_complete = get_run_display(run_id)
     
-    # Auto-load dashboard data if Stage 4 is complete
+    # Show dashboard accordion if Stage 4 is complete, but don't auto-load data
+    # User will click the refresh button to load data
     if stage4_complete and run_id:
-        dashboard_data = load_stage4_dashboard(run_id)
-        return (display_text, gr.update(visible=True, open=True)) + dashboard_data
+        empty_df = pd.DataFrame()
+        return (display_text, gr.update(visible=True, open=True)) + ("", "*Click the 🔄 Refresh button to load analytics*", "", "", empty_df, empty_df, empty_df, empty_df, empty_df, "")
     else:
         # Return empty dashboard data when not visible
         empty_df = pd.DataFrame()
@@ -746,7 +747,9 @@ with gr.Blocks(
             # Analytics Dashboard - Only visible when Stage 4 is complete
             analytics_dashboard_accordion = gr.Accordion("📊 Analytics Dashboard", open=True, visible=False)
             with analytics_dashboard_accordion:
-                gr.Markdown("### Interactive Cohort Analytics")
+                with gr.Row():
+                    gr.Markdown("### Interactive Cohort Analytics")
+                    refresh_dashboard_btn = gr.Button("🔄 Refresh", size="sm", scale=0, min_width=100)
                 
                 with gr.Tabs():
                     with gr.Tab("📈 Overview"):
@@ -1078,6 +1081,24 @@ with gr.Blocks(
         outputs=[
             run_display,
             analytics_dashboard_accordion,
+            stage4_summary_cards_main,
+            stage4_quick_stats_main,
+            stage4_quality_main,
+            stage4_insights_main,
+            stage4_gender_chart_main,
+            stage4_age_chart_main,
+            stage4_year_chart_main,
+            stage4_monthly_chart_main,
+            stage4_characteristics_table_main,
+            stage4_output_main,
+        ],
+    )
+    
+    # Manual refresh button for analytics dashboard
+    refresh_dashboard_btn.click(
+        load_stage4_dashboard,
+        inputs=selected_run_id,
+        outputs=[
             stage4_summary_cards_main,
             stage4_quick_stats_main,
             stage4_quality_main,
