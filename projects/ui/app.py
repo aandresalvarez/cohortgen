@@ -649,10 +649,10 @@ with gr.Blocks(
                 elem_classes=["run-display"],
             )
             
-            # Analytics Dashboard - Prominent placement!
-            with gr.Accordion("📊 Analytics Dashboard", open=False, visible=True):
+            # Analytics Dashboard - Only visible when Stage 4 is complete
+            analytics_dashboard_accordion = gr.Accordion("📊 Analytics Dashboard", open=True, visible=False)
+            with analytics_dashboard_accordion:
                 gr.Markdown("### Interactive Cohort Analytics")
-                gr.Markdown("*Click 'Load Dashboard' to view visualizations, AI insights, and export options*")
                 
                 with gr.Tabs():
                     with gr.Tab("📈 Overview"):
@@ -743,8 +743,6 @@ with gr.Blocks(
                         stage4_output_main = gr.Code(
                             language="json", interactive=False, lines=10
                         )
-                
-                load_stage4_btn_main = gr.Button("🔄 Load/Refresh Dashboard", variant="primary", size="lg")
             
             # Individual stage testing
             with gr.Accordion("🔬 Individual Stage Testing", open=False):
@@ -1125,25 +1123,7 @@ with gr.Blocks(
         outputs=stage3_sql_formatted,
     )
 
-    # Main dashboard (visible in main panel)
-    load_stage4_btn_main.click(
-        load_stage4_dashboard,
-        inputs=selected_run_id,
-        outputs=[
-            stage4_summary_cards_main,
-            stage4_quick_stats_main,
-            stage4_quality_main,
-            stage4_insights_main,
-            stage4_gender_chart_main,
-            stage4_age_chart_main,
-            stage4_year_chart_main,
-            stage4_monthly_chart_main,
-            stage4_characteristics_table_main,
-            stage4_output_main,
-        ],
-    )
-    
-    # Export buttons for main dashboard
+    # Export buttons for main dashboard (no manual load button needed - auto-loads)
     export_csv_btn_main.click(
         lambda run_id: export_csv_handler(run_id),
         inputs=selected_run_id,
@@ -1219,14 +1199,27 @@ with gr.Blocks(
         outputs=stage4_json_download,
     )
 
-    # Auto-refresh runs and current run display
+    # Auto-refresh runs and current run display (including dashboard)
     refresh_timer.tick(
         lambda: get_runs_list(),
         outputs=runs_table,
     ).then(
-        get_run_display,
+        update_display_and_dashboard,
         inputs=selected_run_id,
-        outputs=run_display,
+        outputs=[
+            run_display,
+            analytics_dashboard_accordion,
+            stage4_summary_cards_main,
+            stage4_quick_stats_main,
+            stage4_quality_main,
+            stage4_insights_main,
+            stage4_gender_chart_main,
+            stage4_age_chart_main,
+            stage4_year_chart_main,
+            stage4_monthly_chart_main,
+            stage4_characteristics_table_main,
+            stage4_output_main,
+        ],
     )
 
 
