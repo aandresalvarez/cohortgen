@@ -4,14 +4,17 @@ Gradio UI for OMOP Cohort Builder.
 Dashboard-style interface with run list and chat-style execution view.
 """
 
+import json
 import sys
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional, Tuple
 
-from dotenv import load_dotenv
 import gradio as gr
+import pandas as pd
+from dotenv import load_dotenv
 
 # Add project root to path first
 project_root = Path(__file__).parent.parent.parent
@@ -23,6 +26,18 @@ load_dotenv(dotenv_path=env_path)
 
 from projects.ui.models import RunStatus, StageStatus
 from projects.ui.service import CohortService
+from projects.ui.analytics_dashboard import (
+    export_analytics_csv,
+    export_analytics_json,
+    generate_ai_insights,
+    generate_data_quality_html,
+    generate_summary_cards_html,
+    prepare_age_chart_data,
+    prepare_characteristics_table,
+    prepare_gender_chart_data,
+    prepare_monthly_trend_data,
+    prepare_year_trend_data,
+)
 
 # Initialize service
 service = CohortService()
@@ -566,6 +581,69 @@ def load_artifact(run_id: str, artifact_type: str) -> str:
     return content
 
 
+def load_stage4_dashboard(run_id: str) -> Tuple[str, str, str, str, Any, Any, Any, Any, Any, str, str]:
+    """
+    Load and prepare Stage 4 analytics dashboard.
+    
+    Returns: (summary_cards_html, quick_stats, quality_html, insights_md, 
+              gender_chart_df, age_chart_df, year_chart_df, monthly_chart_df, 
+              characteristics_table_df, raw_json, export_status)
+    """
+    if not run_id:
+        empty_df = pd.DataFrame()
+        return ("", "*No run selected*", "", "*No run selected*", 
+                empty_df, empty_df, empty_df, empty_df, empty_df, "", "No run selected")
+    
+    run = service.get_run(run_id)
+    if not run or not run.stage4_path:
+        empty_df = pd.DataFrame()
+        return ("", "*Analytics not available yet*", "", "*Analytics not available yet*", 
+                empty_df, empty_df, empty_df, empty_df, empty_df, "", "Analytics not available")
+    
+    try:
+        # Load analytics JSON
+        with open(run.stage4_path) as f:
+            analytics = json.load(f)
+        
+        if analytics.get("status") != "complete":
+            empty_df = pd.DataFrame()
+            return ("", "*Analytics incomplete*", "", "*Analytics incomplete*", 
+                    empty_df, empty_df, empty_df, empty_df, empty_df, 
+                    json.dumps(analytics, indent=2), "Analytics incomplete")
+        
+        # Generate all dashboard components
+        summary_html = generate_summary_cards_html(analytics)
+        quality_html = generate_data_quality_html(analytics)
+        insights = generate_ai_insights(analytics, run.inputs.description if run.inputs else "")
+        
+        # Prepare chart data
+        gender_df = prepare_gender_chart_data(analytics) or pd.DataFrame()
+        age_df = prepare_age_chart_data(analytics) or pd.DataFrame()
+        year_df = prepare_year_trend_data(analytics) or pd.DataFrame()
+        monthly_df = prepare_monthly_trend_data(analytics) or pd.DataFrame()
+        char_df = prepare_characteristics_table(analytics)
+        
+        # Generate quick stats text
+        results = analytics.get("results", {})
+        cohort_size = 0
+        if "cohort_size" in results and isinstance(results["cohort_size"], list):
+            if results["cohort_size"]:
+                cohort_size = results["cohort_size"][0].get("n", 0)
+        
+        quick_stats = f"**Total Patients:** {cohort_size:,}"
+        
+        raw_json = json.dumps(analytics, indent=2)
+        
+        return (summary_html, quick_stats, quality_html, insights, 
+                gender_df, age_df, year_df, monthly_df, char_df, raw_json, 
+                "✅ Dashboard loaded successfully")
+    
+    except Exception as e:
+        empty_df = pd.DataFrame()
+        return ("", f"*Error loading dashboard: {str(e)}*", "", f"*Error: {str(e)}*", 
+                empty_df, empty_df, empty_df, empty_df, empty_df, "", f"Error: {str(e)}")
+
+
 # Build Gradio interface
 with gr.Blocks(
     title="OMOP Cohort Builder", theme=gr.themes.Soft(), css="""
@@ -667,11 +745,100 @@ with gr.Blocks(
                         stage3_sql_formatted = gr.HTML(label="Formatted SQL")
                         format_sql_btn = gr.Button("🎨 Format SQL with Syntax Highlighting")
 
-                    with gr.Tab("Stage 4 (JSON)"):
-                        stage4_output = gr.Code(
-                            language="json", interactive=False, lines=10
-                        )
-                        load_stage4_btn = gr.Button("Load Stage 4 Analytics")
+                    with gr.Tab("📊 Stage 4 Analytics Dashboard"):
+                        gr.Markdown("### Interactive Cohort Analytics")
+                        
+                        with gr.Tabs():
+                            with gr.Tab("📈 Overview"):
+                                # Summary cards
+                                stage4_summary_cards = gr.HTML(label="Summary Metrics")
+                                
+                                # Quick stats
+                                stage4_quick_stats = gr.Markdown(value="*Load analytics to view dashboard*")
+                                
+                                # Data quality indicators
+                                gr.Markdown("#### Data Quality")
+                                stage4_quality = gr.HTML(label="Quality Indicators")
+                            
+                            with gr.Tab("👥 Demographics"):
+                                with gr.Row():
+                                    with gr.Column():
+                                        gr.Markdown("#### Gender Distribution")
+                                        stage4_gender_chart = gr.BarPlot(
+                                            x="Gender",
+                                            y="Count",
+                                            title="Gender Distribution",
+                                            tooltip=["Gender", "Count", "Percentage"],
+                                            y_title="Number of Patients",
+                                            height=300,
+                                            show_label=False
+                                        )
+                                    
+                                    with gr.Column():
+                                        gr.Markdown("#### Age Distribution")
+                                        stage4_age_chart = gr.BarPlot(
+                                            x="Age Group",
+                                            y="Count",
+                                            title="Age Distribution",
+                                            tooltip=["Age Group", "Count", "Percentage"],
+                                            y_title="Number of Patients",
+                                            height=300,
+                                            show_label=False
+                                        )
+                                
+                                gr.Markdown("#### Detailed Characteristics")
+                                stage4_characteristics_table = gr.DataFrame(
+                                    headers=["Characteristic", "Count", "Percentage", "95% CI"],
+                                    label="Cohort Characteristics with Confidence Intervals",
+                                    interactive=False
+                                )
+                            
+                            with gr.Tab("📅 Temporal Trends"):
+                                with gr.Row():
+                                    with gr.Column():
+                                        gr.Markdown("#### Annual Enrollment")
+                                        stage4_year_chart = gr.LinePlot(
+                                            x="Year",
+                                            y="Patients",
+                                            title="Patients by Index Year",
+                                            tooltip=["Year", "Patients"],
+                                            height=300,
+                                            show_label=False
+                                        )
+                                    
+                                    with gr.Column():
+                                        gr.Markdown("#### Monthly Trend")
+                                        stage4_monthly_chart = gr.LinePlot(
+                                            x="Month",
+                                            y="Patients",
+                                            title="Monthly Enrollment Pattern",
+                                            tooltip=["Month", "Patients"],
+                                            height=300,
+                                            show_label=False
+                                        )
+                            
+                            with gr.Tab("🔍 AI Insights"):
+                                gr.Markdown("### AI-Powered Analysis")
+                                stage4_insights = gr.Markdown(
+                                    value="*Load analytics to generate insights*"
+                                )
+                            
+                            with gr.Tab("💾 Export & Raw Data"):
+                                gr.Markdown("#### Export Options")
+                                
+                                with gr.Row():
+                                    export_csv_btn = gr.Button("📥 Download CSV (Characteristics)", size="sm")
+                                    export_json_btn = gr.Button("📥 Download JSON (Full Analytics)", size="sm")
+                                
+                                stage4_csv_download = gr.File(label="CSV Download", visible=False)
+                                stage4_json_download = gr.File(label="JSON Download", visible=False)
+                                
+                                gr.Markdown("#### Raw JSON Data")
+                                stage4_output = gr.Code(
+                                    language="json", interactive=False, lines=10
+                                )
+                        
+                        load_stage4_btn = gr.Button("🔄 Load/Refresh Dashboard", variant="primary")
 
     # New run modal
     with gr.Row(visible=False) as new_run_panel:
@@ -906,9 +1073,66 @@ with gr.Blocks(
     )
 
     load_stage4_btn.click(
-        load_artifact,
-        inputs=[selected_run_id, gr.State("analytics")],
-        outputs=stage4_output,
+        load_stage4_dashboard,
+        inputs=selected_run_id,
+        outputs=[
+            stage4_summary_cards,
+            stage4_quick_stats,
+            stage4_quality,
+            stage4_insights,
+            stage4_gender_chart,
+            stage4_age_chart,
+            stage4_year_chart,
+            stage4_monthly_chart,
+            stage4_characteristics_table,
+            stage4_output,
+            run_status_display,  # Show status message
+        ],
+    )
+    
+    # Export buttons
+    def export_csv_handler(run_id: str) -> Optional[str]:
+        """Export analytics to CSV."""
+        if not run_id:
+            return None
+        run = service.get_run(run_id)
+        if not run or not run.stage4_path:
+            return None
+        try:
+            with open(run.stage4_path) as f:
+                analytics = json.load(f)
+            
+            # Create temp file
+            temp_dir = tempfile.gettempdir()
+            csv_path = Path(temp_dir) / f"cohort_{run_id}_characteristics.csv"
+            export_analytics_csv(analytics, csv_path)
+            return str(csv_path)
+        except Exception:
+            return None
+    
+    def export_json_handler(run_id: str) -> Optional[str]:
+        """Export analytics to JSON."""
+        if not run_id:
+            return None
+        run = service.get_run(run_id)
+        if not run or not run.stage4_path:
+            return None
+        try:
+            # Just return the existing analytics file path
+            return str(run.stage4_path)
+        except Exception:
+            return None
+    
+    export_csv_btn.click(
+        export_csv_handler,
+        inputs=selected_run_id,
+        outputs=stage4_csv_download,
+    )
+    
+    export_json_btn.click(
+        export_json_handler,
+        inputs=selected_run_id,
+        outputs=stage4_json_download,
     )
 
     # Auto-refresh runs and current run display
