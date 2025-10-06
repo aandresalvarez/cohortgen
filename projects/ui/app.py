@@ -5,6 +5,7 @@ Dashboard-style interface with run list and chat-style execution view.
 """
 
 import json
+import os
 import sys
 import tempfile
 import time
@@ -1099,21 +1100,50 @@ with gr.Blocks(
         outputs=[action_status, runs_table],
     )
 
+    # Helper functions for loading logs
+    def load_stage_log(run_id: str, stage: int) -> str:
+        """Load a stage log file."""
+        if not run_id:
+            return "⚠️ No run selected"
+        
+        run = service.get_run(run_id)
+        if not run:
+            return "⚠️ Run not found"
+        
+        # Get the appropriate log path
+        log_path = None
+        if stage == 1 and run.stage1_log_path:
+            log_path = run.stage1_log_path
+        elif stage == 2 and run.stage2_log_path:
+            log_path = run.stage2_log_path
+        elif stage == 3 and run.stage3_log_path:
+            log_path = run.stage3_log_path
+        
+        if not log_path or not os.path.exists(log_path):
+            return f"⚠️ Stage {stage} log not available yet"
+        
+        try:
+            with open(log_path, 'r') as f:
+                content = f.read()
+            return content if content else f"⚠️ Stage {stage} log is empty"
+        except Exception as e:
+            return f"❌ Error loading Stage {stage} log: {str(e)}"
+    
     # Load artifacts
     load_stage1_log_btn.click(
-        lambda run_id: get_stage1_log(run_id) or "⚠️ Stage 1 conversation log not available yet",
+        lambda run_id: load_stage_log(run_id, 1),
         inputs=selected_run_id,
         outputs=stage1_log_output,
     )
     
     load_stage2_log_btn.click(
-        lambda run_id: get_stage_log(run_id, 2) or "⚠️ Stage 2 discovery log not available yet",
+        lambda run_id: load_stage_log(run_id, 2),
         inputs=selected_run_id,
         outputs=stage2_log_output,
     )
     
     load_stage3_log_btn.click(
-        lambda run_id: get_stage_log(run_id, 3) or "⚠️ Stage 3 SQL generation log not available yet",
+        lambda run_id: load_stage_log(run_id, 3),
         inputs=selected_run_id,
         outputs=stage3_log_output,
     )
