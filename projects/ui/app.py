@@ -558,7 +558,7 @@ def load_stage4_dashboard(run_id: str) -> Tuple[str, str, str, str, Any, Any, An
         # Get description from user_inputs if available
         cohort_description = ""
         if hasattr(run, 'user_inputs') and run.user_inputs:
-            cohort_description = run.user_inputs.description
+            cohort_description = run.user_inputs.cohort_description
         insights = generate_ai_insights(analytics, cohort_description)
         
         # Prepare chart data
