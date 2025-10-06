@@ -398,13 +398,34 @@ def update_display_and_dashboard(run_id):
 
 def update_display_only(run_id):
     """Update ONLY run display and accordion visibility (for timer refresh)."""
+    if not run_id:
+        return (
+            "⬅️ Select a run from the list to view details",
+            gr.update(visible=False),  # analytics dashboard
+            gr.update(),  # stage1 chat accordion - preserve current state
+        )
+    
     display_text, stage4_complete = get_run_display(run_id)
     
-    # Only update visibility, don't touch dashboard data
+    # Check if Stage 1 is waiting for input
+    run = service.get_run(run_id)
+    stage1_chat_visible = gr.update()  # No change by default
+    
+    if run:
+        # Only update chat visibility if stage 1 status changed
+        for stage in run.stages:
+            if stage.stage == 1 and stage.status == StageStatus.WAITING_FOR_INPUT:
+                stage1_chat_visible = gr.update(visible=True, open=True)
+                break
+            elif stage.stage == 1 and stage.status in [StageStatus.COMPLETE, StageStatus.FAILED]:
+                stage1_chat_visible = gr.update(visible=False)
+                break
+    
+    # Update analytics dashboard visibility
     if stage4_complete:
-        return display_text, gr.update(visible=True, open=True)
+        return display_text, gr.update(visible=True, open=True), stage1_chat_visible
     else:
-        return display_text, gr.update(visible=False)
+        return display_text, gr.update(visible=False), stage1_chat_visible
 
 
 def format_sql(sql_text: str) -> str:
@@ -860,12 +881,8 @@ with gr.Blocks(
 
         # Right panel: Run details
         with gr.Column(scale=3):
-            run_display = gr.Markdown(
-                "⬅️ Select a run from the list to view details",
-                elem_classes=["run-display"],
-            )
-            
             # Stage 1 Interactive Clarification Chat (only visible when waiting for input)
+            # IMPORTANT: This comes FIRST so it appears at the top when active
             stage1_chat_accordion = gr.Accordion("💬 Stage 1: Clinical Clarification Chat", open=True, visible=False)
             with stage1_chat_accordion:
                 gr.Markdown("Answer the questions below to refine your cohort definition:")
@@ -887,6 +904,12 @@ with gr.Blocks(
                 
                 # Final cohort definition display (shown after completion)
                 stage1_final_def = gr.Markdown(visible=False)
+            
+            # Main run display (stages, progress, etc.)
+            run_display = gr.Markdown(
+                "⬅️ Select a run from the list to view details",
+                elem_classes=["run-display"],
+            )
             
             # Analytics Dashboard - Only visible when Stage 4 is complete
             analytics_dashboard_accordion = gr.Accordion("📊 Analytics Dashboard", open=True, visible=False)
@@ -1460,7 +1483,7 @@ with gr.Blocks(
     ).then(
         update_display_only,
         inputs=selected_run_id,
-        outputs=[run_display, analytics_dashboard_accordion],
+        outputs=[run_display, analytics_dashboard_accordion, stage1_chat_accordion],
     )
 
 
