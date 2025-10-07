@@ -1694,7 +1694,7 @@ with gr.Blocks(
     )
 
     # Export handlers for analytics dashboard
-    def export_csv_handler(run_id: str) -> str | None:
+    def export_csv_handler(run_id: str | None) -> str | None:
         """Export analytics as CSV file."""
         if not run_id:
             return None
@@ -1722,7 +1722,7 @@ with gr.Blocks(
             print(f"Error exporting CSV: {e}")
             return None
 
-    def export_json_handler(run_id: str) -> str | None:
+    def export_json_handler(run_id: str | None) -> str | None:
         """Export analytics as JSON file."""
         if not run_id:
             return None
@@ -1750,7 +1750,7 @@ with gr.Blocks(
             print(f"Error exporting JSON: {e}")
             return None
 
-    def export_atlas_handler(run_id: str) -> str | None:
+    def export_atlas_handler(run_id: str | None) -> str | None:
         """Export cohort definition as ATLAS-compatible JSON."""
         if not run_id:
             return None
@@ -1786,21 +1786,21 @@ with gr.Blocks(
 
     # Export buttons for main dashboard
     export_csv_btn_main.click(
-        export_csv_handler,
-        inputs=selected_run_id,
-        outputs=stage4_csv_download_main,
+        fn=export_csv_handler,
+        inputs=[selected_run_id],
+        outputs=[stage4_csv_download_main],
     )
 
     export_json_btn_main.click(
-        export_json_handler,
-        inputs=selected_run_id,
-        outputs=stage4_json_download_main,
+        fn=export_json_handler,
+        inputs=[selected_run_id],
+        outputs=[stage4_json_download_main],
     )
 
     export_atlas_btn_main.click(
-        export_atlas_handler,
-        inputs=selected_run_id,
-        outputs=stage4_atlas_download_main,
+        fn=export_atlas_handler,
+        inputs=[selected_run_id],
+        outputs=[stage4_atlas_download_main],
     )
 
     # Simple JSON loader for artifacts section
