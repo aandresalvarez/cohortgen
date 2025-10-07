@@ -6,6 +6,7 @@ Features: visualizations, AI insights, exports, data quality checks.
 """
 
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -553,3 +554,166 @@ def export_analytics_json(analytics: Dict[str, Any], output_path: Path) -> None:
     """Export analytics to JSON format."""
     with open(output_path, "w") as f:
         json.dump(analytics, f, indent=2)
+
+
+def export_atlas_cohort(
+    cohort_definition: Dict[str, Any], concept_sets: Dict[str, Any], output_path: Path
+) -> None:
+    """
+    Export cohort definition in ATLAS-compatible JSON format.
+
+    This generates a cohort definition that can be imported directly into ATLAS
+    for further refinement, visualization, and analysis.
+
+    Args:
+        cohort_definition: The Stage 1 cohort definition
+        concept_sets: The Stage 2 concept sets
+        output_path: Path where the ATLAS JSON should be saved
+    """
+    # Extract key information from cohort definition
+    index_event = cohort_definition.get("index_event", "First occurrence")
+    inclusion_criteria = cohort_definition.get("inclusion_criteria", [])
+    exclusion_criteria = cohort_definition.get("exclusion_criteria", [])
+    demographics = cohort_definition.get("demographics", {})
+
+    # Build concept sets for ATLAS format
+    atlas_concept_sets = []
+    concept_set_id = 0
+
+    for set_name, concept_set in concept_sets.items():
+        if isinstance(concept_set, dict):
+            concepts = concept_set.get("concepts", [])
+            domain = concept_set.get("domain", "Condition")
+
+            # Create ATLAS concept set format
+            atlas_concepts = []
+            for concept in concepts:
+                if isinstance(concept, dict):
+                    atlas_concepts.append(
+                        {
+                            "concept": {
+                                "CONCEPT_ID": concept.get("concept_id", 0),
+                                "CONCEPT_NAME": concept.get("concept_name", ""),
+                                "STANDARD_CONCEPT": "S",
+                                "DOMAIN_ID": domain,
+                                "VOCABULARY_ID": concept.get("vocabulary_id", "SNOMED"),
+                                "CONCEPT_CLASS_ID": concept.get(
+                                    "concept_class_id", "Clinical Finding"
+                                ),
+                                "CONCEPT_CODE": concept.get("concept_code", ""),
+                            },
+                            "isExcluded": False,
+                            "includeDescendants": True,
+                            "includeMapped": False,
+                        }
+                    )
+
+            if atlas_concepts:
+                atlas_concept_sets.append(
+                    {
+                        "id": concept_set_id,
+                        "name": set_name,
+                        "expression": {"items": atlas_concepts},
+                    }
+                )
+                concept_set_id += 1
+
+    # Build primary criteria (index event)
+    primary_criteria = {
+        "CriteriaList": [
+            {
+                "ConditionOccurrence": {
+                    "CodesetId": 0 if atlas_concept_sets else None,
+                    "First": True,
+                }
+            }
+        ],
+        "ObservationWindow": {
+            "PriorDays": 0,
+            "PostDays": 0,
+        },
+        "PrimaryCriteriaLimit": {"Type": "First"},
+    }
+
+    # Build inclusion rules
+    inclusion_rules = []
+
+    # Add demographics as inclusion rules
+    if demographics:
+        rule_id = 0
+
+        # Age criteria
+        age_info = demographics.get("age", "")
+        if age_info and "18" in str(age_info):
+            inclusion_rules.append(
+                {
+                    "name": "Age restriction",
+                    "expression": {
+                        "Type": "ALL",
+                        "CriteriaList": [],
+                        "DemographicCriteriaList": [
+                            {
+                                "Age": {
+                                    "Value": 18,
+                                    "Op": "gte",
+                                }
+                            }
+                        ],
+                    },
+                }
+            )
+            rule_id += 1
+
+    # Add exclusion criteria as qualified limit
+    qualified_limit = None
+    if exclusion_criteria:
+        qualified_limit = {"Type": "First"}
+
+    # Build cohort exit
+    cohort_exit = cohort_definition.get("cohort_exit", "")
+    end_strategy = {
+        "DateOffset": {
+            "DateField": "EndDate",
+            "Offset": 0,
+        }
+    }
+
+    if "observation" in str(cohort_exit).lower():
+        end_strategy = {
+            "CustomEra": {
+                "DrugCodesetId": None,
+                "GapDays": 0,
+                "Offset": 0,
+            }
+        }
+
+    # Construct final ATLAS cohort definition
+    atlas_cohort = {
+        "ConceptSets": atlas_concept_sets,
+        "PrimaryCriteria": primary_criteria,
+        "InclusionRules": inclusion_rules,
+        "QualifiedLimit": qualified_limit or {"Type": "First"},
+        "ExpressionLimit": {"Type": "First"},
+        "EndStrategy": end_strategy,
+        "CensoringCriteria": [],
+        "CollapseSettings": {
+            "CollapseType": "ERA",
+            "EraPad": 0,
+        },
+        "censored": False,
+        "cdmVersionRange": ">=5.0.0",
+    }
+
+    # Wrap in metadata for import
+    atlas_export = {
+        "name": f"Cohort from CohortGen - {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        "description": f"Index Event: {index_event}\n\n"
+        f"Inclusion: {', '.join(inclusion_criteria) if inclusion_criteria else 'None'}\n"
+        f"Exclusion: {', '.join(exclusion_criteria) if exclusion_criteria else 'None'}\n"
+        f"Demographics: {demographics}",
+        "expression": atlas_cohort,
+    }
+
+    # Write to file
+    with open(output_path, "w") as f:
+        json.dump(atlas_export, f, indent=2)

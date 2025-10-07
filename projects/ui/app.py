@@ -1214,9 +1214,13 @@ with gr.Blocks(
                             export_json_btn_main = gr.Button(
                                 "📥 Download JSON (Full Analytics)", size="sm"
                             )
+                            export_atlas_btn_main = gr.Button(
+                                "🌐 Export to ATLAS", size="sm", variant="primary"
+                            )
 
                         stage4_csv_download_main = gr.File(label="CSV Download", visible=False)
                         stage4_json_download_main = gr.File(label="JSON Download", visible=False)
+                        stage4_atlas_download_main = gr.File(label="ATLAS Export", visible=False)
 
                         gr.Markdown("#### Raw JSON Data")
                         stage4_output_main = gr.Code(language="json", interactive=False, lines=10)
@@ -1746,6 +1750,40 @@ with gr.Blocks(
             print(f"Error exporting JSON: {e}")
             return None
 
+    def export_atlas_handler(run_id: str) -> str | None:
+        """Export cohort definition as ATLAS-compatible JSON."""
+        if not run_id:
+            return None
+
+        run = service.get_run(run_id)
+        if not run or not run.stage1_path or not run.stage2_path:
+            return None
+
+        try:
+            # Load cohort definition (Stage 1) and concept sets (Stage 2)
+            with open(run.stage1_path) as f:
+                cohort_definition = json.load(f)
+
+            with open(run.stage2_path) as f:
+                concept_sets = json.load(f)
+
+            # Create ATLAS JSON file
+            from projects.ui.analytics_dashboard import export_atlas_cohort
+
+            # Create temp file with proper name
+            temp_dir = Path(tempfile.gettempdir())
+            atlas_path = temp_dir / f"cohort_{run_id}_ATLAS.json"
+
+            export_atlas_cohort(cohort_definition, concept_sets, atlas_path)
+            return str(atlas_path)
+
+        except Exception as e:
+            print(f"Error exporting ATLAS cohort: {e}")
+            import traceback
+
+            traceback.print_exc()
+            return None
+
     # Export buttons for main dashboard
     export_csv_btn_main.click(
         export_csv_handler,
@@ -1757,6 +1795,12 @@ with gr.Blocks(
         export_json_handler,
         inputs=selected_run_id,
         outputs=stage4_json_download_main,
+    )
+
+    export_atlas_btn_main.click(
+        export_atlas_handler,
+        inputs=selected_run_id,
+        outputs=stage4_atlas_download_main,
     )
 
     # Simple JSON loader for artifacts section
