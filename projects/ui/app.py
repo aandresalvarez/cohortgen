@@ -1218,9 +1218,9 @@ with gr.Blocks(
                                 "🌐 Export to ATLAS", size="sm", variant="primary"
                             )
 
-                        stage4_csv_download_main = gr.File(label="CSV Download", visible=False)
-                        stage4_json_download_main = gr.File(label="JSON Download", visible=False)
-                        stage4_atlas_download_main = gr.File(label="ATLAS Export", visible=False)
+                        stage4_csv_download_main = gr.File(label="CSV Download")
+                        stage4_json_download_main = gr.File(label="JSON Download")
+                        stage4_atlas_download_main = gr.File(label="ATLAS Export")
 
                         gr.Markdown("#### Raw JSON Data")
                         stage4_output_main = gr.Code(language="json", interactive=False, lines=10)
