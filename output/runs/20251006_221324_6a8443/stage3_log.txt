@@ -1,0 +1,36 @@
+BigQuery Configuration:
+  Project: alvaro-169413
+  Dataset: bigquery-public-data.cms_synthetic_patient_data_omop
+  Location: US
+
+
+======================================================================
+STAGE 3: BIGQUERY SQL GENERATION
+======================================================================
+
+[Step 0] Discovering available OMOP tables and schemas...
+✅ Found 24 tables in bigquery-public-data.cms_synthetic_patient_data_omop
+   Available domain tables: condition_occurrence, drug_exposure, observation, procedure_occurrence
+
+📋 Schema Discovery:
+   condition_occurrence: date columns = condition_start_date, condition_start_datetime, condition_end_date
+   procedure_occurrence: date columns = procedure_datetime
+   drug_exposure: date columns = drug_exposure_start_date, drug_exposure_start_datetime, drug_exposure_end_date
+   observation: date columns = observation_date, observation_datetime
+
+[Step 1] Generating initial SQL...
+
+Generated SQL (2462 characters)
+
+SQL Preview:
+WITH esrd_concepts AS (
+  SELECT DISTINCT ca.descendant_concept_id AS concept_id
+  FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept_ancestor` ca
+  JOIN `bigquery-public-data.cms_synthetic_patient_data_omop.concept` c
+    ON c.concept_id = ca.descendant_concept_id
+  WHERE ca.ancesto...
+
+[Step 2] Validating SQL (dry run)...
+✅ SQL is valid!
+   Estimated cost: $0.0405
+   Bytes to process: 8.29 GB

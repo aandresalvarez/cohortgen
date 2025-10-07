@@ -108,13 +108,14 @@ def build_analytics_queries(
     join_index = ""
     have_index = False
     if esrd_list:
+        # Rewritten to use JOIN instead of correlated subquery (BigQuery requirement)
         index_cte = f"""
 , index_dates AS (
-  SELECT person_id, MIN(condition_start_date) AS index_date
-  FROM {cond}
-  WHERE person_id IN (SELECT person_id FROM cohort)
-    AND condition_concept_id IN ({esrd_list})
-  GROUP BY person_id
+  SELECT co.person_id, MIN(co.condition_start_date) AS index_date
+  FROM {cond} co
+  INNER JOIN cohort c ON c.person_id = co.person_id
+  WHERE co.condition_concept_id IN ({esrd_list})
+  GROUP BY co.person_id
 )
 """
         join_index = "LEFT JOIN index_dates i USING(person_id)"
@@ -188,6 +189,37 @@ FROM cohort c
 {join_index}
 GROUP BY 1
 ORDER BY 1
+""".strip()
+        )
+
+        # 5) Age statistics (for summary cards)
+        queries["age_stats"] = (
+            f"""
+{base_cte}
+SELECT
+  AVG(EXTRACT(YEAR FROM i.index_date) - p.year_of_birth) AS mean_age,
+  APPROX_QUANTILES(EXTRACT(YEAR FROM i.index_date) - p.year_of_birth, 100)[OFFSET(50)] AS median_age,
+  STDDEV(EXTRACT(YEAR FROM i.index_date) - p.year_of_birth) AS std_age,
+  MIN(EXTRACT(YEAR FROM i.index_date) - p.year_of_birth) AS min_age,
+  MAX(EXTRACT(YEAR FROM i.index_date) - p.year_of_birth) AS max_age
+FROM cohort c
+{join_index}
+JOIN {person} p ON p.person_id = c.person_id
+""".strip()
+        )
+
+        # 6) Monthly enrollment trend
+        queries["monthly_trend"] = (
+            f"""
+{base_cte}
+SELECT
+  FORMAT_DATE('%Y-%m', i.index_date) AS month,
+  COUNT(DISTINCT c.person_id) AS n
+FROM cohort c
+{join_index}
+GROUP BY 1
+ORDER BY 1
+LIMIT 100
 """.strip()
         )
 

@@ -15,6 +15,8 @@ help:
 	@echo "Running:"
 	@echo "  make run               Run full workflow (all 3 stages)"
 	@echo "  make run-log           Run full workflow WITH LOGGING to timestamped file"
+	@echo "  make run-ui            Launch Gradio UI (web interface)"
+	@echo "  make stop-ui           Stop Gradio UI if running"
 	@echo "  make run-stats         Run Stage 4 (Analytics) on latest SQL"
 	@echo "  make run-clar          Run Stage 1 (Clinical Clarification)"
 	@echo "  make run-cd            Run Stage 2 (Concept Discovery)"
@@ -71,6 +73,22 @@ run-log:
 	echo "✅ Complete log saved to: $${LOG_FILE}" && \
 	echo "════════════════════════════════════════════════════════════════"
 
+# Launch Gradio UI
+run-ui:
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "🧬 OMOP Cohort Builder - Web UI"
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "Starting Gradio interface..."
+	@echo "UI will be available at: http://localhost:7860"
+	@echo ""
+	@uv run python projects/ui/app.py
+
+# Stop the Gradio UI if it's running
+stop-ui:
+	@echo "Stopping Gradio UI..."
+	@lsof -ti:7860 | xargs kill -9 2>/dev/null && echo "✓ UI stopped" || echo "✓ UI was not running"
+
 # Run Stage 1: Clinical Clarification
 run-clar:
 	@cd projects/clar && python3 hitl_clarification_working.py
@@ -86,6 +104,27 @@ run-qb:
 # Run Stage 4: Analytics
 run-stats:
 	@uv run python projects/stats/run_stats.py
+
+## Individual stage runners for specific run ID (UI-based runs)
+run-stage1: ## Run Stage 1 for specific run (Usage: make run-stage1 RUN_ID=20251006_123456_abc123)
+	@if [ -z "$(RUN_ID)" ]; then echo "❌ Error: RUN_ID not set"; echo "Usage: make run-stage1 RUN_ID=your_run_id"; exit 1; fi
+	@echo "Running Stage 1 for run $(RUN_ID)..."
+	@uv run python -c "import sys; sys.path.insert(0, '.'); from projects.ui.service import CohortService; from projects.ui.storage import FileSystemStorage; storage = FileSystemStorage(); service = CohortService(storage); run = storage.load_run('$(RUN_ID)'); service._execute_stage1(run); print('✅ Stage 1 complete')"
+
+run-stage2: ## Run Stage 2 for specific run (Usage: make run-stage2 RUN_ID=20251006_123456_abc123)
+	@if [ -z "$(RUN_ID)" ]; then echo "❌ Error: RUN_ID not set"; echo "Usage: make run-stage2 RUN_ID=your_run_id"; exit 1; fi
+	@echo "Running Stage 2 for run $(RUN_ID)..."
+	@uv run python -c "import sys; sys.path.insert(0, '.'); from projects.ui.service import CohortService; from projects.ui.storage import FileSystemStorage; storage = FileSystemStorage(); service = CohortService(storage); run = storage.load_run('$(RUN_ID)'); service._execute_stage2(run); print('✅ Stage 2 complete')"
+
+run-stage3: ## Run Stage 3 for specific run (Usage: make run-stage3 RUN_ID=20251006_123456_abc123)
+	@if [ -z "$(RUN_ID)" ]; then echo "❌ Error: RUN_ID not set"; echo "Usage: make run-stage3 RUN_ID=your_run_id"; exit 1; fi
+	@echo "Running Stage 3 for run $(RUN_ID)..."
+	@uv run python -c "import sys; sys.path.insert(0, '.'); from projects.ui.service import CohortService; from projects.ui.storage import FileSystemStorage; storage = FileSystemStorage(); service = CohortService(storage); run = storage.load_run('$(RUN_ID)'); service._execute_stage3(run); print('✅ Stage 3 complete')"
+
+run-stage4: ## Run Stage 4 for specific run (Usage: make run-stage4 RUN_ID=20251006_123456_abc123)
+	@if [ -z "$(RUN_ID)" ]; then echo "❌ Error: RUN_ID not set"; echo "Usage: make run-stage4 RUN_ID=your_run_id"; exit 1; fi
+	@echo "Running Stage 4 for run $(RUN_ID)..."
+	@uv run python -c "import sys; sys.path.insert(0, '.'); from projects.ui.service import CohortService; from projects.ui.storage import FileSystemStorage; storage = FileSystemStorage(); service = CohortService(storage); run = storage.load_run('$(RUN_ID)'); service._execute_stage4(run); print('✅ Stage 4 complete')"
 
 # Run tests
 test:

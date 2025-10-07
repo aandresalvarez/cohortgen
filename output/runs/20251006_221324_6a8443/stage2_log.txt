@@ -1,0 +1,104 @@
+======================================================================
+Stage 2: Concept Discovery
+Run ID: 20251006_221324_6a8443
+======================================================================
+
+
+======================================================================
+OMOP CONCEPT DISCOVERY - NORMAL MODE
+======================================================================
+
+Cohort Definition:
+Index Event: First date on which both a heart failure diagnosis and an end-stage renal disease diagnosis are recorded on the same date (use the first date on which both appear together).
+Inclusion Criteria: History of heart failure: a diagnosis of heart failure recorded any time prior to or on the index date., End-stage renal disease: a diagnosis of end-stage renal disease recorded any time prior to or on the index date.
+Exclusion Criteria: None
+Observation Window: No minimum prior observation required. Capture medical history any time before the index date. Follow-up after index: until end of enrollment (end of continuous observation) or death.
+Prior Observation: None required
+Cohort Exit: End of continuous observation (end of enrollment) or death.
+
+[Step 1] Decomposing cohort definition into concept sets...
+
+✅ Decomposed into 2 concept sets:
+  1. Heart failure (condition) (Condition)
+     Intent: All condition concepts representing heart failure diagnoses to identify patients with any recorded heart failure (acute, chronic, systolic, diastolic, congestive, HFrEF, HFpEF, left ventricular failure). Use SNOMED standard concepts and include descendants.
+     Queries: heart failure, congestive heart failure, cardiac failure...
+  2. End-stage renal disease / dialysis dependence (condition) (Condition)
+     Intent: Condition concepts representing end-stage renal disease (ESRD) and dialysis dependence, including CKD stage 5 and variants (end stage renal disease, end stage kidney disease, ESRD, dialysis-dependent renal failure). Use SNOMED standard concepts and include descendants.
+     Queries: end stage renal disease, end-stage renal disease, end stage kidney disease...
+
+[Step 2] Intelligent candidate seeding...
+🚀 Phase 1 Optimization: Processing 2 concept sets in parallel (max_workers=5)
+
+Processing: Heart failure (condition)
+
+Processing: End-stage renal disease / dialysis dependence (condition)
+    Searching: end stage renal disease
+    Searching: heart failure
+ℹ️  Note: Query 'end stage renal disease' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'heart failure' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ✅ Found 4 candidates
+    Searching: end-stage renal disease
+ℹ️  Note: Query 'end-stage renal disease' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ✅ Found 1 candidates
+    Searching: end stage kidney disease
+ℹ️  Note: Query 'end stage kidney disease' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ✅ Found 2 candidates
+    Searching: congestive heart failure
+ℹ️  Note: Query 'congestive heart failure' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ✅ Found 5 candidates
+    Searching: cardiac failure
+ℹ️  Note: Query 'cardiac failure' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ✅ Found 4 candidates
+  🤖 LLM candidate selection...
+      ✅ Found 5 candidates
+  🤖 LLM candidate selection...
+  ✅ Selected 5 candidates: Selected SNOMED standard Condition concepts focused on ESRD and close subtypes. Top: 193782 (End-stage renal disease) — exact lexical match and standard SNOMED. Next are specific ESRD subtypes: 37018886 (End stage renal disease due to hypertension), 43020455 (Malignant hypertensive end stage renal disease), 46273164 (End stage renal disease due to benign hypertension). Included 45768813 (Anemia in end stage renal disease) as an associated ESRD condition when present. CKD stage 5 and explicit dialysis-dependent concepts were not returned in the Athena payload; add standard SNOMED CKD stage 5 / dialysis-dependent concepts if needed.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [193782, 37018886, 43020455] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+  ✅ Selected 11 candidates: 316139 (Heart failure) is primary: exact lexical match and SNOMED standard. 319835 (Congestive heart failure) is a frequent synonym/clinical equivalent. Next I included common clinically relevant subtypes that are SNOMED standard Condition concepts and likely have useful descendant hierarchies for capture: acute (4023479), chronic (4229440), decompensated (4111554) and compensated (4108244) cardiac failure, biventricular (4242669) and symptomatic (44784442) congestive heart failure. I also included congenital (4071869), neonatal (4172864) and fetal (43021735) cardiac/heart failure concepts to ensure coverage of age- or etiology-specific HF records. Ordering follows lexical/semantic closeness to the search term, preference for standard SNOMED concepts, and uses ascending concept_id as a deterministic tiebreaker.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [316139, 319835, 4023479] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 3 decisions
+      - 193782: ✅ Concept details show conceptName = 'End-stage renal disease', vocabularyId = 'SNOMED', domain = 'Con...
+      - 37018886: ✅ Details show conceptName = 'End stage renal disease due to hypertension', vocabularyId = 'SNOMED', d...
+      - 43020455: ✅ Details show conceptName = 'Malignant hypertensive end stage renal disease', vocabularyId = 'SNOMED'...
+    [Iteration 2] Processing batch: [46273164, 45768813] (depths: [0, 0])
+      Fetching details for 2 concepts (batched)...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 3 decisions
+      - 316139: ✅ conceptName = 'Heart failure'; standardConcept = 'Standard'; vocabularyId = 'SNOMED'; domain = Condi...
+      - 319835: ✅ conceptName = 'Congestive heart failure'; standardConcept = 'Standard'; vocabularyId = 'SNOMED'; dom...
+      - 4023479: ✅ conceptName = 'Acute congestive heart failure'; standardConcept = 'Standard'; vocabularyId = 'SNOMED...
+    [Iteration 2] Processing batch: [4229440, 4111554, 4108244] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 2 decisions
+      - 46273164: ✅ Concept is SNOMED, domain Condition, conceptClass Disorder and marked Standard. The conceptName is '...
+      - 45768813: ❌ Concept is SNOMED, domain Condition, conceptClass Disorder and marked Standard. However the conceptN...
+  ✅ Resolution: resolved (accepted_matches) after 5 visits
+✅ Completed: End-stage renal disease / dialysis dependence (condition)
+    ✅ Batch analysis complete: 3 decisions
+      - 4229440: ✅ Concept is SNOMED standard (standardConcept = 'Standard'), domain = Condition, conceptName = 'Chroni...
+      - 4111554: ✅ Concept is SNOMED standard, domain = Condition, conceptName = 'Decompensated cardiac failure'. 'Deco...
+      - 4108244: ✅ Concept is SNOMED standard, domain = Condition, conceptName = 'Compensated cardiac failure'. 'Compen...
+    ✅ Collected 6 accepted anchors; stopping exploration
+  ✅ Resolution: resolved (enough_matches) after 6 visits
+✅ Completed: Heart failure (condition)
+
+[Final Concept Sets]
+  - End-stage renal disease / dialysis dependence (condition): 4 concepts
+  - Heart failure (condition): 6 concepts
+
+======================================================================
+✅ INTELLIGENT CONCEPT DISCOVERY COMPLETE
+======================================================================
+
+Output is ready!
+
+======================================================================
+Stage 2 Complete
+======================================================================

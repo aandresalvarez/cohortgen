@@ -1,0 +1,631 @@
+INFO:httpx:HTTP Request: GET http://localhost:7860/gradio_api/startup-events "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD http://localhost:7860/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+INFO:projects.ui.service:Created run 20251006_210536_3733ca: patients with flu
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:projects.ui.service:Starting run 20251006_210536_3733ca with stages [2, 3, 4]
+INFO:projects.ui.service:[20251006_210536_3733ca] Starting Stage 2: Concept Discovery
+INFO:openai._base_client:Retrying request to /chat/completions in 0.443193 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:openai._base_client:Retrying request to /chat/completions in 0.379436 seconds
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+* Running on local URL:  http://0.0.0.0:7860
+* To create a public link, set `share=True` in `launch()`.
+======================================================================
+Stage 2: Concept Discovery
+Run ID: 20251006_210536_3733ca
+======================================================================
+
+
+======================================================================
+OMOP CONCEPT DISCOVERY - NORMAL MODE
+======================================================================
+
+Cohort Definition:
+Index Event: First-ever diagnosis of influenza that is laboratory-confirmed (first recorded diagnosis of influenza with a positive influenza test).
+Inclusion Criteria: Laboratory-confirmed influenza at index (positive influenza test), No age restriction, Both sexes
+Exclusion Criteria: No exclusions
+Observation Window: No prior observation required; post-index follow-up not specified.
+Prior Observation: No prior observation required.
+Cohort Exit: Not specified
+
+[Step 1] Decomposing cohort definition into concept sets...
+
+✅ Decomposed into 5 concept sets:
+  1. Influenza - Diagnosis (SNOMED) (Condition)
+     Intent: All clinical diagnosis codes for influenza (seasonal and specific subtypes) to identify recorded influenza diagnoses. Include generic influenza, influenza A, influenza B, avian/swine/pandemic influenza, and influenza with complications (e.g., pneumonia).
+     Queries: influenza, influenza A, influenza B...
+  2. Influenza - Molecular/NAAT/PCR tests (LOINC) (Measurement)
+     Intent: LOINC measurement codes for molecular assays that detect influenza viral RNA/DNA (PCR, rRT-PCR, NAAT). Include tests for Influenza A, Influenza B, Influenza A/B panels and specific viral RNA qualitative/quantitative tests.
+     Queries: Influenza A RNA, Influenza B RNA, Influenza A/B RNA...
+  3. Influenza - Antigen detection / Rapid tests (LOINC) (Measurement)
+     Intent: LOINC measurement codes for antigen detection tests including rapid influenza diagnostic tests (RIDT), immunoassays, immunofluorescence for Influenza A and B and combined A/B antigen detection.
+     Queries: influenza antigen, influenza A antigen, influenza B antigen...
+  4. Influenza - Viral culture tests (LOINC) (Measurement)
+     Intent: LOINC measurement codes for viral culture and isolation tests for influenza viruses (Influenza A, Influenza B, and unspecified influenza virus culture/identification).
+     Queries: influenza culture, influenza virus culture, influenza A culture...
+  5. Influenza test positive / detected - Result value concepts (SNOMED) (Measurement)
+     Intent: Standard result/value concepts to indicate a positive/detected influenza test result (to be used as measurement.value_as_concept_id or observation_concept_id when linking a test to a positive result). Include synonyms commonly used for qualitative detection.
+     Queries: Detected, Positive, Present...
+
+[Step 2] Intelligent candidate seeding...
+🚀 Phase 1 Optimization: Processing 5 concept sets in parallel (max_workers=5)
+
+Processing: Influenza - Molecular/NAAT/PCR tests (LOINC)
+
+Processing: Influenza - Diagnosis (SNOMED)
+
+Processing: Influenza - Antigen detection / Rapid tests (LOINC)
+
+Processing: Influenza - Viral culture tests (LOINC)
+
+Processing: Influenza test positive / detected - Result value concepts (SNOMED)
+    Searching: Influenza A RNA
+    Searching: Detected
+    Searching: influenza antigen
+    Searching: influenza
+    Searching: influenza culture
+ℹ️  Note: Query 'influenza' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'influenza culture' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'influenza a rna' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'detected' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'influenza antigen' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: Positive
+ℹ️  Note: Query 'positive' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: influenza virus culture
+ℹ️  Note: Query 'influenza virus culture' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: influenza A antigen
+ℹ️  Note: Query 'influenza a antigen' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: Present
+ℹ️  Note: Query 'present' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: influenza A culture
+ℹ️  Note: Query 'influenza a culture' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+  ⚠️  No search results for Influenza test positive / detected - Result value concepts (SNOMED)
+✅ Completed: Influenza test positive / detected - Result value concepts (SNOMED)
+      ✅ Found 1 candidates
+    Searching: influenza A
+ℹ️  Note: Query 'influenza a' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: influenza B antigen
+ℹ️  Note: Query 'influenza b antigen' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+  ⚠️  No search results for Influenza - Viral culture tests (LOINC)
+✅ Completed: Influenza - Viral culture tests (LOINC)
+      ⚠️  No candidates found: Unknown error
+    Searching: influenza B
+ℹ️  Note: Query 'influenza b' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+  🤖 LLM candidate selection...
+      ⚠️  No candidates found: Unknown error
+  ⚠️  No search results for Influenza - Antigen detection / Rapid tests (LOINC)
+✅ Completed: Influenza - Antigen detection / Rapid tests (LOINC)
+      ✅ Found 1 candidates
+    Searching: Influenza B RNA
+ℹ️  Note: Query 'influenza b rna' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ✅ Found 1 candidates
+    Searching: Influenza A/B RNA
+ℹ️  Note: Query 'influenza a/b rna' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+  🤖 LLM candidate selection...
+  ✅ Selected 1 candidates: Selected SNOMED concept 4266367 (Influenza) as the top candidate because it is an exact lexical match, a Standard SNOMED concept, and in the Condition domain. Athena returned only this SNOMED entry; specific subtypes (Influenza A, B, avian/swine/pandemic) and influenza-with-complication concepts were not present in the Athena response, so they are not added here but should be considered if you can request expanded Athena search or mappings.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [4266367] (depths: [0])
+      Fetching details for 1 concepts (batched)...
+      🤖 LLM batch analysis...
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:openai._base_client:Retrying request to /chat/completions in 0.484012 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:projects.ui.service:[20251006_210536_3733ca] Stage 2 complete in 88.1s
+INFO:projects.ui.service:[20251006_210536_3733ca] Starting Stage 3: SQL Generation
+INFO:openai._base_client:Retrying request to /chat/completions in 0.413622 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:projects.ui.service:[20251006_210536_3733ca] Stage 3 complete in 111.7s
+INFO:projects.ui.service:[20251006_210536_3733ca] Starting Stage 4: Analytics
+INFO:projects.ui.service:[20251006_210536_3733ca] Stage 4 complete in 6.5s
+INFO:projects.ui.service:Run 20251006_210536_3733ca finished with status succeeded in 206.3s
+INFO:projects.ui.service:Created run 20251006_211544_ea3944: all patients wit...
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:projects.ui.service:Starting run 20251006_211544_ea3944 with stages [2, 3, 4]
+INFO:projects.ui.service:[20251006_211544_ea3944] Starting Stage 2: Concept Discovery
+INFO:openai._base_client:Retrying request to /chat/completions in 0.496728 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:openai._base_client:Retrying request to /chat/completions in 0.460687 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+  ✅ Selected 2 candidates: Selected LOINC measurement concepts that directly represent molecular detection of influenza RNA. Top pick is 1092044 (Influenza virus A RNA [Presence] in Specimen) because it is an exact match to PCR/NAAT detection for Influenza A, is a Measurement domain LOINC standard concept, and lexically matches the search. Second is 3033001 (Influenza virus B RNA [Identifier] in Isolate by Sequencing) because it is a LOINC measurement and denotes molecular identification of Influenza B RNA (sequencing-based identifier rather than simple presence). Athena returned only these two LOINC measurement hits; no other relevant LOINC molecular influenza measurements were provided. If you want broader panel or qualitative/quantitative assay codes (e.g., Influenza A/B RNA presence, Influenza A/B panel by PCR), I recommend rerunning Athena with expanded terms to capture those LOINC codes.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [1092044, 3033001] (depths: [0, 0])
+      Fetching details for 2 concepts (batched)...
+    ✅ Batch analysis complete: 1 decisions
+      - 4266367: ✅ Concept attributes: conceptName='Influenza', standardConcept='Standard', domainId='Condition', vocab...
+  ✅ Resolution: resolved (accepted_matches) after 1 visits
+✅ Completed: Influenza - Diagnosis (SNOMED)
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 2 decisions
+      - 1092044: ✅ conceptName = 'Influenza virus A RNA [Presence] in Specimen', vocabulary = LOINC, domain = Measureme...
+      - 3033001: ❌ conceptName = 'Influenza virus B RNA [Identifier] in Isolate by Sequencing', vocabulary = LOINC, dom...
+  ✅ Resolution: resolved (accepted_matches) after 2 visits
+✅ Completed: Influenza - Molecular/NAAT/PCR tests (LOINC)
+
+[Final Concept Sets]
+  - Influenza test positive / detected - Result value concepts (SNOMED): 0 concepts
+  - Influenza - Viral culture tests (LOINC): 0 concepts
+  - Influenza - Antigen detection / Rapid tests (LOINC): 0 concepts
+  - Influenza - Diagnosis (SNOMED): 1 concepts
+  - Influenza - Molecular/NAAT/PCR tests (LOINC): 1 concepts
+
+======================================================================
+✅ INTELLIGENT CONCEPT DISCOVERY COMPLETE
+======================================================================
+
+Output is ready!
+
+======================================================================
+Stage 2 Complete
+======================================================================
+BigQuery Configuration:
+  Project: alvaro-169413
+  Dataset: bigquery-public-data.cms_synthetic_patient_data_omop
+  Location: US
+
+
+======================================================================
+STAGE 3: BIGQUERY SQL GENERATION
+======================================================================
+
+[Step 0] Discovering available OMOP tables and schemas...
+✅ Found 24 tables in bigquery-public-data.cms_synthetic_patient_data_omop
+   Available domain tables: condition_occurrence, drug_exposure, observation, procedure_occurrence
+
+📋 Schema Discovery:
+   condition_occurrence: date columns = condition_start_date, condition_start_datetime, condition_end_date
+   procedure_occurrence: date columns = procedure_datetime
+   drug_exposure: date columns = drug_exposure_start_date, drug_exposure_start_datetime, drug_exposure_end_date
+   observation: date columns = observation_date, observation_datetime
+
+⚠️  Warning: Some concept sets reference tables that don't exist:
+   - Influenza - Molecular/NAAT/PCR tests (LOINC) (Domain: Measurement → measurement)
+   These concepts will be excluded from the generated SQL.
+
+
+[Step 1] Generating initial SQL...
+
+Generated SQL (2152 characters)
+
+SQL Preview:
+WITH influenza_dx_concepts AS (
+  SELECT c.concept_id
+  FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept` c
+  WHERE c.concept_id = 4266367
+    AND c.standard_concept = 'S'
+    AND c.domain_id = 'Condition'
+  UNION DISTINCT
+  SELECT ca.descendant_concept_id
+  FROM `bigquery-public-d...
+
+[Step 2] Validating SQL (dry run)...
+❌ SQL validation failed (attempt 1/5)
+   Errors: ['BigQuery API error: POST https://bigquery.googleapis.com/bigquery/v2/projects/alvaro-169413/jobs?prettyPrint=false: Not found: Table bigquery-public-data:cms_synthetic_patient_data_omop.measurement was not found in location US\n\nLocation: US\nJob ID: 14f80e06-d718-403f-b80f-ee5f0dbcd036\n']
+
+[Step 3] Attempting to fix SQL...
+   SQL updated (2152 characters)
+   Retrying validation...
+[Step 3] Validating SQL (dry run)...
+❌ SQL validation failed (attempt 2/5)
+   Errors: ['BigQuery API error: POST https://bigquery.googleapis.com/bigquery/v2/projects/alvaro-169413/jobs?prettyPrint=false: IN subquery is not supported inside join predicate.\n\nLocation: US\nJob ID: 315d216b-3c4a-48bb-a4e6-4a2b620ba98f\n']
+
+[Step 4] Attempting to fix SQL...
+   SQL updated (2152 characters)
+   Retrying validation...
+[Step 4] Validating SQL (dry run)...
+✅ SQL is valid!
+   Estimated cost: $0.0472
+   Bytes to process: 9.67 GB
+======================================================================
+Stage 4: Analytics
+Run ID: 20251006_210536_3733ca
+======================================================================
+
+BigQuery Configuration:
+  Project: alvaro-169413
+  Dataset: bigquery-public-data.cms_synthetic_patient_data_omop
+  Location: US
+
+No ESRD concept IDs found; age/index-year analytics will be skipped
+
+Building analytics queries...
+  ✓ Removed trailing semicolon from SQL
+  ✓ Built 2 analytics queries
+
+[Run] cohort_size...
+  ✓ 1 rows
+[Run] by_gender...
+  ✓ 0 rows
+
+======================================================================
+✅ Analytics Complete
+======================================================================
+======================================================================
+Stage 2: Concept Discovery
+Run ID: 20251006_211544_ea3944
+======================================================================
+
+
+======================================================================
+OMOP CONCEPT DISCOVERY - NORMAL MODE
+======================================================================
+
+Cohort Definition:
+Index Event: First-ever diagnosis of influenza (first recorded diagnosis of influenza)
+Inclusion Criteria: First-ever diagnosis of influenza
+Observation Window: Post-index follow-up: user-selected (pending confirmation) — initial choice: 'death' 
+Prior Observation: none (no required continuous observation before index)
+Cohort Exit: To be confirmed: user initially indicated 'death' as follow-up endpoint
+
+[Step 1] Decomposing cohort definition into concept sets...
+
+✅ Decomposed into 1 concept sets:
+  1. Influenza diagnosis (SNOMED) (Condition)
+     Intent: All clinical diagnosis codes representing influenza infections (any type/subtype, complications like influenza with pneumonia, seasonal/avian/swine/H1N1), to identify first-ever recorded diagnosis of influenza as cohort index event.
+     Queries: Influenza, Influenza A, Influenza B...
+
+[Step 2] Intelligent candidate seeding...
+🚀 Phase 1 Optimization: Processing 1 concept sets in parallel (max_workers=5)
+
+Processing: Influenza diagnosis (SNOMED)
+    Searching: Influenza
+ℹ️  Note: Query 'influenza' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ✅ Found 1 candidates
+    Searching: Influenza A
+ℹ️  Note: Query 'influenza a' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: Influenza B
+ℹ️  Note: Query 'influenza b' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+  🤖 LLM candidate selection...
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:projects.ui.service:[20251006_211544_ea3944] Stage 2 complete in 51.8s
+INFO:projects.ui.service:[20251006_211544_ea3944] Starting Stage 3: SQL Generation
+INFO:openai._base_client:Retrying request to /chat/completions in 0.438132 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:projects.ui.service:[20251006_211544_ea3944] Stage 3 complete in 32.6s
+INFO:projects.ui.service:[20251006_211544_ea3944] Starting Stage 4: Analytics
+INFO:projects.ui.service:[20251006_211544_ea3944] Stage 4 complete in 4.8s
+INFO:projects.ui.service:Run 20251006_211544_ea3944 finished with status succeeded in 89.2s
+INFO:projects.ui.service:Deleting run 20251006_211544_ea3944
+INFO:projects.ui.service:Deleting run 20251006_205400_91cc6d
+INFO:projects.ui.service:Deleting run 20251006_210536_3733ca
+INFO:projects.ui.service:Created run 20251006_215541_fc0928: Prior heart failure...
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:projects.ui.service:Starting run 20251006_215541_fc0928 with stages [2, 3, 4]
+INFO:projects.ui.service:[20251006_215541_fc0928] Starting Stage 2: Concept Discovery
+INFO:openai._base_client:Retrying request to /chat/completions in 0.389462 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+  ✅ Selected 1 candidates: Top candidate is 4266367 (Influenza - SNOMED, standard, Condition). Athena returned this exact SNOMED standard concept: exact lexical match, correct domain, and standard designation. Use this as the primary concept and include its descendants in cohort definitions to capture all influenza types/subtypes and complications (seasonal, avian, swine/H1N1, influenza with pneumonia). No other SNOMED candidates were returned by Athena to add; therefore only the standard, broad influenza concept is listed.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [4266367] (depths: [0])
+      Fetching details for 1 concepts (batched)...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 1 decisions
+      - 4266367: ✅ The concept is marked Standard (standardConcept = "Standard"), has domainId = "Condition", vocabular...
+  ✅ Resolution: resolved (accepted_matches) after 1 visits
+✅ Completed: Influenza diagnosis (SNOMED)
+
+[Final Concept Sets]
+  - Influenza diagnosis (SNOMED): 1 concepts
+
+======================================================================
+✅ INTELLIGENT CONCEPT DISCOVERY COMPLETE
+======================================================================
+
+Output is ready!
+
+======================================================================
+Stage 2 Complete
+======================================================================
+BigQuery Configuration:
+  Project: alvaro-169413
+  Dataset: bigquery-public-data.cms_synthetic_patient_data_omop
+  Location: US
+
+
+======================================================================
+STAGE 3: BIGQUERY SQL GENERATION
+======================================================================
+
+[Step 0] Discovering available OMOP tables and schemas...
+✅ Found 24 tables in bigquery-public-data.cms_synthetic_patient_data_omop
+   Available domain tables: condition_occurrence, drug_exposure, observation, procedure_occurrence
+
+📋 Schema Discovery:
+   condition_occurrence: date columns = condition_start_date, condition_start_datetime, condition_end_date
+   procedure_occurrence: date columns = procedure_datetime
+   drug_exposure: date columns = drug_exposure_start_date, drug_exposure_start_datetime, drug_exposure_end_date
+   observation: date columns = observation_date, observation_datetime
+
+[Step 1] Generating initial SQL...
+
+Generated SQL (857 characters)
+
+SQL Preview:
+WITH influenza_condition_concepts AS (
+  SELECT DISTINCT c.concept_id AS condition_concept_id
+  FROM `bigquery-public-data.cms_synthetic_patient_data_omop.concept_ancestor` ca
+  JOIN `bigquery-public-data.cms_synthetic_patient_data_omop.concept` c
+    ON c.concept_id = ca.descendant_concept_id
+  WHE...
+
+[Step 2] Validating SQL (dry run)...
+✅ SQL is valid!
+   Estimated cost: $0.0299
+   Bytes to process: 6.13 GB
+======================================================================
+Stage 4: Analytics
+Run ID: 20251006_211544_ea3944
+======================================================================
+
+BigQuery Configuration:
+  Project: alvaro-169413
+  Dataset: bigquery-public-data.cms_synthetic_patient_data_omop
+  Location: US
+
+No ESRD concept IDs found; age/index-year analytics will be skipped
+
+Building analytics queries...
+  ✓ Removed trailing semicolon from SQL
+  ✓ Built 2 analytics queries
+
+[Run] cohort_size...
+  ✓ 1 rows
+[Run] by_gender...
+  ✓ 2 rows
+
+======================================================================
+✅ Analytics Complete
+======================================================================
+======================================================================
+Stage 2: Concept Discovery
+Run ID: 20251006_215541_fc0928
+======================================================================
+
+
+======================================================================
+OMOP CONCEPT DISCOVERY - NORMAL MODE
+======================================================================
+
+Cohort Definition:
+Index Event: First date on which both a diagnosis of heart failure and a diagnosis of end-stage renal disease are recorded on the same day (first co-occurrence).
+Inclusion Criteria: History of heart failure any time before the index date (prior diagnosis of heart failure at any time before the index event)., Diagnosis of end-stage renal disease on the index date as part of the co-occurrence., Adults aged 18 years or older at the index date (age >= 18).
+Observation Window: Follow-up from index until end of continuous observation (end of enrollment) or death; no fixed follow-up duration.
+Prior Observation: No prior observation or continuous enrollment requirement before index.
+Cohort Exit: Exit cohort at end of continuous observation (end of enrollment) or at death.
+
+[Step 1] Decomposing cohort definition into concept sets...
+
+✅ Decomposed into 4 concept sets:
+  1. Heart failure (Condition, SNOMED) (Condition)
+     Intent: All diagnoses indicating heart failure to identify prior history (used for the requirement: prior diagnosis of heart failure any time before the index date and for the co-occurrence on index date). Include acute, chronic, systolic/diastolic, left ventricular failure, and cardiomyopathy with heart failure.
+     Queries: heart failure, congestive heart failure, congestive cardiac failure...
+  2. End-stage renal disease (ESRD) / CKD stage 5 (Condition, SNOMED) (Condition)
+     Intent: All diagnoses indicating end-stage renal disease, end-stage kidney disease, CKD stage 5, dialysis-dependent renal failure — to be used to define the ESRD diagnosis that must co-occur on the index date.
+     Queries: end stage renal disease, end-stage kidney disease, ESRD...
+  3. Dialysis procedures (supporting) - Hemodialysis and Peritoneal dialysis (Procedure: SNOMED, CPT4) (Procedure)
+     Intent: Procedure concepts indicating maintenance dialysis (hemodialysis and peritoneal dialysis). This supporting set can help capture patients with ESRD when diagnosis coding is inconsistent. Use for sensitivity analyses or to supplement identification of dialysis-dependent ESRD on index date.
+     Queries: hemodialysis, haemodialysis, maintenance hemodialysis...
+  4. Chronic kidney disease unspecified / kidney failure (supporting broader CKD concepts) (Condition, SNOMED) (Condition)
+     Intent: Broader CKD and kidney failure diagnoses to support sensitivity analyses for ESRD identification (e.g., 'chronic kidney disease' and 'kidney failure' terms that may be coded when stage is not specified). Use with caution and only in sensitivity analyses or to help find candidate concepts for the ESRD set.
+     Queries: chronic kidney disease, kidney failure, renal failure chronic...
+
+[Step 2] Intelligent candidate seeding...
+🚀 Phase 1 Optimization: Processing 4 concept sets in parallel (max_workers=5)
+
+Processing: Heart failure (Condition, SNOMED)
+
+Processing: End-stage renal disease (ESRD) / CKD stage 5 (Condition, SNOMED)
+
+Processing: Dialysis procedures (supporting) - Hemodialysis and Peritoneal dialysis (Procedure: SNOMED, CPT4)
+
+Processing: Chronic kidney disease unspecified / kidney failure (supporting broader CKD concepts) (Condition, SNOMED)
+    Searching: heart failure
+    Searching: end stage renal disease
+    Searching: hemodialysis
+    Searching: chronic kidney disease
+ℹ️  Note: Query 'heart failure' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'end stage renal disease' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'hemodialysis' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'chronic kidney disease' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ✅ Found 4 candidates
+    Searching: end-stage kidney disease
+ℹ️  Note: Query 'end-stage kidney disease' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ✅ Found 1 candidates
+    Searching: ESRD
+ℹ️  Note: Query 'esrd' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ✅ Found 4 candidates
+    Searching: haemodialysis
+INFO:openai._base_client:Retrying request to /chat/completions in 0.378103 seconds
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:openai._base_client:Retrying request to /chat/completions in 0.404137 seconds
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:athena_client.client:Athena client initialized: max_retries=3, retry_delay=None, throttling=enabled
+INFO:openai._base_client:Retrying request to /chat/completions in 0.478780 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+ℹ️  Note: Query 'haemodialysis' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+  🤖 LLM candidate selection...
+      ✅ Found 1 candidates
+      ✅ Found 2 candidates
+    Searching: kidney failure
+    Searching: congestive heart failure
+ℹ️  Note: Query 'kidney failure' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'congestive heart failure' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: maintenance hemodialysis
+ℹ️  Note: Query 'maintenance hemodialysis' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: renal failure chronic
+ℹ️  Note: Query 'renal failure chronic' matches many concepts (estimated 2,000+), but only 20 will be downloaded.
+      ✅ Found 5 candidates
+    Searching: congestive cardiac failure
+ℹ️  Note: Query 'congestive cardiac failure' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ✅ Found 2 candidates
+  🤖 LLM candidate selection...
+      ✅ Found 4 candidates
+  🤖 LLM candidate selection...
+      ✅ Found 1 candidates
+  🤖 LLM candidate selection...
+  ✅ Selected 4 candidates: Selected SNOMED standard, broad CKD/kidney-failure concepts prioritized by lexical and semantic match. Top: 46271022 (Chronic kidney disease) — exact broad CKD term and top candidate; 198185 (Chronic renal failure) — synonymous kidney-failure phrasing; 4322556 (Chronic progressive renal failure) — chronic/progressive qualifier useful for sensitivity; 4128067 (Acute-on-chronic renal failure) — contains chronic kidney-failure component but includes acute episode, include only with caution. Excluded anemia (443961) as it is a complication rather than a CKD/kidney-failure diagnosis. All chosen concepts are SNOMED standard.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [46271022, 198185, 4322556] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+  ✅ Selected 4 candidates: Selected SNOMED concepts that explicitly indicate end-stage renal disease, prioritized by exact lexical match and clinical equivalence. Top candidate is 193782 (End-stage renal disease) as the generic, directly matching term. Next are cause-specific ESRD concepts (37018886: End stage renal disease due to hypertension; 43020455: Malignant hypertensive end stage renal disease; 46273164: End stage renal disease due to benign hypertension) because they unambiguously denote ESRD. I excluded 45768813 (Anemia in end stage renal disease) because it documents a complication (anemia) rather than a primary ESRD diagnosis and could introduce noise when requiring ESRD to co-occur on the index date.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [193782, 37018886, 43020455] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+      🤖 LLM batch analysis...
+  ✅ Selected 5 candidates: Selected SNOMED procedure concepts that best capture maintenance hemodialysis for ESRD sensitivity/supplemental identification. Top pick is Maintenance hemodialysis (46273700) because it explicitly denotes ongoing/maintenance therapy; second is the general Hemodialysis concept (4120120) as the closest lexical match and broad capture; Continuous (4050863) and Intermittent (4051326) hemodialysis follow as common maintenance modalities; Initial hemodialysis (4238836) is included last because it denotes the first/incident procedure rather than ongoing maintenance. All are SNOMED standard procedure concepts. Note: no peritoneal dialysis SNOMED procedures were returned in the Athena payload—recommend adding canonical Peritoneal dialysis SNOMED/CPT procedure codes to capture that modality.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [46273700, 4120120, 4050863] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+  ✅ Selected 7 candidates: Selected SNOMED standard Condition concepts that best represent prior/present heart failure diagnoses. Top candidates are 316139 (Heart failure) and 319835 (Congestive heart failure) — exact/close lexical matches and generic HF concepts. Next are acute and chronic variants (4023479, 4229440), then clinically specific CHF subtypes (4242669 biventricular, 44784442 symptomatic) and a hypertensive cause-coded HF (439698). I excluded fetal heart failure as not relevant for typical adult prior-history capture. If you need systolic/diastolic, left‑ventricular failure, or cardiomyopathy-with-HF included, run supplemental searches for those SNOMED entries.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [316139, 319835, 4023479] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 3 decisions
+      - 46273700: ✅ Concept details: standardConcept='Standard', domainId='Procedure', vocabularyId='SNOMED'. conceptNam...
+      - 4120120: ✅ Concept details: standardConcept='Standard', domainId='Procedure', vocabularyId='SNOMED'. conceptNam...
+      - 4050863: ❌ Concept details: standardConcept='Standard', domainId='Procedure', vocabularyId='SNOMED'. conceptNam...
+    [Iteration 2] Processing batch: [4051326, 4238836] (depths: [0, 0])
+      Fetching details for 2 concepts (batched)...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 3 decisions
+      - 46271022: ✅ details: conceptName = 'Chronic kidney disease'; standardConcept = 'Standard'; domainId = 'Condition...
+      - 198185: ✅ details: conceptName = 'Chronic renal failure'; standardConcept = 'Standard'; domainId = 'Condition'...
+      - 4322556: ✅ details: conceptName = 'Chronic progressive renal failure'; standardConcept = 'Standard'; domainId =...
+    ⏰ Timeout reached (30s), exiting
+  ✅ Resolution: resolved (timeout) after 3 visits
+✅ Completed: Chronic kidney disease unspecified / kidney failure (supporting broader CKD concepts) (Condition, SNOMED)
+    ✅ Batch analysis complete: 3 decisions
+      - 316139: ✅ Details show conceptName = 'Heart failure', vocabularyId = 'SNOMED', domainId = 'Condition', and sta...
+      - 319835: ✅ Details show conceptName = 'Congestive heart failure', vocabularyId = 'SNOMED', domainId = 'Conditio...
+      - 4023479: ✅ Details show conceptName = 'Acute congestive heart failure', vocabularyId = 'SNOMED', domainId = 'Co...
+    [Iteration 2] Processing batch: [4229440, 4242669, 44784442] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 3 decisions
+      - 193782: ✅ Concept 193782 is SNOMED 'End-stage renal disease', Standard concept in the Condition domain (detail...
+      - 37018886: ✅ Concept 37018886 is SNOMED 'End stage renal disease due to hypertension', marked Standard and in the...
+      - 43020455: ✅ Concept 43020455 is SNOMED 'Malignant hypertensive end stage renal disease', Standard in the Conditi...
+    ⏰ Timeout reached (30s), exiting
+  ✅ Resolution: resolved (timeout) after 3 visits
+✅ Completed: End-stage renal disease (ESRD) / CKD stage 5 (Condition, SNOMED)
+    ✅ Batch analysis complete: 2 decisions
+      - 4051326: ✅ Standard SNOMED Procedure (standardConcept = 'Standard', domain = Procedure, vocabulary = SNOMED). T...
+      - 4238836: ❌ Also a Standard SNOMED Procedure (domain = Procedure). However, the conceptName 'Initial hemodialysi...
+  ✅ Resolution: resolved (accepted_matches) after 5 visits
+✅ Completed: Dialysis procedures (supporting) - Hemodialysis and Peritoneal dialysis (Procedure: SNOMED, CPT4)
+    ✅ Batch analysis complete: 3 decisions
+INFO:projects.ui.service:[20251006_215541_fc0928] Stage 2 complete in 126.1s
+INFO:projects.ui.service:[20251006_215541_fc0928] Starting Stage 3: SQL Generation
+INFO:openai._base_client:Retrying request to /chat/completions in 0.420341 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:projects.ui.service:[20251006_215541_fc0928] Stage 3 complete in 66.6s
+INFO:projects.ui.service:[20251006_215541_fc0928] Starting Stage 4: Analytics
+INFO:projects.ui.service:[20251006_215541_fc0928] Stage 4 complete in 53.8s
+INFO:projects.ui.service:Run 20251006_215541_fc0928 finished with status succeeded in 246.5s
