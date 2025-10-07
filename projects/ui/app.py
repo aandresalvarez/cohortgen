@@ -7,6 +7,7 @@ Dashboard-style interface with run list and chat-style execution view.
 import json
 import os
 import sys
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, Tuple
@@ -1688,19 +1689,75 @@ with gr.Blocks(
         outputs=stage3_sql_formatted,
     )
 
-    # Export buttons for main dashboard (no manual load button needed - auto-loads)
-    # TODO: Implement export handlers
-    # export_csv_btn_main.click(
-    #     lambda run_id: export_csv_handler(run_id),
-    #     inputs=selected_run_id,
-    #     outputs=stage4_csv_download_main,
-    # )
-    #
-    # export_json_btn_main.click(
-    #     lambda run_id: export_json_handler(run_id),
-    #     inputs=selected_run_id,
-    #     outputs=stage4_json_download_main,
-    # )
+    # Export handlers for analytics dashboard
+    def export_csv_handler(run_id: str) -> str | None:
+        """Export analytics as CSV file."""
+        if not run_id:
+            return None
+
+        run = service.get_run(run_id)
+        if not run or not run.stage4_path:
+            return None
+
+        try:
+            # Load analytics
+            with open(run.stage4_path) as f:
+                analytics = json.load(f)
+
+            # Create CSV file
+            from projects.ui.analytics_dashboard import export_analytics_csv
+
+            # Create temp file with proper name
+            temp_dir = Path(tempfile.gettempdir())
+            csv_path = temp_dir / f"cohort_{run_id}_analytics.csv"
+
+            export_analytics_csv(analytics, csv_path)
+            return str(csv_path)
+
+        except Exception as e:
+            print(f"Error exporting CSV: {e}")
+            return None
+
+    def export_json_handler(run_id: str) -> str | None:
+        """Export analytics as JSON file."""
+        if not run_id:
+            return None
+
+        run = service.get_run(run_id)
+        if not run or not run.stage4_path:
+            return None
+
+        try:
+            # Load analytics
+            with open(run.stage4_path) as f:
+                analytics = json.load(f)
+
+            # Create JSON file
+            from projects.ui.analytics_dashboard import export_analytics_json
+
+            # Create temp file with proper name
+            temp_dir = Path(tempfile.gettempdir())
+            json_path = temp_dir / f"cohort_{run_id}_analytics.json"
+
+            export_analytics_json(analytics, json_path)
+            return str(json_path)
+
+        except Exception as e:
+            print(f"Error exporting JSON: {e}")
+            return None
+
+    # Export buttons for main dashboard
+    export_csv_btn_main.click(
+        export_csv_handler,
+        inputs=selected_run_id,
+        outputs=stage4_csv_download_main,
+    )
+
+    export_json_btn_main.click(
+        export_json_handler,
+        inputs=selected_run_id,
+        outputs=stage4_json_download_main,
+    )
 
     # Simple JSON loader for artifacts section
     load_stage4_btn.click(
