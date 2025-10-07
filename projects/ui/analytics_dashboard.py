@@ -6,6 +6,7 @@ Features: visualizations, AI insights, exports, data quality checks.
 """
 
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
@@ -580,43 +581,55 @@ def export_atlas_cohort(
     atlas_concept_sets = []
     concept_set_id = 0
 
-    for set_name, concept_set in concept_sets.items():
-        if isinstance(concept_set, dict):
-            concepts = concept_set.get("concepts", [])
-            domain = concept_set.get("domain", "Condition")
+    # Handle both old and new Stage 2 formats
+    concept_sets_list = []
+    if isinstance(concept_sets, dict):
+        # New format: {"concept_sets": [...]}
+        concept_sets_list = concept_sets.get("concept_sets", [])
+    elif isinstance(concept_sets, list):
+        # Direct list format
+        concept_sets_list = concept_sets
 
-            # Create ATLAS concept set format
-            atlas_concepts = []
-            for concept in concepts:
-                if isinstance(concept, dict):
-                    atlas_concepts.append(
-                        {
-                            "concept": {
-                                "CONCEPT_ID": concept.get("concept_id", 0),
-                                "CONCEPT_NAME": concept.get("concept_name", ""),
-                                "STANDARD_CONCEPT": "S",
-                                "DOMAIN_ID": domain,
-                                "VOCABULARY_ID": concept.get("vocabulary_id", "SNOMED"),
-                                "CONCEPT_CLASS_ID": concept.get(
-                                    "concept_class_id", "Clinical Finding"
-                                ),
-                                "CONCEPT_CODE": concept.get("concept_code", ""),
-                            },
-                            "isExcluded": False,
-                            "includeDescendants": True,
-                            "includeMapped": False,
-                        }
-                    )
+    for concept_set in concept_sets_list:
+        if not isinstance(concept_set, dict):
+            continue
 
-            if atlas_concepts:
-                atlas_concept_sets.append(
+        set_name = concept_set.get("name", f"Concept Set {concept_set_id}")
+        domain = concept_set.get("domain", "Condition")
+
+        # Get included concepts (handle both "included_concepts" and "concepts" keys)
+        included_concepts = concept_set.get("included_concepts", concept_set.get("concepts", []))
+
+        # Create ATLAS concept set format
+        atlas_concepts = []
+        for concept in included_concepts:
+            if isinstance(concept, dict):
+                atlas_concepts.append(
                     {
-                        "id": concept_set_id,
-                        "name": set_name,
-                        "expression": {"items": atlas_concepts},
+                        "concept": {
+                            "CONCEPT_ID": concept.get("concept_id", 0),
+                            "CONCEPT_NAME": concept.get("concept_name", ""),
+                            "STANDARD_CONCEPT": concept.get("standard_concept", "S"),
+                            "DOMAIN_ID": concept.get("domain_id", domain),
+                            "VOCABULARY_ID": concept.get("vocabulary_id", "SNOMED"),
+                            "CONCEPT_CLASS_ID": concept.get("concept_class_id", "Clinical Finding"),
+                            "CONCEPT_CODE": concept.get("concept_code", ""),
+                        },
+                        "isExcluded": False,
+                        "includeDescendants": True,
+                        "includeMapped": False,
                     }
                 )
-                concept_set_id += 1
+
+        if atlas_concepts:
+            atlas_concept_sets.append(
+                {
+                    "id": concept_set_id,
+                    "name": set_name,
+                    "expression": {"items": atlas_concepts},
+                }
+            )
+            concept_set_id += 1
 
     # Build primary criteria (index event)
     primary_criteria = {
@@ -637,52 +650,125 @@ def export_atlas_cohort(
 
     # Build inclusion rules
     inclusion_rules = []
+    rule_id = 0
 
-    # Add demographics as inclusion rules
-    if demographics:
-        rule_id = 0
+    # Parse inclusion criteria for age requirements
+    age_value = None
+    age_op = "gte"
 
-        # Age criteria
-        age_info = demographics.get("age", "")
-        if age_info and "18" in str(age_info):
+    # Check both demographics and inclusion_criteria for age info
+    age_sources = [demographics.get("age", ""), str(inclusion_criteria)]
+    for age_source in age_sources:
+        age_str = str(age_source).lower()
+        if "18" in age_str or "adult" in age_str:
+            age_value = 18
+            if ">=" in age_str or "or older" in age_str or "adult" in age_str:
+                age_op = "gte"
+            elif ">" in age_str:
+                age_op = "gt"
+            break
+
+    # Add age restriction as inclusion rule
+    if age_value:
+        inclusion_rules.append(
+            {
+                "name": "Age restriction",
+                "expression": {
+                    "Type": "ALL",
+                    "CriteriaList": [],
+                    "DemographicCriteriaList": [
+                        {
+                            "Age": {
+                                "Value": age_value,
+                                "Op": age_op,
+                            }
+                        }
+                    ],
+                    "Groups": [],
+                },
+            }
+        )
+        rule_id += 1
+
+    # Add additional inclusion rules for each concept set (if applicable)
+    for idx, concept_set in enumerate(atlas_concept_sets[:3]):  # Limit to first 3 for simplicity
+        if idx > 0:  # Skip first one as it's the primary criteria
             inclusion_rules.append(
                 {
-                    "name": "Age restriction",
+                    "name": concept_set["name"],
                     "expression": {
                         "Type": "ALL",
-                        "CriteriaList": [],
-                        "DemographicCriteriaList": [
+                        "CriteriaList": [
                             {
-                                "Age": {
-                                    "Value": 18,
-                                    "Op": "gte",
-                                }
+                                "Criteria": {
+                                    "ConditionOccurrence": {
+                                        "CodesetId": concept_set["id"],
+                                    }
+                                },
+                                "StartWindow": {
+                                    "Start": {"Coeff": -1},
+                                    "End": {"Days": 0, "Coeff": 1},
+                                    "UseIndexEnd": False,
+                                    "UseEventEnd": False,
+                                },
+                                "Occurrence": {"Type": 0, "Count": 1},
                             }
                         ],
+                        "DemographicCriteriaList": [],
+                        "Groups": [],
                     },
                 }
             )
             rule_id += 1
+            if rule_id >= 5:  # Limit total inclusion rules
+                break
 
     # Add exclusion criteria as qualified limit
     qualified_limit = None
     if exclusion_criteria:
         qualified_limit = {"Type": "First"}
 
-    # Build cohort exit
+    # Build cohort exit / end strategy
     cohort_exit = cohort_definition.get("cohort_exit", "")
-    end_strategy = {
-        "DateOffset": {
-            "DateField": "EndDate",
-            "Offset": 0,
-        }
-    }
+    observation_window = cohort_definition.get("observation_window", "")
 
-    if "observation" in str(cohort_exit).lower():
+    # Determine appropriate end strategy based on cohort definition
+    exit_str = f"{cohort_exit} {observation_window}".lower()
+
+    if "continuous observation" in exit_str or "enrollment" in exit_str:
+        # Exit at end of continuous observation
         end_strategy = {
-            "CustomEra": {
-                "DrugCodesetId": None,
-                "GapDays": 0,
+            "DateOffset": {
+                "DateField": "EndDate",
+                "Offset": 0,
+            }
+        }
+    elif "year" in exit_str or "day" in exit_str or "month" in exit_str:
+        # Fixed duration follow-up
+        # Try to extract duration
+        duration_match = re.search(r"(\d+)\s*(year|month|day)", exit_str)
+        if duration_match:
+            value = int(duration_match.group(1))
+            unit = duration_match.group(2)
+            days = value if unit == "day" else (value * 30 if unit == "month" else value * 365)
+            end_strategy = {
+                "DateOffset": {
+                    "DateField": "StartDate",
+                    "Offset": days,
+                }
+            }
+        else:
+            end_strategy = {
+                "DateOffset": {
+                    "DateField": "EndDate",
+                    "Offset": 0,
+                }
+            }
+    else:
+        # Default: end of observation
+        end_strategy = {
+            "DateOffset": {
+                "DateField": "EndDate",
                 "Offset": 0,
             }
         }
