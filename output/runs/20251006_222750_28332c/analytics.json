@@ -1,0 +1,22 @@
+{
+  "status": "complete",
+  "project_id": "alvaro-169413",
+  "dataset": "bigquery-public-data.cms_synthetic_patient_data_omop",
+  "results": {
+    "cohort_size": [
+      {
+        "n": 1506340
+      }
+    ],
+    "by_gender": [
+      {
+        "gender": "female",
+        "n": 861244
+      },
+      {
+        "gender": "male",
+        "n": 645096
+      }
+    ]
+  }
+}

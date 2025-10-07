@@ -424,6 +424,7 @@ class CohortService:
                     message = " ".join(str(arg) for arg in args)
                     with open(stage2_log_path, "a") as f:
                         f.write(message + "\n")
+                        f.flush()  # Flush immediately for real-time log updates
                     _REAL_PRINT(*args, **kwargs)
                 
                 original_print = builtins.print
@@ -566,6 +567,7 @@ class CohortService:
                     message = " ".join(str(arg) for arg in args)
                     with open(stage3_log_path, "a") as f:
                         f.write(message + "\n")
+                        f.flush()  # Flush immediately for real-time log updates
                     _REAL_PRINT(*args, **kwargs)
                 
                 original_print = builtins.print
@@ -990,11 +992,29 @@ class CohortService:
             Tuple of (next_question, is_complete, cohort_definition)
         """
         from projects.ui.models import ClarificationSession
+        from projects.ui.interactive_clarification import InteractiveClarificationSession
         
-        # Get session
+        # Get session (or restore from saved state)
         session = self._clarification_sessions.get(run_id)
         if not session:
-            return "Error: Session not found. Please start clarification first.", True, None
+            # Try to restore from saved run state
+            run = self.get_run(run_id)
+            if run and run.clarification_session and not run.clarification_session.is_complete:
+                # Recreate session from saved state
+                session = InteractiveClarificationSession(
+                    run_id=run_id,
+                    initial_description=run.user_inputs.cohort_description
+                )
+                # Restore conversation history
+                session.conversation_history = run.clarification_session.conversation_history.copy()
+                session.is_complete = run.clarification_session.is_complete
+                session.cohort_definition = run.clarification_session.cohort_definition
+                session.question_count = len([msg for msg in session.conversation_history if msg["role"] == "assistant"])
+                
+                # Store in memory
+                self._clarification_sessions[run_id] = session
+            else:
+                return "Error: Session not found. Please start clarification first.", False, None
         
         # Send message
         next_question, is_complete, cohort_def = session.send_message(message)

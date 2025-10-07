@@ -1,0 +1,252 @@
+{
+  "concept_sets": [
+    {
+      "name": "Type 1 diabetes mellitus (T1DM) - Condition (SNOMED) - Exclusion",
+      "intent": "All condition concepts representing Type 1 diabetes mellitus (insulin-dependent, juvenile-onset) to be used as an exclusion set: any record of these conditions before index disqualifies the index event.",
+      "domain": "Condition",
+      "included_concepts": [
+        {
+          "concept_id": 201254,
+          "concept_name": "Type 1 diabetes mellitus",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "46635009"
+        },
+        {
+          "concept_id": 4063042,
+          "concept_name": "Pre-existing type 1 diabetes mellitus",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "199229001"
+        },
+        {
+          "concept_id": 3661732,
+          "concept_name": "Newly diagnosed type 1 diabetes mellitus",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "870528001"
+        }
+      ],
+      "excluded_concepts": [],
+      "resolution_outcome": {
+        "status": "resolved",
+        "concept": null,
+        "reason": "timeout",
+        "visit_count": 3,
+        "stop_reason": "timeout",
+        "pending_candidates": [
+          1244603,
+          45766051,
+          40484649,
+          37163452,
+          4152858,
+          43531009
+        ],
+        "history": [],
+        "evidence": null,
+        "accepted_concepts": [
+          {
+            "concept_id": 201254,
+            "concept_name": "Type 1 diabetes mellitus",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "46635009"
+          },
+          {
+            "concept_id": 4063042,
+            "concept_name": "Pre-existing type 1 diabetes mellitus",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "199229001"
+          },
+          {
+            "concept_id": 3661732,
+            "concept_name": "Newly diagnosed type 1 diabetes mellitus",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "870528001"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Type 2 diabetes mellitus (T2DM) - Condition (SNOMED)",
+      "intent": "All condition concepts representing Type 2 diabetes mellitus (adult-onset, non-insulin-dependent) to identify first-ever recorded diagnosis of type 2 diabetes. Use SNOMED concepts and include descendants to capture complications and specific clinical subtypes.",
+      "domain": "Condition",
+      "included_concepts": [
+        {
+          "concept_id": 201826,
+          "concept_name": "Type 2 diabetes mellitus",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "44054006"
+        },
+        {
+          "concept_id": 4063043,
+          "concept_name": "Pre-existing type 2 diabetes mellitus",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "199230006"
+        },
+        {
+          "concept_id": 4130162,
+          "concept_name": "Insulin treated type 2 diabetes mellitus",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "237599002"
+        }
+      ],
+      "excluded_concepts": [],
+      "resolution_outcome": {
+        "status": "resolved",
+        "concept": null,
+        "reason": "timeout",
+        "visit_count": 3,
+        "stop_reason": "timeout",
+        "pending_candidates": [
+          40485020,
+          45766052,
+          4129519
+        ],
+        "history": [],
+        "evidence": null,
+        "accepted_concepts": [
+          {
+            "concept_id": 201826,
+            "concept_name": "Type 2 diabetes mellitus",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "44054006"
+          },
+          {
+            "concept_id": 4063043,
+            "concept_name": "Pre-existing type 2 diabetes mellitus",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "199230006"
+          },
+          {
+            "concept_id": 4130162,
+            "concept_name": "Insulin treated type 2 diabetes mellitus",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "237599002"
+          }
+        ]
+      }
+    }
+  ],
+  "atlas": {
+    "concept_sets": [
+      {
+        "name": "Type 1 diabetes mellitus (T1DM) - Condition (SNOMED) - Exclusion",
+        "expression": {
+          "items": [
+            {
+              "concept": {
+                "CONCEPT_ID": 201254,
+                "CONCEPT_NAME": "Type 1 diabetes mellitus",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "46635009"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": 4063042,
+                "CONCEPT_NAME": "Pre-existing type 1 diabetes mellitus",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "199229001"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": 3661732,
+                "CONCEPT_NAME": "Newly diagnosed type 1 diabetes mellitus",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "870528001"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "Type 2 diabetes mellitus (T2DM) - Condition (SNOMED)",
+        "expression": {
+          "items": [
+            {
+              "concept": {
+                "CONCEPT_ID": 201826,
+                "CONCEPT_NAME": "Type 2 diabetes mellitus",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "44054006"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": 4063043,
+                "CONCEPT_NAME": "Pre-existing type 2 diabetes mellitus",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "199230006"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": 4130162,
+                "CONCEPT_NAME": "Insulin treated type 2 diabetes mellitus",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "237599002"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            }
+          ]
+        }
+      }
+    ],
+    "summary": {
+      "total_concept_sets": 2,
+      "total_included_concepts": 6,
+      "total_excluded_concepts": 0
+    }
+  }
+}

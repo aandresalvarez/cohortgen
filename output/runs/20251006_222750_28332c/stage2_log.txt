@@ -1,0 +1,93 @@
+======================================================================
+Stage 2: Concept Discovery
+Run ID: 20251006_222750_28332c
+======================================================================
+
+
+======================================================================
+OMOP CONCEPT DISCOVERY - NORMAL MODE
+======================================================================
+
+Cohort Definition:
+Index Event: First-ever diagnosis of type 2 diabetes (the first recorded diagnosis of type 2 diabetes in the patient's medical record)
+Demographics: age: Adults aged 18 years and older at index date, sex: Both sexes (male and female)
+Inclusion Criteria: Diagnosis must be the patient’s first-ever recorded diagnosis of type 2 diabetes.
+Exclusion Criteria: Any diagnosis of type 1 diabetes recorded before the index date.
+Observation Window: Post-index follow-up from the index date until the end of the patient’s continuous observation (end of available medical/insurance records).
+Prior Observation: No prior continuous observation required before index.
+Cohort Exit: Exit at end of continuous observation (end of available records).
+
+[Step 1] Decomposing cohort definition into concept sets...
+
+✅ Decomposed into 2 concept sets:
+  1. Type 2 diabetes mellitus (T2DM) - Condition (SNOMED) (Condition)
+     Intent: All condition concepts representing Type 2 diabetes mellitus (adult-onset, non-insulin-dependent) to identify first-ever recorded diagnosis of type 2 diabetes. Use SNOMED concepts and include descendants to capture complications and specific clinical subtypes.
+     Queries: Type 2 diabetes mellitus, Type II diabetes mellitus, Non-insulin-dependent diabetes mellitus...
+  2. Type 1 diabetes mellitus (T1DM) - Condition (SNOMED) - Exclusion (Condition)
+     Intent: All condition concepts representing Type 1 diabetes mellitus (insulin-dependent, juvenile-onset) to be used as an exclusion set: any record of these conditions before index disqualifies the index event.
+     Queries: Type 1 diabetes mellitus, Type I diabetes mellitus, Insulin-dependent diabetes mellitus...
+
+[Step 2] Intelligent candidate seeding...
+🚀 Phase 1 Optimization: Processing 2 concept sets in parallel (max_workers=5)
+
+Processing: Type 2 diabetes mellitus (T2DM) - Condition (SNOMED)
+
+Processing: Type 1 diabetes mellitus (T1DM) - Condition (SNOMED) - Exclusion
+    Searching: Type 2 diabetes mellitus
+    Searching: Type 1 diabetes mellitus
+ℹ️  Note: Query 'type 2 diabetes mellitus' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'type 1 diabetes mellitus' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ✅ Found 5 candidates
+    Searching: Type II diabetes mellitus
+ℹ️  Note: Query 'type ii diabetes mellitus' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ✅ Found 8 candidates
+    Searching: Type I diabetes mellitus
+ℹ️  Note: Query 'type i diabetes mellitus' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ✅ Found 1 candidates
+    Searching: Insulin-dependent diabetes mellitus
+ℹ️  Note: Query 'insulin-dependent diabetes mellitus' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ✅ Found 1 candidates
+    Searching: Non-insulin-dependent diabetes mellitus
+ℹ️  Note: Query 'non-insulin-dependent diabetes mellitus' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+  🤖 LLM candidate selection...
+      ⚠️  No candidates found: Unknown error
+  🤖 LLM candidate selection...
+  ✅ Selected 6 candidates: Selected SNOMED condition concepts and closely related subtypes/statuses for identifying first-ever Type 2 diabetes. Top candidate is 201826 (exact lexical match, standard SNOMED). Next are closely related standard SNOMED concepts capturing pre-existing/treated/status variants: 4063043 (Pre-existing), 4130162 (Insulin treated), 40485020 (Well controlled), 45766052 (In remission), and 4129519 (Pregnancy and T2DM). Ordering reflects lexical/semantic closeness and preference for standard SNOMED; duplicates and non-condition/noise omitted.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [201826, 4063043, 4130162] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+  ✅ Selected 9 candidates: Top pick is 201254 (Type 1 diabetes mellitus) as the exact SNOMED standard match. Next are closely related T1DM status concepts that indicate prior or current disease and thus should exclude an index event: 4063042 (Pre-existing), 3661732 (Newly diagnosed), 1244603 (Presymptomatic), 45766051 (In remission), 40484649 (Well controlled). I then include clinically specific subtypes/contexts that still represent T1DM (37163452 fulminant, 4152858 with arthropathy, 43531009 pregnancy & T1DM). All are SNOMED Condition standard concepts; ordering reflects exact lexical match first, then semantic closeness (status/history), then specific subtypes/contexts. Top candidates explicitly: 201254, 4063042, 3661732.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [201254, 4063042, 3661732] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 3 decisions
+      - 201254: ✅ ConceptName: 'Type 1 diabetes mellitus'; standardConcept: 'Standard'; domainId: 'Condition'; vocabul...
+      - 4063042: ✅ ConceptName: 'Pre-existing type 1 diabetes mellitus'; standardConcept: 'Standard'; domainId: 'Condit...
+      - 3661732: ✅ ConceptName: 'Newly diagnosed type 1 diabetes mellitus'; standardConcept: 'Standard'; domainId: 'Con...
+    ⏰ Timeout reached (30s), exiting
+  ✅ Resolution: resolved (timeout) after 3 visits
+✅ Completed: Type 1 diabetes mellitus (T1DM) - Condition (SNOMED) - Exclusion
+    ✅ Batch analysis complete: 3 decisions
+      - 201826: ✅ Exact name match 'Type 2 diabetes mellitus'; details show standardConcept = 'Standard', domainId = '...
+      - 4063043: ✅ ConceptName 'Pre-existing type 2 diabetes mellitus' is a SNOMED Condition (standardConcept = 'Standa...
+      - 4130162: ✅ ConceptName 'Insulin treated type 2 diabetes mellitus' is a SNOMED Condition (standardConcept = 'Sta...
+    ⏰ Timeout reached (30s), exiting
+  ✅ Resolution: resolved (timeout) after 3 visits
+✅ Completed: Type 2 diabetes mellitus (T2DM) - Condition (SNOMED)
+
+[Final Concept Sets]
+  - Type 1 diabetes mellitus (T1DM) - Condition (SNOMED) - Exclusion: 3 concepts
+  - Type 2 diabetes mellitus (T2DM) - Condition (SNOMED): 3 concepts
+
+======================================================================
+✅ INTELLIGENT CONCEPT DISCOVERY COMPLETE
+======================================================================
+
+Output is ready!
+
+======================================================================
+Stage 2 Complete
+======================================================================

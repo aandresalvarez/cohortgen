@@ -1,8 +1,78 @@
 {
   "concept_sets": [
     {
-      "name": "End-stage renal disease (ESRD) - Condition",
-      "intent": "Identify diagnosis codes indicating end-stage renal disease / end-stage kidney disease, chronic kidney disease stage 5, or kidney failure requiring dialysis or renal replacement therapy prior to the index date.",
+      "name": "Chronic kidney disease unspecified / kidney failure (supporting broader CKD concepts) (Condition, SNOMED)",
+      "intent": "Broader CKD and kidney failure diagnoses to support sensitivity analyses for ESRD identification (e.g., 'chronic kidney disease' and 'kidney failure' terms that may be coded when stage is not specified). Use with caution and only in sensitivity analyses or to help find candidate concepts for the ESRD set.",
+      "domain": "Condition",
+      "included_concepts": [
+        {
+          "concept_id": 46271022,
+          "concept_name": "Chronic kidney disease",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "709044004"
+        },
+        {
+          "concept_id": 198185,
+          "concept_name": "Chronic renal failure",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "90688005"
+        },
+        {
+          "concept_id": 4322556,
+          "concept_name": "Chronic progressive renal failure",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "425369003"
+        }
+      ],
+      "excluded_concepts": [],
+      "resolution_outcome": {
+        "status": "resolved",
+        "concept": null,
+        "reason": "timeout",
+        "visit_count": 3,
+        "stop_reason": "timeout",
+        "pending_candidates": [
+          4128067
+        ],
+        "history": [],
+        "evidence": null,
+        "accepted_concepts": [
+          {
+            "concept_id": 46271022,
+            "concept_name": "Chronic kidney disease",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "709044004"
+          },
+          {
+            "concept_id": 198185,
+            "concept_name": "Chronic renal failure",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "90688005"
+          },
+          {
+            "concept_id": 4322556,
+            "concept_name": "Chronic progressive renal failure",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "425369003"
+          }
+        ]
+      }
+    },
+    {
+      "name": "End-stage renal disease (ESRD) / CKD stage 5 (Condition, SNOMED)",
+      "intent": "All diagnoses indicating end-stage renal disease, end-stage kidney disease, CKD stage 5, dialysis-dependent renal failure \u2014 to be used to define the ESRD diagnosis that must co-occur on the index date.",
       "domain": "Condition",
       "included_concepts": [
         {
@@ -22,14 +92,6 @@
           "concept_code": "111411000119103"
         },
         {
-          "concept_id": 46273164,
-          "concept_name": "End stage renal disease due to benign hypertension",
-          "domain_id": "Condition",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "712487000"
-        },
-        {
           "concept_id": 43020455,
           "concept_name": "Malignant hypertensive end stage renal disease",
           "domain_id": "Condition",
@@ -42,10 +104,12 @@
       "resolution_outcome": {
         "status": "resolved",
         "concept": null,
-        "reason": "accepted_matches",
-        "visit_count": 5,
-        "stop_reason": null,
-        "pending_candidates": [],
+        "reason": "timeout",
+        "visit_count": 3,
+        "stop_reason": "timeout",
+        "pending_candidates": [
+          46273164
+        ],
         "history": [],
         "evidence": null,
         "accepted_concepts": [
@@ -66,14 +130,6 @@
             "concept_code": "111411000119103"
           },
           {
-            "concept_id": 46273164,
-            "concept_name": "End stage renal disease due to benign hypertension",
-            "domain_id": "Condition",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "712487000"
-          },
-          {
             "concept_id": 43020455,
             "concept_name": "Malignant hypertensive end stage renal disease",
             "domain_id": "Condition",
@@ -85,110 +141,18 @@
       }
     },
     {
-      "name": "Kidney replacement therapy / ESRD indicators (Procedure & Observation)",
-      "intent": "Additional signals of ESRD: records of chronic dialysis modalities, dialysis adequacy measurements, permanent vascular access procedures, and observations documenting dialysis dependence or renal replacement therapy status.",
-      "domain": "Observation",
-      "included_concepts": [
-        {
-          "concept_id": 4019967,
-          "concept_name": "Dependence on renal dialysis",
-          "domain_id": "Observation",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "105502003"
-        },
-        {
-          "concept_id": 40482357,
-          "concept_name": "Dependence on peritoneal dialysis",
-          "domain_id": "Observation",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "443596009"
-        },
-        {
-          "concept_id": 46269984,
-          "concept_name": "Dependence on continuous ambulatory peritoneal dialysis",
-          "domain_id": "Observation",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "11000731000119102"
-        },
-        {
-          "concept_id": 46269985,
-          "concept_name": "Dependence on continuous cycling peritoneal dialysis",
-          "domain_id": "Observation",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "11000771000119104"
-        },
-        {
-          "concept_id": 765776,
-          "concept_name": "Dialysis regime",
-          "domain_id": "Observation",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "430891000124105"
-        }
-      ],
-      "excluded_concepts": [],
-      "resolution_outcome": {
-        "status": "resolved",
-        "concept": null,
-        "reason": "enough_matches",
-        "visit_count": 5,
-        "stop_reason": "enough_matches",
-        "pending_candidates": [],
-        "history": [],
-        "evidence": null,
-        "accepted_concepts": [
-          {
-            "concept_id": 4019967,
-            "concept_name": "Dependence on renal dialysis",
-            "domain_id": "Observation",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "105502003"
-          },
-          {
-            "concept_id": 40482357,
-            "concept_name": "Dependence on peritoneal dialysis",
-            "domain_id": "Observation",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "443596009"
-          },
-          {
-            "concept_id": 46269984,
-            "concept_name": "Dependence on continuous ambulatory peritoneal dialysis",
-            "domain_id": "Observation",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "11000731000119102"
-          },
-          {
-            "concept_id": 46269985,
-            "concept_name": "Dependence on continuous cycling peritoneal dialysis",
-            "domain_id": "Observation",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "11000771000119104"
-          },
-          {
-            "concept_id": 765776,
-            "concept_name": "Dialysis regime",
-            "domain_id": "Observation",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "430891000124105"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Dialysis procedures (Hemodialysis & Peritoneal dialysis)",
-      "intent": "Capture procedural evidence of dialysis (in-center or home hemodialysis, peritoneal dialysis), which is commonly used as evidence of ESRD/renal replacement therapy.",
+      "name": "Dialysis procedures (supporting) - Hemodialysis and Peritoneal dialysis (Procedure: SNOMED, CPT4)",
+      "intent": "Procedure concepts indicating maintenance dialysis (hemodialysis and peritoneal dialysis). This supporting set can help capture patients with ESRD when diagnosis coding is inconsistent. Use for sensitivity analyses or to supplement identification of dialysis-dependent ESRD on index date.",
       "domain": "Procedure",
       "included_concepts": [
+        {
+          "concept_id": 46273700,
+          "concept_name": "Maintenance hemodialysis",
+          "domain_id": "Procedure",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "708931003"
+        },
         {
           "concept_id": 4120120,
           "concept_name": "Hemodialysis",
@@ -198,49 +162,33 @@
           "concept_code": "302497006"
         },
         {
-          "concept_id": 4146536,
-          "concept_name": "Renal dialysis",
-          "domain_id": "Procedure",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "265764009"
-        },
-        {
-          "concept_id": 4050863,
-          "concept_name": "Continuous hemodialysis",
-          "domain_id": "Procedure",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "233578004"
-        },
-        {
           "concept_id": 4051326,
           "concept_name": "Intermittent hemodialysis",
           "domain_id": "Procedure",
           "vocabulary_id": "SNOMED",
           "standard_concept": "Standard",
           "concept_code": "233575001"
-        },
-        {
-          "concept_id": 4238836,
-          "concept_name": "Initial hemodialysis",
-          "domain_id": "Procedure",
-          "vocabulary_id": "SNOMED",
-          "standard_concept": "Standard",
-          "concept_code": "57274006"
         }
       ],
       "excluded_concepts": [],
       "resolution_outcome": {
         "status": "resolved",
         "concept": null,
-        "reason": "enough_matches",
-        "visit_count": 6,
-        "stop_reason": "enough_matches",
+        "reason": "accepted_matches",
+        "visit_count": 5,
+        "stop_reason": null,
         "pending_candidates": [],
         "history": [],
         "evidence": null,
         "accepted_concepts": [
+          {
+            "concept_id": 46273700,
+            "concept_name": "Maintenance hemodialysis",
+            "domain_id": "Procedure",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "708931003"
+          },
           {
             "concept_id": 4120120,
             "concept_name": "Hemodialysis",
@@ -250,65 +198,19 @@
             "concept_code": "302497006"
           },
           {
-            "concept_id": 4146536,
-            "concept_name": "Renal dialysis",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "265764009"
-          },
-          {
-            "concept_id": 4050863,
-            "concept_name": "Continuous hemodialysis",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "233578004"
-          },
-          {
             "concept_id": 4051326,
             "concept_name": "Intermittent hemodialysis",
             "domain_id": "Procedure",
             "vocabulary_id": "SNOMED",
             "standard_concept": "Standard",
             "concept_code": "233575001"
-          },
-          {
-            "concept_id": 4238836,
-            "concept_name": "Initial hemodialysis",
-            "domain_id": "Procedure",
-            "vocabulary_id": "SNOMED",
-            "standard_concept": "Standard",
-            "concept_code": "57274006"
           }
         ]
       }
     },
     {
-      "name": "ESRD-related laboratory measurements (eGFR and Serum Creatinine)",
-      "intent": "Capture laboratory measurements used to document kidney failure/ESRD: estimated glomerular filtration rate (eGFR) and serum/plasma creatinine. Include method variants (CKD-EPI, MDRD) and creatinine assay methods (enzymatic, Jaffe) to maximize capture.",
-      "domain": "Measurement",
-      "included_concepts": [],
-      "excluded_concepts": [],
-      "resolution_outcome": {
-        "status": "unresolved",
-        "concept": null,
-        "reason": "timeout",
-        "visit_count": 6,
-        "stop_reason": "timeout",
-        "pending_candidates": [
-          3025311,
-          3025320,
-          3036277
-        ],
-        "history": [],
-        "evidence": null,
-        "accepted_concepts": []
-      }
-    },
-    {
-      "name": "Heart failure (Condition)",
-      "intent": "Capture any documented history of heart failure prior to the index date (includes acute, chronic, systolic, diastolic, congestive, left ventricular failure and acute-on-chronic presentations).",
+      "name": "Heart failure (Condition, SNOMED)",
+      "intent": "All diagnoses indicating heart failure to identify prior history (used for the requirement: prior diagnosis of heart failure any time before the index date and for the co-occurrence on index date). Include acute, chronic, systolic/diastolic, left ventricular failure, and cardiomyopathy with heart failure.",
       "domain": "Condition",
       "included_concepts": [
         {
@@ -367,7 +269,9 @@
         "reason": "enough_matches",
         "visit_count": 6,
         "stop_reason": "enough_matches",
-        "pending_candidates": [],
+        "pending_candidates": [
+          439698
+        ],
         "history": [],
         "evidence": null,
         "accepted_concepts": [
@@ -426,7 +330,53 @@
   "atlas": {
     "concept_sets": [
       {
-        "name": "End-stage renal disease (ESRD) - Condition",
+        "name": "Chronic kidney disease unspecified / kidney failure (supporting broader CKD concepts) (Condition, SNOMED)",
+        "expression": {
+          "items": [
+            {
+              "concept": {
+                "CONCEPT_ID": 46271022,
+                "CONCEPT_NAME": "Chronic kidney disease",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "709044004"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": 198185,
+                "CONCEPT_NAME": "Chronic renal failure",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "90688005"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": 4322556,
+                "CONCEPT_NAME": "Chronic progressive renal failure",
+                "DOMAIN_ID": "Condition",
+                "VOCABULARY_ID": "SNOMED",
+                "STANDARD_CONCEPT": "Standard",
+                "CONCEPT_CODE": "425369003"
+              },
+              "isExcluded": false,
+              "includeDescendants": true,
+              "includeMapped": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "End-stage renal disease (ESRD) / CKD stage 5 (Condition, SNOMED)",
         "expression": {
           "items": [
             {
@@ -457,19 +407,6 @@
             },
             {
               "concept": {
-                "CONCEPT_ID": 46273164,
-                "CONCEPT_NAME": "End stage renal disease due to benign hypertension",
-                "DOMAIN_ID": "Condition",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "712487000"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
                 "CONCEPT_ID": 43020455,
                 "CONCEPT_NAME": "Malignant hypertensive end stage renal disease",
                 "DOMAIN_ID": "Condition",
@@ -485,81 +422,22 @@
         }
       },
       {
-        "name": "Kidney replacement therapy / ESRD indicators (Procedure & Observation)",
+        "name": "Dialysis procedures (supporting) - Hemodialysis and Peritoneal dialysis (Procedure: SNOMED, CPT4)",
         "expression": {
           "items": [
             {
               "concept": {
-                "CONCEPT_ID": 4019967,
-                "CONCEPT_NAME": "Dependence on renal dialysis",
-                "DOMAIN_ID": "Observation",
+                "CONCEPT_ID": 46273700,
+                "CONCEPT_NAME": "Maintenance hemodialysis",
+                "DOMAIN_ID": "Procedure",
                 "VOCABULARY_ID": "SNOMED",
                 "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "105502003"
+                "CONCEPT_CODE": "708931003"
               },
               "isExcluded": false,
               "includeDescendants": true,
               "includeMapped": false
             },
-            {
-              "concept": {
-                "CONCEPT_ID": 40482357,
-                "CONCEPT_NAME": "Dependence on peritoneal dialysis",
-                "DOMAIN_ID": "Observation",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "443596009"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 46269984,
-                "CONCEPT_NAME": "Dependence on continuous ambulatory peritoneal dialysis",
-                "DOMAIN_ID": "Observation",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "11000731000119102"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 46269985,
-                "CONCEPT_NAME": "Dependence on continuous cycling peritoneal dialysis",
-                "DOMAIN_ID": "Observation",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "11000771000119104"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 765776,
-                "CONCEPT_NAME": "Dialysis regime",
-                "DOMAIN_ID": "Observation",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "430891000124105"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            }
-          ]
-        }
-      },
-      {
-        "name": "Dialysis procedures (Hemodialysis & Peritoneal dialysis)",
-        "expression": {
-          "items": [
             {
               "concept": {
                 "CONCEPT_ID": 4120120,
@@ -568,32 +446,6 @@
                 "VOCABULARY_ID": "SNOMED",
                 "STANDARD_CONCEPT": "Standard",
                 "CONCEPT_CODE": "302497006"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 4146536,
-                "CONCEPT_NAME": "Renal dialysis",
-                "DOMAIN_ID": "Procedure",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "265764009"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 4050863,
-                "CONCEPT_NAME": "Continuous hemodialysis",
-                "DOMAIN_ID": "Procedure",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "233578004"
               },
               "isExcluded": false,
               "includeDescendants": true,
@@ -611,31 +463,12 @@
               "isExcluded": false,
               "includeDescendants": true,
               "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 4238836,
-                "CONCEPT_NAME": "Initial hemodialysis",
-                "DOMAIN_ID": "Procedure",
-                "VOCABULARY_ID": "SNOMED",
-                "STANDARD_CONCEPT": "Standard",
-                "CONCEPT_CODE": "57274006"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
             }
           ]
         }
       },
       {
-        "name": "ESRD-related laboratory measurements (eGFR and Serum Creatinine)",
-        "expression": {
-          "items": []
-        }
-      },
-      {
-        "name": "Heart failure (Condition)",
+        "name": "Heart failure (Condition, SNOMED)",
         "expression": {
           "items": [
             {
@@ -721,8 +554,8 @@
       }
     ],
     "summary": {
-      "total_concept_sets": 5,
-      "total_included_concepts": 20,
+      "total_concept_sets": 4,
+      "total_included_concepts": 15,
       "total_excluded_concepts": 0
     }
   }

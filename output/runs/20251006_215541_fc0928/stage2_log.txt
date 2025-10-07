@@ -1,0 +1,159 @@
+======================================================================
+Stage 2: Concept Discovery
+Run ID: 20251006_215541_fc0928
+======================================================================
+
+
+======================================================================
+OMOP CONCEPT DISCOVERY - NORMAL MODE
+======================================================================
+
+Cohort Definition:
+Index Event: First date on which both a diagnosis of heart failure and a diagnosis of end-stage renal disease are recorded on the same day (first co-occurrence).
+Inclusion Criteria: History of heart failure any time before the index date (prior diagnosis of heart failure at any time before the index event)., Diagnosis of end-stage renal disease on the index date as part of the co-occurrence., Adults aged 18 years or older at the index date (age >= 18).
+Observation Window: Follow-up from index until end of continuous observation (end of enrollment) or death; no fixed follow-up duration.
+Prior Observation: No prior observation or continuous enrollment requirement before index.
+Cohort Exit: Exit cohort at end of continuous observation (end of enrollment) or at death.
+
+[Step 1] Decomposing cohort definition into concept sets...
+
+✅ Decomposed into 4 concept sets:
+  1. Heart failure (Condition, SNOMED) (Condition)
+     Intent: All diagnoses indicating heart failure to identify prior history (used for the requirement: prior diagnosis of heart failure any time before the index date and for the co-occurrence on index date). Include acute, chronic, systolic/diastolic, left ventricular failure, and cardiomyopathy with heart failure.
+     Queries: heart failure, congestive heart failure, congestive cardiac failure...
+  2. End-stage renal disease (ESRD) / CKD stage 5 (Condition, SNOMED) (Condition)
+     Intent: All diagnoses indicating end-stage renal disease, end-stage kidney disease, CKD stage 5, dialysis-dependent renal failure — to be used to define the ESRD diagnosis that must co-occur on the index date.
+     Queries: end stage renal disease, end-stage kidney disease, ESRD...
+  3. Dialysis procedures (supporting) - Hemodialysis and Peritoneal dialysis (Procedure: SNOMED, CPT4) (Procedure)
+     Intent: Procedure concepts indicating maintenance dialysis (hemodialysis and peritoneal dialysis). This supporting set can help capture patients with ESRD when diagnosis coding is inconsistent. Use for sensitivity analyses or to supplement identification of dialysis-dependent ESRD on index date.
+     Queries: hemodialysis, haemodialysis, maintenance hemodialysis...
+  4. Chronic kidney disease unspecified / kidney failure (supporting broader CKD concepts) (Condition, SNOMED) (Condition)
+     Intent: Broader CKD and kidney failure diagnoses to support sensitivity analyses for ESRD identification (e.g., 'chronic kidney disease' and 'kidney failure' terms that may be coded when stage is not specified). Use with caution and only in sensitivity analyses or to help find candidate concepts for the ESRD set.
+     Queries: chronic kidney disease, kidney failure, renal failure chronic...
+
+[Step 2] Intelligent candidate seeding...
+🚀 Phase 1 Optimization: Processing 4 concept sets in parallel (max_workers=5)
+
+Processing: Heart failure (Condition, SNOMED)
+
+Processing: End-stage renal disease (ESRD) / CKD stage 5 (Condition, SNOMED)
+
+Processing: Dialysis procedures (supporting) - Hemodialysis and Peritoneal dialysis (Procedure: SNOMED, CPT4)
+
+Processing: Chronic kidney disease unspecified / kidney failure (supporting broader CKD concepts) (Condition, SNOMED)
+    Searching: heart failure
+    Searching: end stage renal disease
+    Searching: hemodialysis
+    Searching: chronic kidney disease
+ℹ️  Note: Query 'heart failure' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'end stage renal disease' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'hemodialysis' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'chronic kidney disease' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ✅ Found 4 candidates
+    Searching: end-stage kidney disease
+ℹ️  Note: Query 'end-stage kidney disease' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ✅ Found 1 candidates
+    Searching: ESRD
+ℹ️  Note: Query 'esrd' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ✅ Found 4 candidates
+    Searching: haemodialysis
+ℹ️  Note: Query 'haemodialysis' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+  🤖 LLM candidate selection...
+      ✅ Found 1 candidates
+      ✅ Found 2 candidates
+    Searching: kidney failure
+    Searching: congestive heart failure
+ℹ️  Note: Query 'kidney failure' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+ℹ️  Note: Query 'congestive heart failure' matches many concepts (estimated 5,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: maintenance hemodialysis
+ℹ️  Note: Query 'maintenance hemodialysis' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ⚠️  No candidates found: Unknown error
+    Searching: renal failure chronic
+ℹ️  Note: Query 'renal failure chronic' matches many concepts (estimated 2,000+), but only 20 will be downloaded.
+      ✅ Found 5 candidates
+    Searching: congestive cardiac failure
+ℹ️  Note: Query 'congestive cardiac failure' matches many concepts (estimated 1,000+), but only 20 will be downloaded.
+      ✅ Found 2 candidates
+  🤖 LLM candidate selection...
+      ✅ Found 4 candidates
+  🤖 LLM candidate selection...
+      ✅ Found 1 candidates
+  🤖 LLM candidate selection...
+  ✅ Selected 4 candidates: Selected SNOMED standard, broad CKD/kidney-failure concepts prioritized by lexical and semantic match. Top: 46271022 (Chronic kidney disease) — exact broad CKD term and top candidate; 198185 (Chronic renal failure) — synonymous kidney-failure phrasing; 4322556 (Chronic progressive renal failure) — chronic/progressive qualifier useful for sensitivity; 4128067 (Acute-on-chronic renal failure) — contains chronic kidney-failure component but includes acute episode, include only with caution. Excluded anemia (443961) as it is a complication rather than a CKD/kidney-failure diagnosis. All chosen concepts are SNOMED standard.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [46271022, 198185, 4322556] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+  ✅ Selected 4 candidates: Selected SNOMED concepts that explicitly indicate end-stage renal disease, prioritized by exact lexical match and clinical equivalence. Top candidate is 193782 (End-stage renal disease) as the generic, directly matching term. Next are cause-specific ESRD concepts (37018886: End stage renal disease due to hypertension; 43020455: Malignant hypertensive end stage renal disease; 46273164: End stage renal disease due to benign hypertension) because they unambiguously denote ESRD. I excluded 45768813 (Anemia in end stage renal disease) because it documents a complication (anemia) rather than a primary ESRD diagnosis and could introduce noise when requiring ESRD to co-occur on the index date.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [193782, 37018886, 43020455] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+      🤖 LLM batch analysis...
+  ✅ Selected 5 candidates: Selected SNOMED procedure concepts that best capture maintenance hemodialysis for ESRD sensitivity/supplemental identification. Top pick is Maintenance hemodialysis (46273700) because it explicitly denotes ongoing/maintenance therapy; second is the general Hemodialysis concept (4120120) as the closest lexical match and broad capture; Continuous (4050863) and Intermittent (4051326) hemodialysis follow as common maintenance modalities; Initial hemodialysis (4238836) is included last because it denotes the first/incident procedure rather than ongoing maintenance. All are SNOMED standard procedure concepts. Note: no peritoneal dialysis SNOMED procedures were returned in the Athena payload—recommend adding canonical Peritoneal dialysis SNOMED/CPT procedure codes to capture that modality.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [46273700, 4120120, 4050863] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+  ✅ Selected 7 candidates: Selected SNOMED standard Condition concepts that best represent prior/present heart failure diagnoses. Top candidates are 316139 (Heart failure) and 319835 (Congestive heart failure) — exact/close lexical matches and generic HF concepts. Next are acute and chronic variants (4023479, 4229440), then clinically specific CHF subtypes (4242669 biventricular, 44784442 symptomatic) and a hypertensive cause-coded HF (439698). I excluded fetal heart failure as not relevant for typical adult prior-history capture. If you need systolic/diastolic, left‑ventricular failure, or cardiomyopathy-with-HF included, run supplemental searches for those SNOMED entries.
+  [Step 3] Queue-based exploration (max_depth=2, max_visits=50)
+    [Iteration 1] Processing batch: [316139, 319835, 4023479] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 3 decisions
+      - 46273700: ✅ Concept details: standardConcept='Standard', domainId='Procedure', vocabularyId='SNOMED'. conceptNam...
+      - 4120120: ✅ Concept details: standardConcept='Standard', domainId='Procedure', vocabularyId='SNOMED'. conceptNam...
+      - 4050863: ❌ Concept details: standardConcept='Standard', domainId='Procedure', vocabularyId='SNOMED'. conceptNam...
+    [Iteration 2] Processing batch: [4051326, 4238836] (depths: [0, 0])
+      Fetching details for 2 concepts (batched)...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 3 decisions
+      - 46271022: ✅ details: conceptName = 'Chronic kidney disease'; standardConcept = 'Standard'; domainId = 'Condition...
+      - 198185: ✅ details: conceptName = 'Chronic renal failure'; standardConcept = 'Standard'; domainId = 'Condition'...
+      - 4322556: ✅ details: conceptName = 'Chronic progressive renal failure'; standardConcept = 'Standard'; domainId =...
+    ⏰ Timeout reached (30s), exiting
+  ✅ Resolution: resolved (timeout) after 3 visits
+✅ Completed: Chronic kidney disease unspecified / kidney failure (supporting broader CKD concepts) (Condition, SNOMED)
+    ✅ Batch analysis complete: 3 decisions
+      - 316139: ✅ Details show conceptName = 'Heart failure', vocabularyId = 'SNOMED', domainId = 'Condition', and sta...
+      - 319835: ✅ Details show conceptName = 'Congestive heart failure', vocabularyId = 'SNOMED', domainId = 'Conditio...
+      - 4023479: ✅ Details show conceptName = 'Acute congestive heart failure', vocabularyId = 'SNOMED', domainId = 'Co...
+    [Iteration 2] Processing batch: [4229440, 4242669, 44784442] (depths: [0, 0, 0])
+      Fetching details for 3 concepts (batched)...
+      🤖 LLM batch analysis...
+    ✅ Batch analysis complete: 3 decisions
+      - 193782: ✅ Concept 193782 is SNOMED 'End-stage renal disease', Standard concept in the Condition domain (detail...
+      - 37018886: ✅ Concept 37018886 is SNOMED 'End stage renal disease due to hypertension', marked Standard and in the...
+      - 43020455: ✅ Concept 43020455 is SNOMED 'Malignant hypertensive end stage renal disease', Standard in the Conditi...
+    ⏰ Timeout reached (30s), exiting
+  ✅ Resolution: resolved (timeout) after 3 visits
+✅ Completed: End-stage renal disease (ESRD) / CKD stage 5 (Condition, SNOMED)
+    ✅ Batch analysis complete: 2 decisions
+      - 4051326: ✅ Standard SNOMED Procedure (standardConcept = 'Standard', domain = Procedure, vocabulary = SNOMED). T...
+      - 4238836: ❌ Also a Standard SNOMED Procedure (domain = Procedure). However, the conceptName 'Initial hemodialysi...
+  ✅ Resolution: resolved (accepted_matches) after 5 visits
+✅ Completed: Dialysis procedures (supporting) - Hemodialysis and Peritoneal dialysis (Procedure: SNOMED, CPT4)
+    ✅ Batch analysis complete: 3 decisions
+      - 4229440: ✅ Concept is SNOMED (vocabularyId=SNOMED) in the Condition domain and marked Standard (standardConcept...
+      - 4242669: ✅ Concept is SNOMED Condition and Standard (standardConcept='Standard') with conceptName='Biventricula...
+      - 44784442: ✅ Concept is SNOMED Condition and Standard (standardConcept='Standard') with conceptName='Symptomatic ...
+    ✅ Collected 6 accepted anchors; stopping exploration
+  ✅ Resolution: resolved (enough_matches) after 6 visits
+✅ Completed: Heart failure (Condition, SNOMED)
+
+[Final Concept Sets]
+  - Chronic kidney disease unspecified / kidney failure (supporting broader CKD concepts) (Condition, SNOMED): 3 concepts
+  - End-stage renal disease (ESRD) / CKD stage 5 (Condition, SNOMED): 3 concepts
+  - Dialysis procedures (supporting) - Hemodialysis and Peritoneal dialysis (Procedure: SNOMED, CPT4): 3 concepts
+  - Heart failure (Condition, SNOMED): 6 concepts
+
+======================================================================
+✅ INTELLIGENT CONCEPT DISCOVERY COMPLETE
+======================================================================
+
+Output is ready!
+
+======================================================================
+Stage 2 Complete
+======================================================================

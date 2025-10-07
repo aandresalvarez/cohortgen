@@ -1,0 +1,16 @@
+{
+  "index_event": "First-ever diagnosis of type 2 diabetes (the first recorded diagnosis of type 2 diabetes in the patient's medical record)",
+  "inclusion_criteria": [
+    "Diagnosis must be the patient\u2019s first-ever recorded diagnosis of type 2 diabetes."
+  ],
+  "exclusion_criteria": [
+    "Any diagnosis of type 1 diabetes recorded before the index date."
+  ],
+  "observation_window": "Post-index follow-up from the index date until the end of the patient\u2019s continuous observation (end of available medical/insurance records).",
+  "demographics": {
+    "age": "Adults aged 18 years and older at index date",
+    "sex": "Both sexes (male and female)"
+  },
+  "prior_observation": "No prior continuous observation required before index.",
+  "cohort_exit": "Exit at end of continuous observation (end of available records)."
+}

@@ -1,0 +1,13 @@
+{
+  "index_event": "First date on which both a diagnosis of heart failure and a diagnosis of end-stage renal disease are recorded on the same day (first co-occurrence).",
+  "inclusion_criteria": [
+    "History of heart failure any time before the index date (prior diagnosis of heart failure at any time before the index event).",
+    "Diagnosis of end-stage renal disease on the index date as part of the co-occurrence.",
+    "Adults aged 18 years or older at the index date (age >= 18)."
+  ],
+  "exclusion_criteria": [],
+  "observation_window": "Follow-up from index until end of continuous observation (end of enrollment) or death; no fixed follow-up duration.",
+  "demographics": {},
+  "prior_observation": "No prior observation or continuous enrollment requirement before index.",
+  "cohort_exit": "Exit cohort at end of continuous observation (end of enrollment) or at death."
+}

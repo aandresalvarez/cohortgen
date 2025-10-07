@@ -1,6 +1,6 @@
 ======================================================================
 Stage 4: Analytics
-Run ID: 20251006_165740_0f67c7
+Run ID: 20251006_221324_6a8443
 ======================================================================
 
 BigQuery Configuration:
@@ -8,7 +8,7 @@ BigQuery Configuration:
   Dataset: bigquery-public-data.cms_synthetic_patient_data_omop
   Location: US
 
-Found ESRD concept IDs for index derivation: [193782, 37018886, 46273164, 43020455]
+Found ESRD concept IDs for index derivation: [193782, 37018886, 43020455, 46273164]
 
 Building analytics queries...
   ✓ Removed trailing semicolon from SQL
@@ -25,7 +25,7 @@ Building analytics queries...
 [Run] age_stats...
   ✓ 1 rows
 [Run] monthly_trend...
-  ✓ 37 rows
+  ✓ 38 rows
 
 ======================================================================
 ✅ Analytics Complete

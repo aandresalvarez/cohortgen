@@ -38,7 +38,7 @@ class InteractiveClarificationSession:
         self.cohort_definition: Optional[Dict[str, Any]] = None
         
         # Import the clarification module
-        from hitl_clarification_working import (
+        from projects.clar.hitl_clarification_working import (
             agent, ClarificationDecision, CohortDefinition, 
             demographics_extractor, DemographicsExtraction
         )

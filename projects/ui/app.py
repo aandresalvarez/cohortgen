@@ -163,10 +163,10 @@ def start_selected_run(selected_run_id: str) -> tuple[str, gr.update, list, str]
         return f"❌ Error: {str(e)}", gr.update(visible=False), [], ""
 
 
-def send_clarification_message_handler(run_id: str, message: str, chat_history: list) -> tuple[list, str, gr.update, gr.update]:
+def send_clarification_message_handler(run_id: str, message: str, chat_history: list) -> tuple[list, str, gr.update, gr.update, str, str]:
     """Handle sending a clarification message."""
     if not run_id or not message.strip():
-        return chat_history, "", gr.update(), gr.update()
+        return chat_history, "", gr.update(), gr.update(), gr.update(), gr.update()
     
     # Add user message to history
     chat_history.append({"role": "user", "content": message})
@@ -176,10 +176,10 @@ def send_clarification_message_handler(run_id: str, message: str, chat_history: 
         next_question, is_complete, cohort_def = service.send_clarification_message(run_id, message)
         
         if is_complete:
-            # Show completion message
+            # Show completion message in chat
             chat_history.append({
                 "role": "assistant", 
-                "content": "✅ **Clarification complete!** Starting Stage 2: Concept Discovery..."
+                "content": "✅ **Clarification complete!** I have all the information needed to define your cohort.\n\n**Next Steps:**\n- ✅ Stage 1 complete - Your cohort definition is shown below\n- 🔄 Stage 2 starting - Searching for OMOP concepts\n- ⏳ Stage 3 will generate BigQuery SQL\n- 📊 Stage 4 will run analytics\n\n*Please scroll down to see your final cohort definition and live progress.*"
             })
             
             # Format final definition
@@ -191,23 +191,31 @@ def send_clarification_message_handler(run_id: str, message: str, chat_history: 
             except Exception as e:
                 chat_history.append({"role": "assistant", "content": f"⚠️ Error starting Stage 2: {str(e)}"})
             
+            # Get updated run display to show Stage 2 starting
+            import time
+            time.sleep(0.5)  # Brief pause to let Stage 2 start
+            header_text = get_run_header(run_id)
+            display_text, _ = get_run_display(run_id)
+            
             # Hide chat accordion and show final definition
             return (
                 chat_history, 
                 "", 
                 gr.update(value=final_def_md, visible=True),
-                gr.update(visible=False)  # Hide the chat accordion
+                gr.update(visible=False),  # Hide the chat accordion
+                header_text,  # Updated header
+                display_text  # Updated run display showing Stage 2
             )
         else:
             # Add next question
             if next_question:
                 chat_history.append({"role": "assistant", "content": next_question})
             
-            return chat_history, "", gr.update(), gr.update()
+            return chat_history, "", gr.update(), gr.update(), gr.update(), gr.update()
     
     except Exception as e:
         chat_history.append({"role": "assistant", "content": f"❌ Error: {str(e)}"})
-        return chat_history, "", gr.update(), gr.update()
+        return chat_history, "", gr.update(), gr.update(), gr.update(), gr.update()
 
 
 def format_cohort_definition(cohort_def: dict) -> str:
@@ -215,10 +223,17 @@ def format_cohort_definition(cohort_def: dict) -> str:
     if not cohort_def:
         return ""
     
-    output = ["## 📋 Final Cohort Definition", ""]
+    output = [
+        "---",
+        "",
+        "# ✅ Stage 1 Complete: Cohort Definition Finalized",
+        "",
+        "## 📋 Your Cohort Definition",
+        ""
+    ]
     
     if cohort_def.get("index_event"):
-        output.append(f"**✅ Index Event:** {cohort_def['index_event']}")
+        output.append(f"**🎯 Index Event:** {cohort_def['index_event']}")
         output.append("")
     
     if cohort_def.get("inclusion_criteria"):
@@ -228,31 +243,36 @@ def format_cohort_definition(cohort_def: dict) -> str:
         output.append("")
     
     if cohort_def.get("exclusion_criteria"):
-        output.append("**✅ Exclusion Criteria:**")
+        output.append("**❌ Exclusion Criteria:**")
         for criterion in cohort_def["exclusion_criteria"]:
             output.append(f"- {criterion}")
         output.append("")
     
     if cohort_def.get("observation_window"):
-        output.append(f"**✅ Observation Window:** {cohort_def['observation_window']}")
+        output.append(f"**📅 Observation Window:** {cohort_def['observation_window']}")
         output.append("")
     
     if cohort_def.get("demographics"):
-        output.append("**✅ Demographics:**")
+        output.append("**👥 Demographics:**")
         for key, value in cohort_def["demographics"].items():
             output.append(f"- {key.title()}: {value}")
         output.append("")
     
     if cohort_def.get("prior_observation"):
-        output.append(f"**✅ Prior Observation:** {cohort_def['prior_observation']}")
+        output.append(f"**⏱️ Prior Observation:** {cohort_def['prior_observation']}")
         output.append("")
     
     if cohort_def.get("cohort_exit"):
-        output.append(f"**✅ Cohort Exit:** {cohort_def['cohort_exit']}")
+        output.append(f"**🚪 Cohort Exit:** {cohort_def['cohort_exit']}")
         output.append("")
     
-    output.append("---")
-    output.append("*This definition will be used to generate OMOP concepts in Stage 2.*")
+    # output.append("---")
+    # output.append("")
+    # output.append("### 🔄 Next: Stage 2 - Concept Discovery")
+    # output.append("")
+    # output.append("*Now searching OMOP vocabulary for relevant concepts... This may take 1-2 minutes.*")
+    # output.append("")
+    # output.append("*Scroll down to see live progress below.*")
     
     return "\n".join(output)
 
@@ -322,58 +342,58 @@ def test_individual_stage(run_id: str, stage_num: int) -> str:
         return f"❌ Stage {stage_num} failed: {str(e)}"
 
 
+def get_run_header(run_id: Optional[str]) -> str:
+    """Get just the run header (ID, status, created, duration)."""
+    if not run_id:
+        return "⬅️ Select a run from the list to view details"
+
+    run = service.get_run(run_id)
+    if not run:
+        return f"⚠️ Run {run_id} not found"
+
+    # Build header
+    header = (
+        f"**Run ID:** `{run.run_id}` | **Status:** {format_run_status(run.status.value)} | "
+        f"**Created:** {format_timestamp(run.created_at)}"
+    )
+    if run.total_duration_seconds > 0:
+        header += f" | **Duration:** {format_duration(run.total_duration_seconds)}"
+    
+    return header
+
+
 def get_run_display(run_id: Optional[str]) -> Tuple[str, bool]:
     """Get formatted display for a run and whether Stage 4 is complete."""
     if not run_id:
-        return "⬅️ Select a run from the list to view details", False
+        return "", False
 
     run = service.get_run(run_id)
     if not run:
         return f"⚠️ Run {run_id} not found", False
 
-    # Build display
+    # Build display (stages only, no header)
     output = []
 
-    # Header
-    output.append(f"# {run.name}")
-    output.append(
-        f"**Run ID:** `{run.run_id}` | **Status:** {format_run_status(run.status.value)} | "
-        f"**Created:** {format_timestamp(run.created_at)}"
-    )
-    if run.total_duration_seconds > 0:
-        output.append(f"**Duration:** {format_duration(run.total_duration_seconds)}")
-    
-    # Show current stage if running
-    if run.status == RunStatus.RUNNING:
-        current_stage = None
-        for stage in run.stages:
-            if stage.status == StageStatus.RUNNING or stage.status == StageStatus.WAITING_FOR_INPUT:
-                current_stage = stage.stage
-                break
-        
-        if current_stage:
-            stage_names = {1: "Clinical Clarification", 2: "Concept Discovery", 3: "SQL Generation", 4: "Analytics"}
-            output.append(f"\n### 🔄 Currently Running: **Stage {current_stage} - {stage_names.get(current_stage, 'Unknown')}**\n")
-    
-    output.append("\n---\n")
-
-    # Input
-    output.append("## 📝 Input")
-    output.append(f"> {run.user_inputs.cohort_description}")
-    output.append("")
-
-    if run.user_inputs.fast_mode:
-        output.append("⚡ **Fast Mode:** ON")
-        output.append("")
-
     # Stages
-    output.append("\n---\n")
+    output.append("---\n")
 
     stage4_complete = False
+    stage1_complete = False
+    
+    # Check if Stage 1 is complete (will be shown separately)
+    for stage in run.stages:
+        if stage.stage == 1 and stage.status == StageStatus.COMPLETE:
+            stage1_complete = True
+            break
+    
     if not run.stages:
         output.append("*No stages started yet. Click 'Start Run' to begin.*")
     else:
         for stage in run.stages:
+            # Skip Stage 1 if complete (shown separately as final definition)
+            if stage.stage == 1 and stage1_complete:
+                continue
+                
             if stage.stage == 4 and stage.status == StageStatus.COMPLETE:
                 stage4_complete = True
             output.append(render_stage(stage, run))
@@ -390,16 +410,35 @@ def get_run_display(run_id: Optional[str]) -> Tuple[str, bool]:
 
 def update_display_and_dashboard(run_id):
     """Update run display and auto-load dashboard if Stage 4 complete."""
+    header_text = get_run_header(run_id)
     display_text, stage4_complete = get_run_display(run_id)
+    
+    # Check if Stage 1 is waiting for input
+    run = service.get_run(run_id) if run_id else None
+    stage1_chat_visible = gr.update(visible=False)  # Hidden by default
+    stage1_chat_history = []
+    
+    if run:
+        # Check Stage 1 status
+        for stage in run.stages:
+            if stage.stage == 1 and stage.status == StageStatus.WAITING_FOR_INPUT:
+                stage1_chat_visible = gr.update(visible=True, open=True)
+                # Load existing conversation history
+                if run.clarification_session and run.clarification_session.conversation_history:
+                    stage1_chat_history = run.clarification_session.conversation_history
+                break
+            elif stage.stage == 1 and stage.status in [StageStatus.COMPLETE, StageStatus.FAILED]:
+                stage1_chat_visible = gr.update(visible=False)
+                break
     
     # Auto-load dashboard data if Stage 4 is complete
     if stage4_complete and run_id:
         dashboard_data = load_stage4_dashboard(run_id)
-        return (display_text, gr.update(visible=True, open=True)) + dashboard_data
+        return (header_text, display_text, gr.update(visible=True, open=True), stage1_chat_visible, stage1_chat_history) + dashboard_data
     else:
         # Return empty dashboard data when not visible
         empty_df = pd.DataFrame()
-        return (display_text, gr.update(visible=False)) + ("", "", "", "", empty_df, empty_df, empty_df, empty_df, empty_df, "")
+        return (header_text, display_text, gr.update(visible=False), stage1_chat_visible, stage1_chat_history) + ("", "", "", "", empty_df, empty_df, empty_df, empty_df, empty_df, "")
 
 
 def update_display_only(run_id):
@@ -407,10 +446,12 @@ def update_display_only(run_id):
     if not run_id:
         return (
             "⬅️ Select a run from the list to view details",
+            "",
             gr.update(visible=False),  # analytics dashboard
             gr.update(),  # stage1 chat accordion - preserve current state
         )
     
+    header_text = get_run_header(run_id)
     display_text, stage4_complete = get_run_display(run_id)
     
     # Check if Stage 1 is waiting for input
@@ -429,9 +470,9 @@ def update_display_only(run_id):
     
     # Update analytics dashboard visibility
     if stage4_complete:
-        return display_text, gr.update(visible=True, open=True), stage1_chat_visible
+        return header_text, display_text, gr.update(visible=True, open=True), stage1_chat_visible
     else:
-        return display_text, gr.update(visible=False), stage1_chat_visible
+        return header_text, display_text, gr.update(visible=False), stage1_chat_visible
 
 
 def format_sql(sql_text: str) -> str:
@@ -533,6 +574,8 @@ def render_stage(stage_result, run) -> str:
             if run.stage2_log_path:
                 log_content = get_stage_log(run.run_id, 2)
                 if log_content:
+                    # Clean redundant headers
+                    log_content = clean_log_content(log_content, 2)
                     output.append("")
                     output.append("**Discovery Log:**")
                     output.append("```")
@@ -674,6 +717,8 @@ def render_stage(stage_result, run) -> str:
             # Show live log if available
             log_content = get_stage_log(run.run_id, 2)
             if log_content:
+                # Clean redundant headers
+                log_content = clean_log_content(log_content, 2)
                 output.append("")
                 output.append("**Live Progress:**")
                 output.append("```")
@@ -690,6 +735,8 @@ def render_stage(stage_result, run) -> str:
             # Show live log if available
             log_content = get_stage_log(run.run_id, 3)
             if log_content:
+                # Clean redundant headers
+                log_content = clean_log_content(log_content, 3)
                 output.append("")
                 output.append("**Live Progress:**")
                 output.append("```")
@@ -712,6 +759,36 @@ def render_stage(stage_result, run) -> str:
         output.append("*Waiting...*")
 
     return "\n".join(output)
+
+
+def clean_log_content(log_content: str, stage_num: int) -> str:
+    """Remove redundant stage headers from log content."""
+    if not log_content:
+        return log_content
+    
+    lines = log_content.strip().split("\n")
+    cleaned_lines = []
+    skip_header = True
+    
+    for line in lines:
+        # Skip the redundant header lines at the start
+        if skip_header:
+            # Skip lines that contain "Stage X:" or just "===" or "---"
+            if (f"Stage {stage_num}:" in line or 
+                line.strip().startswith("====") or 
+                line.strip().startswith("---") or
+                line.strip().startswith("Run ID:") or
+                "OMOP CONCEPT DISCOVERY" in line or
+                "SQL GENERATION" in line or
+                (line.startswith("Cohort Definition:") and len(line) > 100)):  # Very long cohort def line
+                continue
+            else:
+                # Found actual content, stop skipping
+                skip_header = False
+        
+        cleaned_lines.append(line)
+    
+    return "\n".join(cleaned_lines)
 
 
 def get_stage1_log(run_id: str) -> str:
@@ -887,8 +964,13 @@ with gr.Blocks(
 
         # Right panel: Run details
         with gr.Column(scale=3):
+            # Run header - ALWAYS at top
+            run_header = gr.Markdown(
+                "⬅️ Select a run from the list to view details",
+                elem_classes=["run-display"],
+            )
+            
             # Stage 1 Interactive Clarification Chat (only visible when waiting for input)
-            # IMPORTANT: This comes FIRST so it appears at the top when active
             stage1_chat_accordion = gr.Accordion("💬 Stage 1: Clinical Clarification Chat", open=True, visible=False)
             with stage1_chat_accordion:
                 gr.Markdown("Answer the questions below to refine your cohort definition:")
@@ -907,13 +989,13 @@ with gr.Blocks(
                         container=False
                     )
                     stage1_send_btn = gr.Button("Send", size="sm", scale=1, variant="primary")
-                
-                # Final cohort definition display (shown after completion)
-                stage1_final_def = gr.Markdown(visible=False)
             
-            # Main run display (stages, progress, etc.)
+            # Final cohort definition display (shown OUTSIDE accordion after completion)
+            stage1_final_def = gr.Markdown(visible=False)
+            
+            # Main run display (stages, progress, etc.) - WITHOUT header
             run_display = gr.Markdown(
-                "⬅️ Select a run from the list to view details",
+                "",
                 elem_classes=["run-display"],
             )
             
@@ -1236,7 +1318,7 @@ with gr.Blocks(
             )
 
     # Auto-refresh for running runs (every 2 minutes)
-    refresh_timer = gr.Timer(value=120.0, active=True)
+    refresh_timer = gr.Timer(value=3.0, active=True)  # Refresh every 3 seconds for live progress
 
     # Event handlers
 
@@ -1252,8 +1334,11 @@ with gr.Blocks(
         update_display_and_dashboard,
         inputs=selected_run_id,
         outputs=[
+            run_header,
             run_display,
             analytics_dashboard_accordion,
+            stage1_chat_accordion,
+            stage1_chatbot,
             stage4_summary_cards_main,
             stage4_quick_stats_main,
             stage4_quality_main,
@@ -1328,7 +1413,14 @@ with gr.Blocks(
     stage1_send_btn.click(
         send_clarification_message_handler,
         inputs=[selected_run_id, stage1_input, stage1_chatbot],
-        outputs=[stage1_chatbot, stage1_input, stage1_final_def, stage1_chat_accordion],
+        outputs=[stage1_chatbot, stage1_input, stage1_final_def, stage1_chat_accordion, run_header, run_display],
+    )
+    
+    # Also support Enter key in textbox
+    stage1_input.submit(
+        send_clarification_message_handler,
+        inputs=[selected_run_id, stage1_input, stage1_chatbot],
+        outputs=[stage1_chatbot, stage1_input, stage1_final_def, stage1_chat_accordion, run_header, run_display],
     )
 
     # Delete run
@@ -1489,7 +1581,7 @@ with gr.Blocks(
     ).then(
         update_display_only,
         inputs=selected_run_id,
-        outputs=[run_display, analytics_dashboard_accordion, stage1_chat_accordion],
+        outputs=[run_header, run_display, analytics_dashboard_accordion, stage1_chat_accordion],
     )
 
 

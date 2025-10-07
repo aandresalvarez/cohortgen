@@ -1,0 +1,14 @@
+{
+  "index_event": "First date on which both a heart failure diagnosis and an end-stage renal disease diagnosis are recorded on the same date (use the first date on which both appear together).",
+  "inclusion_criteria": [
+    "History of heart failure: a diagnosis of heart failure recorded any time prior to or on the index date.",
+    "End-stage renal disease: a diagnosis of end-stage renal disease recorded any time prior to or on the index date."
+  ],
+  "exclusion_criteria": [
+    "None"
+  ],
+  "observation_window": "No minimum prior observation required. Capture medical history any time before the index date. Follow-up after index: until end of enrollment (end of continuous observation) or death.",
+  "demographics": {},
+  "prior_observation": "None required",
+  "cohort_exit": "End of continuous observation (end of enrollment) or death."
+}

@@ -1,0 +1,224 @@
+{
+  "clinical_definition": {
+    "index_event": "First date on which both a heart failure diagnosis and an end-stage renal disease diagnosis are recorded on the same date (use the first date on which both appear together).",
+    "inclusion_criteria": [
+      "History of heart failure: a diagnosis of heart failure recorded any time prior to or on the index date.",
+      "End-stage renal disease: a diagnosis of end-stage renal disease recorded any time prior to or on the index date."
+    ],
+    "exclusion_criteria": [
+      "None"
+    ],
+    "observation_window": "No minimum prior observation required. Capture medical history any time before the index date. Follow-up after index: until end of enrollment (end of continuous observation) or death.",
+    "demographics": {},
+    "prior_observation": "None required",
+    "cohort_exit": "End of continuous observation (end of enrollment) or death."
+  },
+  "concept_sets": [
+    {
+      "name": "End-stage renal disease / dialysis dependence (condition)",
+      "intent": "Condition concepts representing end-stage renal disease (ESRD) and dialysis dependence, including CKD stage 5 and variants (end stage renal disease, end stage kidney disease, ESRD, dialysis-dependent renal failure). Use SNOMED standard concepts and include descendants.",
+      "domain": "Condition",
+      "included_concepts": [
+        {
+          "concept_id": 193782,
+          "concept_name": "End-stage renal disease",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "46177005"
+        },
+        {
+          "concept_id": 37018886,
+          "concept_name": "End stage renal disease due to hypertension",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "111411000119103"
+        },
+        {
+          "concept_id": 43020455,
+          "concept_name": "Malignant hypertensive end stage renal disease",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "285841000119104"
+        },
+        {
+          "concept_id": 46273164,
+          "concept_name": "End stage renal disease due to benign hypertension",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "712487000"
+        }
+      ],
+      "excluded_concepts": [],
+      "resolution_outcome": {
+        "status": "resolved",
+        "concept": null,
+        "reason": "accepted_matches",
+        "visit_count": 5,
+        "stop_reason": null,
+        "pending_candidates": [],
+        "history": [],
+        "evidence": null,
+        "accepted_concepts": [
+          {
+            "concept_id": 193782,
+            "concept_name": "End-stage renal disease",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "46177005"
+          },
+          {
+            "concept_id": 37018886,
+            "concept_name": "End stage renal disease due to hypertension",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "111411000119103"
+          },
+          {
+            "concept_id": 43020455,
+            "concept_name": "Malignant hypertensive end stage renal disease",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "285841000119104"
+          },
+          {
+            "concept_id": 46273164,
+            "concept_name": "End stage renal disease due to benign hypertension",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "712487000"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Heart failure (condition)",
+      "intent": "All condition concepts representing heart failure diagnoses to identify patients with any recorded heart failure (acute, chronic, systolic, diastolic, congestive, HFrEF, HFpEF, left ventricular failure). Use SNOMED standard concepts and include descendants.",
+      "domain": "Condition",
+      "included_concepts": [
+        {
+          "concept_id": 316139,
+          "concept_name": "Heart failure",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "84114007"
+        },
+        {
+          "concept_id": 319835,
+          "concept_name": "Congestive heart failure",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "42343007"
+        },
+        {
+          "concept_id": 4023479,
+          "concept_name": "Acute congestive heart failure",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "10633002"
+        },
+        {
+          "concept_id": 4229440,
+          "concept_name": "Chronic congestive heart failure",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "88805009"
+        },
+        {
+          "concept_id": 4111554,
+          "concept_name": "Decompensated cardiac failure",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "195111005"
+        },
+        {
+          "concept_id": 4108244,
+          "concept_name": "Compensated cardiac failure",
+          "domain_id": "Condition",
+          "vocabulary_id": "SNOMED",
+          "standard_concept": "Standard",
+          "concept_code": "195112003"
+        }
+      ],
+      "excluded_concepts": [],
+      "resolution_outcome": {
+        "status": "resolved",
+        "concept": null,
+        "reason": "enough_matches",
+        "visit_count": 6,
+        "stop_reason": "enough_matches",
+        "pending_candidates": [
+          4242669,
+          44784442,
+          4071869,
+          4172864,
+          43021735
+        ],
+        "history": [],
+        "evidence": null,
+        "accepted_concepts": [
+          {
+            "concept_id": 316139,
+            "concept_name": "Heart failure",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "84114007"
+          },
+          {
+            "concept_id": 319835,
+            "concept_name": "Congestive heart failure",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "42343007"
+          },
+          {
+            "concept_id": 4023479,
+            "concept_name": "Acute congestive heart failure",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "10633002"
+          },
+          {
+            "concept_id": 4229440,
+            "concept_name": "Chronic congestive heart failure",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "88805009"
+          },
+          {
+            "concept_id": 4111554,
+            "concept_name": "Decompensated cardiac failure",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "195111005"
+          },
+          {
+            "concept_id": 4108244,
+            "concept_name": "Compensated cardiac failure",
+            "domain_id": "Condition",
+            "vocabulary_id": "SNOMED",
+            "standard_concept": "Standard",
+            "concept_code": "195112003"
+          }
+        ]
+      }
+    }
+  ]
+}
