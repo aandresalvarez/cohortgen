@@ -58,24 +58,26 @@ def _search_athena_cached(
     Returns JSON string for caching (since dicts aren't hashable).
     """
     if not ATHENA_AVAILABLE:
-        return json.dumps({"success": False, "error": "athena-client not installed", "candidates": []})
-    
+        return json.dumps(
+            {"success": False, "error": "athena-client not installed", "candidates": []}
+        )
+
     try:
         client = AthenaClient()
         results = client.search(query)
-        
+
         vocab_list = list(vocab_tuple) if vocab_tuple else None
-        
+
         candidates = []
         for concept in results:
             # Domain filter
             if domain and concept.domain != domain:
                 continue
-            
+
             # Vocabulary filter
             if vocab_list and concept.vocabulary not in vocab_list:
                 continue
-            
+
             # Standard mapping
             if standard_only and concept.standardConcept != ConceptType.STANDARD:
                 mapped_ids = _map_to_standard_ids(client, int(concept.id))
@@ -91,27 +93,31 @@ def _search_athena_cached(
             else:
                 concept_dict = _concept_to_dict(concept)
                 candidates.append(concept_dict)
-            
+
             if len(candidates) >= top_k:
                 break
-        
-        return json.dumps({
-            "success": True,
-            "query": query,
-            "candidates": candidates[:top_k],
-            "filters": {
-                "domain": domain,
-                "vocabulary": vocab_list,
-                "standard_only": standard_only,
-            },
-        })
+
+        return json.dumps(
+            {
+                "success": True,
+                "query": query,
+                "candidates": candidates[:top_k],
+                "filters": {
+                    "domain": domain,
+                    "vocabulary": vocab_list,
+                    "standard_only": standard_only,
+                },
+            }
+        )
     except Exception as e:
-        return json.dumps({
-            "success": False,
-            "error": str(e),
-            "query": query,
-            "candidates": [],
-        })
+        return json.dumps(
+            {
+                "success": False,
+                "error": str(e),
+                "query": query,
+                "candidates": [],
+            }
+        )
 
 
 @lru_cache(maxsize=CONCEPT_DETAILS_CACHE_SIZE)
@@ -121,12 +127,14 @@ def _get_concept_details_cached(concept_ids_tuple: tuple) -> str:
     Returns JSON string for caching.
     """
     if not ATHENA_AVAILABLE:
-        return json.dumps({"success": False, "error": "athena-client not installed", "concepts": []})
-    
+        return json.dumps(
+            {"success": False, "error": "athena-client not installed", "concepts": []}
+        )
+
     try:
         client = AthenaClient()
         concept_list = []
-        
+
         for cid in concept_ids_tuple:
             try:
                 result = client.details(int(cid))
@@ -135,36 +143,48 @@ def _get_concept_details_cached(concept_ids_tuple: tuple) -> str:
                     concept_list.append(_concept_to_camel_details(result))
             except Exception:
                 continue
-        
-        return json.dumps({
-            "success": True,
-            "concepts": concept_list,
-        })
+
+        return json.dumps(
+            {
+                "success": True,
+                "concepts": concept_list,
+            }
+        )
     except Exception as e:
-        return json.dumps({
-            "success": False,
-            "error": str(e),
-            "concepts": [],
-        })
+        return json.dumps(
+            {
+                "success": False,
+                "error": str(e),
+                "concepts": [],
+            }
+        )
 
 
 def get_cache_stats() -> Dict[str, Any]:
     """Get cache hit/miss statistics."""
     search_info = _search_athena_cached.cache_info()
     details_info = _get_concept_details_cached.cache_info()
-    
+
     return {
         "search_cache": {
             "hits": search_info.hits,
             "misses": search_info.misses,
-            "hit_rate": search_info.hits / (search_info.hits + search_info.misses) if (search_info.hits + search_info.misses) > 0 else 0,
+            "hit_rate": (
+                search_info.hits / (search_info.hits + search_info.misses)
+                if (search_info.hits + search_info.misses) > 0
+                else 0
+            ),
             "size": search_info.currsize,
             "maxsize": search_info.maxsize,
         },
         "details_cache": {
             "hits": details_info.hits,
             "misses": details_info.misses,
-            "hit_rate": details_info.hits / (details_info.hits + details_info.misses) if (details_info.hits + details_info.misses) > 0 else 0,
+            "hit_rate": (
+                details_info.hits / (details_info.hits + details_info.misses)
+                if (details_info.hits + details_info.misses) > 0
+                else 0
+            ),
             "size": details_info.currsize,
             "maxsize": details_info.maxsize,
         },
@@ -275,7 +295,7 @@ def search_athena(
 ) -> Dict[str, Any]:
     """
     Search ATHENA for OMOP concepts matching a query.
-    
+
     Phase 2: Now uses LRU cache for faster repeated searches.
 
     Returns:
@@ -292,12 +312,12 @@ def search_athena(
     # Phase 2: Use cached version
     # Normalize query for better cache hits
     normalized_query = query.lower().strip()
-    
+
     # Convert vocabulary list to tuple for caching (hashable)
     vocab_tuple = None
     if vocabulary:
         vocab_tuple = tuple(sorted(vocabulary))
-    
+
     # Call cached function
     cached_json = _search_athena_cached(
         normalized_query,
@@ -306,10 +326,10 @@ def search_athena(
         standard_only,
         top_k,
     )
-    
+
     # Parse and return result
     result = json.loads(cached_json)
-    
+
     # Restore original query in response
     result["query"] = query
     return result
@@ -370,7 +390,7 @@ def search_athena(
 def get_concept_details(ctx: RunContext[Dict[str, Any]], concept_ids: List[int]) -> Dict[str, Any]:
     """
     Fetch detailed metadata for one or more OMOP concept IDs.
-    
+
     Phase 2: Now uses LRU cache for faster repeated requests.
 
     Returns:
@@ -390,10 +410,10 @@ def get_concept_details(ctx: RunContext[Dict[str, Any]], concept_ids: List[int])
     # Phase 2: Use cached version
     # Convert concept_ids to sorted tuple for caching (hashable)
     concept_ids_tuple = tuple(sorted(concept_ids))
-    
+
     # Call cached function
     cached_json = _get_concept_details_cached(concept_ids_tuple)
-    
+
     # Parse and return result
     return json.loads(cached_json)
 

@@ -191,7 +191,7 @@ GROUP BY 1
 ORDER BY 1
 """.strip()
         )
-        
+
         # 5) Age statistics (for summary cards)
         queries["age_stats"] = (
             f"""
@@ -207,7 +207,7 @@ FROM cohort c
 JOIN {person} p ON p.person_id = c.person_id
 """.strip()
         )
-        
+
         # 6) Monthly enrollment trend
         queries["monthly_trend"] = (
             f"""

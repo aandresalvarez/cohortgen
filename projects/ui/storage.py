@@ -75,9 +75,7 @@ class RunStorage:
         """List all runs from the index."""
         index = self.load_index()
         # Sort by created_at descending
-        return sorted(
-            index.runs, key=lambda r: r.get("created_at", ""), reverse=True
-        )
+        return sorted(index.runs, key=lambda r: r.get("created_at", ""), reverse=True)
 
     def load_index(self) -> RunsIndex:
         """Load the runs index."""
@@ -107,9 +105,7 @@ class RunStorage:
         # Save
         self.save_index(index)
 
-    def save_artifact(
-        self, run_id: str, filename: str, content: str | bytes
-    ) -> str:
+    def save_artifact(self, run_id: str, filename: str, content: str | bytes) -> str:
         """
         Save an artifact file for a run.
 
@@ -139,4 +135,3 @@ class RunStorage:
     def get_artifact_path(self, run_id: str, filename: str) -> str:
         """Get the absolute path for an artifact."""
         return str((self._get_run_dir(run_id) / filename).absolute())
-

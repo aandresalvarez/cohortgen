@@ -3,14 +3,13 @@ Quick test script for the UI service layer.
 """
 
 import sys
-import time
 from pathlib import Path
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from projects.ui.service import CohortService
+from projects.ui.service import CohortService  # noqa: E402
 
 
 def test_service():
@@ -65,7 +64,7 @@ def test_service():
     print("\n5. Cleaning up...")
     service.delete_run(run_id)
     service.delete_run(dup_run_id)
-    print(f"✓ Deleted test runs")
+    print("✓ Deleted test runs")
 
     print("\n" + "=" * 60)
     print("✅ All tests passed!")
@@ -74,4 +73,3 @@ def test_service():
 
 if __name__ == "__main__":
     test_service()
-

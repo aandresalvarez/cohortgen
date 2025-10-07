@@ -736,10 +736,10 @@ def _process_single_concept_set(
 ) -> Dict[str, Any]:
     """
     Process a single concept set (extracted for Phase 1 parallelization).
-    
+
     This function contains the logic for searching, seeding, and exploring
     a single concept set. It's extracted to enable ThreadPoolExecutor parallelization.
-    
+
     Phase 2B: Added max_queries parameter for fast mode support.
     """
     print(f"\nProcessing: {concept_set.name}")
@@ -811,19 +811,13 @@ def _process_single_concept_set(
     )
 
     # Queue-based exploration
-    print(
-        f"  [Step 3] Queue-based exploration (max_depth={max_depth}, max_visits={max_visits})"
-    )
+    print(f"  [Step 3] Queue-based exploration (max_depth={max_depth}, max_visits={max_visits})")
 
     iteration = 0
     start_time = time.time()
     max_iteration_time = PER_SET_TIME_LIMIT_SEC
 
-    while (
-        not queue_state.resolved
-        and queue_state.visit_count < max_visits
-        and queue_state.pending
-    ):
+    while not queue_state.resolved and queue_state.visit_count < max_visits and queue_state.pending:
         iteration += 1
 
         if time.time() - start_time > max_iteration_time:
@@ -848,7 +842,7 @@ def _process_single_concept_set(
             if batch_details_result.get("success"):
                 # Use conceptId (CamelCase) as returned by _get_concept_details_cached
                 all_details = {
-                    c.get("conceptId") or c.get("concept_id"): c 
+                    c.get("conceptId") or c.get("concept_id"): c
                     for c in batch_details_result.get("concepts", [])
                     if c.get("conceptId") or c.get("concept_id")
                 }
@@ -866,7 +860,7 @@ def _process_single_concept_set(
                         if details_result.get("success")
                         else {}
                     )
-                
+
                 relationships_result = get_concept_relationships(ctx={}, concept_id=cid)
 
                 concept_data = {
@@ -986,7 +980,7 @@ def run_intelligent_concept_discovery(
 ) -> Dict[str, Any]:
     """
     Run intelligent concept discovery workflow with LLM seeding and queue-based exploration.
-    
+
     Phase 2B: Fast mode support for 40-60% faster execution with minimal quality loss.
 
     Args:
@@ -1012,7 +1006,7 @@ def run_intelligent_concept_discovery(
         max_concept_sets_limit = MAX_CONCEPT_SETS
         max_queries = MAX_QUERIES_PER_SET
         mode_label = "NORMAL MODE"
-    
+
     print("\n" + "=" * 70)
     print(f"OMOP CONCEPT DISCOVERY - {mode_label}")
     print("=" * 70)
@@ -1033,7 +1027,9 @@ def run_intelligent_concept_discovery(
 
     # STEP 2: Intelligent candidate seeding for each concept set
     print("\n[Step 2] Intelligent candidate seeding...")
-    print(f"🚀 Phase 1 Optimization: Processing {len(plan.concept_sets)} concept sets in parallel (max_workers={PARALLEL_CONCEPT_SETS})")
+    print(
+        f"🚀 Phase 1 Optimization: Processing {len(plan.concept_sets)} concept sets in parallel (max_workers={PARALLEL_CONCEPT_SETS})"
+    )
     final_concept_sets = []
 
     # Phase 1: Parallel concept set processing
@@ -1045,11 +1041,11 @@ def run_intelligent_concept_discovery(
                 max_visits,
                 max_depth,
                 batch_size,
-                max_queries  # Phase 2B: Pass max_queries for fast mode
+                max_queries,  # Phase 2B: Pass max_queries for fast mode
             ): cs
             for cs in plan.concept_sets
         }
-        
+
         for future in as_completed(futures):
             concept_set = futures[future]
             try:
@@ -1059,14 +1055,15 @@ def run_intelligent_concept_discovery(
             except Exception as e:
                 print(f"❌ Failed to process {concept_set.name}: {e}")
                 # Add empty concept set as fallback
-                final_concept_sets.append({
-                    "name": concept_set.name,
-                    "intent": concept_set.intent,
-                    "domain": concept_set.domain,
-                    "included_concepts": [],
-                    "excluded_concepts": [],
-                })
-
+                final_concept_sets.append(
+                    {
+                        "name": concept_set.name,
+                        "intent": concept_set.intent,
+                        "domain": concept_set.domain,
+                        "included_concepts": [],
+                        "excluded_concepts": [],
+                    }
+                )
 
     # Format for ATLAS (separate key) and show counts from raw sets
     atlas_formatted = format_for_atlas(final_concept_sets)
@@ -1080,11 +1077,13 @@ def run_intelligent_concept_discovery(
     print("✅ INTELLIGENT CONCEPT DISCOVERY COMPLETE")
     print("=" * 70)
     print("\nOutput is ready!")
-     
+
     return {"concept_sets": final_concept_sets, "atlas": atlas_formatted}
 
 
-def run_concept_discovery(cohort_definition: str, max_exploration_steps: int = 5, fast_mode: bool = False) -> Dict[str, Any]:
+def run_concept_discovery(
+    cohort_definition: str, max_exploration_steps: int = 5, fast_mode: bool = False
+) -> Dict[str, Any]:
     """
     Legacy wrapper for backward compatibility.
 

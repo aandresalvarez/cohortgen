@@ -2,10 +2,8 @@
 Data models for UI run management.
 """
 
-from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-from pathlib import Path
 from typing import Any, Optional
 
 
@@ -32,7 +30,7 @@ class StageStatus(str, Enum):
 @dataclass
 class ChatMessage:
     """A message in the Stage 1 clarification chat."""
-    
+
     role: str  # "assistant" or "user"
     content: str
 
@@ -40,7 +38,7 @@ class ChatMessage:
 @dataclass
 class ClarificationSession:
     """State for an interactive Stage 1 clarification session."""
-    
+
     run_id: str
     conversation_history: list[dict[str, str]] = field(default_factory=list)
     is_complete: bool = False
@@ -113,7 +111,7 @@ class CohortRun:
 
     # Stage 1 interactive session
     clarification_session: Optional[ClarificationSession] = None
-    
+
     # Artifact paths
     stage1_path: Optional[str] = None
     stage1_log_path: Optional[str] = None
@@ -146,7 +144,9 @@ class CohortRun:
             ],
             "error": self.error,
             "total_duration_seconds": self.total_duration_seconds,
-            "clarification_session": asdict(self.clarification_session) if self.clarification_session else None,
+            "clarification_session": (
+                asdict(self.clarification_session) if self.clarification_session else None
+            ),
             "stage1_path": self.stage1_path,
             "stage1_log_path": self.stage1_log_path,
             "stage2_path": self.stage2_path,
@@ -180,7 +180,11 @@ class CohortRun:
             ],
             error=data.get("error", ""),
             total_duration_seconds=data.get("total_duration_seconds", 0.0),
-            clarification_session=ClarificationSession(**data["clarification_session"]) if data.get("clarification_session") else None,
+            clarification_session=(
+                ClarificationSession(**data["clarification_session"])
+                if data.get("clarification_session")
+                else None
+            ),
             stage1_path=data.get("stage1_path"),
             stage1_log_path=data.get("stage1_log_path"),
             stage2_path=data.get("stage2_path"),
@@ -245,4 +249,3 @@ class RunsIndex:
     def from_dict(cls, data: dict[str, Any]) -> "RunsIndex":
         """Create from dict."""
         return cls(runs=data.get("runs", []))
-

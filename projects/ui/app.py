@@ -7,11 +7,9 @@ Dashboard-style interface with run list and chat-style execution view.
 import json
 import os
 import sys
-import tempfile
-import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional, Tuple
 
 import gradio as gr
 import pandas as pd
@@ -25,11 +23,7 @@ sys.path.insert(0, str(project_root))
 env_path = project_root / ".env"
 load_dotenv(dotenv_path=env_path)
 
-from projects.ui.models import RunStatus, StageStatus
-from projects.ui.service import CohortService
-from projects.ui.analytics_dashboard import (
-    export_analytics_csv,
-    export_analytics_json,
+from projects.ui.analytics_dashboard import (  # noqa: E402
     generate_ai_insights,
     generate_data_quality_html,
     generate_summary_cards_html,
@@ -39,6 +33,8 @@ from projects.ui.analytics_dashboard import (
     prepare_monthly_trend_data,
     prepare_year_trend_data,
 )
+from projects.ui.models import StageStatus  # noqa: E402
+from projects.ui.service import CohortService  # noqa: E402
 
 # Initialize service
 service = CohortService()
@@ -149,70 +145,77 @@ def start_selected_run(selected_run_id: str) -> tuple[str, gr.update, list, str]
     try:
         # Start interactive clarification session
         first_question, is_complete = service.start_interactive_clarification(selected_run_id)
-        
+
         # Build initial chat history
         chat_history = [{"role": "assistant", "content": first_question}]
-        
+
         return (
             f"▶️ Started run #{selected_run_id[:6]} - Please answer the clarification questions",
             gr.update(visible=True, open=True),  # Show chat accordion
             chat_history,
-            ""  # Clear input
+            "",  # Clear input
         )
     except Exception as e:
         return f"❌ Error: {str(e)}", gr.update(visible=False), [], ""
 
 
-def send_clarification_message_handler(run_id: str, message: str, chat_history: list) -> tuple[list, str, gr.update, gr.update, str, str]:
+def send_clarification_message_handler(
+    run_id: str, message: str, chat_history: list
+) -> tuple[list, str, gr.update, gr.update, str, str]:
     """Handle sending a clarification message."""
     if not run_id or not message.strip():
         return chat_history, "", gr.update(), gr.update(), gr.update(), gr.update()
-    
+
     # Add user message to history
     chat_history.append({"role": "user", "content": message})
-    
+
     try:
         # Send message to service
         next_question, is_complete, cohort_def = service.send_clarification_message(run_id, message)
-        
+
         if is_complete:
             # Show completion message in chat
-            chat_history.append({
-                "role": "assistant", 
-                "content": "✅ **Clarification complete!** I have all the information needed to define your cohort.\n\n**Next Steps:**\n- ✅ Stage 1 complete - Your cohort definition is shown below\n- 🔄 Stage 2 starting - Searching for OMOP concepts\n- ⏳ Stage 3 will generate BigQuery SQL\n- 📊 Stage 4 will run analytics\n\n*Please scroll down to see your final cohort definition and live progress.*"
-            })
-            
+            chat_history.append(
+                {
+                    "role": "assistant",
+                    "content": "✅ **Clarification complete!** I have all the information needed to define your cohort.\n\n**Next Steps:**\n- ✅ Stage 1 complete - Your cohort definition is shown below\n- 🔄 Stage 2 starting - Searching for OMOP concepts\n- ⏳ Stage 3 will generate BigQuery SQL\n- 📊 Stage 4 will run analytics\n\n*Please scroll down to see your final cohort definition and live progress.*",
+                }
+            )
+
             # Format final definition
             final_def_md = format_cohort_definition(cohort_def)
-            
+
             # Trigger Stage 2 to start
             try:
                 service.start_run(run_id, stages=[2, 3, 4])
             except Exception as e:
-                chat_history.append({"role": "assistant", "content": f"⚠️ Error starting Stage 2: {str(e)}"})
-            
+                chat_history.append(
+                    {"role": "assistant", "content": f"⚠️ Error starting Stage 2: {str(e)}"}
+                )
+
             # Get updated run display to show Stage 2 starting
             import time
+
             time.sleep(0.5)  # Brief pause to let Stage 2 start
             header_text = get_run_header(run_id)
             display_text, _ = get_run_display(run_id)
-            
+
             # Hide chat accordion and show final definition
             return (
-                chat_history, 
-                "", 
+                chat_history,
+                "",
                 gr.update(value=final_def_md, visible=True),
                 gr.update(visible=False),  # Hide the chat accordion
                 header_text,  # Updated header
-                display_text  # Updated run display showing Stage 2
+                display_text,  # Updated run display showing Stage 2
             )
         else:
             # Add next question
             if next_question:
                 chat_history.append({"role": "assistant", "content": next_question})
-            
+
             return chat_history, "", gr.update(), gr.update(), gr.update(), gr.update()
-    
+
     except Exception as e:
         chat_history.append({"role": "assistant", "content": f"❌ Error: {str(e)}"})
         return chat_history, "", gr.update(), gr.update(), gr.update(), gr.update()
@@ -222,50 +225,50 @@ def format_cohort_definition(cohort_def: dict) -> str:
     """Format cohort definition for display."""
     if not cohort_def:
         return ""
-    
+
     output = [
         "---",
         "",
         "# ✅ Stage 1 Complete: Cohort Definition Finalized",
         "",
         "## 📋 Your Cohort Definition",
-        ""
+        "",
     ]
-    
+
     if cohort_def.get("index_event"):
         output.append(f"**🎯 Index Event:** {cohort_def['index_event']}")
         output.append("")
-    
+
     if cohort_def.get("inclusion_criteria"):
         output.append("**✅ Inclusion Criteria:**")
         for criterion in cohort_def["inclusion_criteria"]:
             output.append(f"- {criterion}")
         output.append("")
-    
+
     if cohort_def.get("exclusion_criteria"):
         output.append("**❌ Exclusion Criteria:**")
         for criterion in cohort_def["exclusion_criteria"]:
             output.append(f"- {criterion}")
         output.append("")
-    
+
     if cohort_def.get("observation_window"):
         output.append(f"**📅 Observation Window:** {cohort_def['observation_window']}")
         output.append("")
-    
+
     if cohort_def.get("demographics"):
         output.append("**👥 Demographics:**")
         for key, value in cohort_def["demographics"].items():
             output.append(f"- {key.title()}: {value}")
         output.append("")
-    
+
     if cohort_def.get("prior_observation"):
         output.append(f"**⏱️ Prior Observation:** {cohort_def['prior_observation']}")
         output.append("")
-    
+
     if cohort_def.get("cohort_exit"):
         output.append(f"**🚪 Cohort Exit:** {cohort_def['cohort_exit']}")
         output.append("")
-    
+
     # output.append("---")
     # output.append("")
     # output.append("### 🔄 Next: Stage 2 - Concept Discovery")
@@ -273,7 +276,7 @@ def format_cohort_definition(cohort_def: dict) -> str:
     # output.append("*Now searching OMOP vocabulary for relevant concepts... This may take 1-2 minutes.*")
     # output.append("")
     # output.append("*Scroll down to see live progress below.*")
-    
+
     return "\n".join(output)
 
 
@@ -287,7 +290,7 @@ def delete_selected_run(selected_run_id: str) -> tuple[str, list[list[str]]]:
         if success:
             return f"🗑️ Deleted run #{selected_run_id[:6]}", get_runs_list()
         else:
-            return f"⚠️ Run not found", get_runs_list()
+            return "⚠️ Run not found", get_runs_list()
     except Exception as e:
         return f"❌ Error: {str(e)}", get_runs_list()
 
@@ -308,36 +311,37 @@ def test_individual_stage(run_id: str, stage_num: int) -> str:
     """Run a single stage for testing purposes."""
     if not run_id:
         return "⚠️ No run selected"
-    
+
     try:
         run = service.storage.load_run(run_id)
         if not run:
             return f"❌ Run {run_id} not found"
-        
+
         stage_methods = {
             1: service._execute_stage1,
             2: service._execute_stage2,
             3: service._execute_stage3,
             4: service._execute_stage4,
         }
-        
+
         method = stage_methods.get(stage_num)
         if not method:
             return f"❌ Invalid stage number: {stage_num}"
-        
+
         # Run the stage in background
         import threading
+
         def run_stage():
             try:
                 method(run)
             except Exception as e:
                 print(f"Error in stage {stage_num}: {e}")
-        
+
         thread = threading.Thread(target=run_stage, daemon=True)
         thread.start()
-        
+
         return f"✅ Stage {stage_num} started! Refresh to see results (auto-refresh will show progress)."
-    
+
     except Exception as e:
         return f"❌ Stage {stage_num} failed: {str(e)}"
 
@@ -358,7 +362,7 @@ def get_run_header(run_id: Optional[str]) -> str:
     )
     if run.total_duration_seconds > 0:
         header += f" | **Duration:** {format_duration(run.total_duration_seconds)}"
-    
+
     return header
 
 
@@ -379,13 +383,13 @@ def get_run_display(run_id: Optional[str]) -> Tuple[str, bool]:
 
     stage4_complete = False
     stage1_complete = False
-    
+
     # Check if Stage 1 is complete (will be shown separately)
     for stage in run.stages:
         if stage.stage == 1 and stage.status == StageStatus.COMPLETE:
             stage1_complete = True
             break
-    
+
     if not run.stages:
         output.append("*No stages started yet. Click 'Start Run' to begin.*")
     else:
@@ -393,7 +397,7 @@ def get_run_display(run_id: Optional[str]) -> Tuple[str, bool]:
             # Skip Stage 1 if complete (shown separately as final definition)
             if stage.stage == 1 and stage1_complete:
                 continue
-                
+
             if stage.stage == 4 and stage.status == StageStatus.COMPLETE:
                 stage4_complete = True
             output.append(render_stage(stage, run))
@@ -412,12 +416,12 @@ def update_display_and_dashboard(run_id):
     """Update run display and auto-load dashboard if Stage 4 complete."""
     header_text = get_run_header(run_id)
     display_text, stage4_complete = get_run_display(run_id)
-    
+
     # Check if Stage 1 is waiting for input
     run = service.get_run(run_id) if run_id else None
     stage1_chat_visible = gr.update(visible=False)  # Hidden by default
     stage1_chat_history = []
-    
+
     if run:
         # Check Stage 1 status
         for stage in run.stages:
@@ -430,15 +434,27 @@ def update_display_and_dashboard(run_id):
             elif stage.stage == 1 and stage.status in [StageStatus.COMPLETE, StageStatus.FAILED]:
                 stage1_chat_visible = gr.update(visible=False)
                 break
-    
+
     # Auto-load dashboard data if Stage 4 is complete
     if stage4_complete and run_id:
         dashboard_data = load_stage4_dashboard(run_id)
-        return (header_text, display_text, gr.update(visible=True, open=True), stage1_chat_visible, stage1_chat_history) + dashboard_data
+        return (
+            header_text,
+            display_text,
+            gr.update(visible=True, open=True),
+            stage1_chat_visible,
+            stage1_chat_history,
+        ) + dashboard_data
     else:
         # Return empty dashboard data when not visible
         empty_df = pd.DataFrame()
-        return (header_text, display_text, gr.update(visible=False), stage1_chat_visible, stage1_chat_history) + ("", "", "", "", empty_df, empty_df, empty_df, empty_df, empty_df, "")
+        return (
+            header_text,
+            display_text,
+            gr.update(visible=False),
+            stage1_chat_visible,
+            stage1_chat_history,
+        ) + ("", "", "", "", empty_df, empty_df, empty_df, empty_df, empty_df, "")
 
 
 def update_display_only(run_id):
@@ -450,14 +466,14 @@ def update_display_only(run_id):
             gr.update(visible=False),  # analytics dashboard
             gr.update(),  # stage1 chat accordion - preserve current state
         )
-    
+
     header_text = get_run_header(run_id)
     display_text, stage4_complete = get_run_display(run_id)
-    
+
     # Check if Stage 1 is waiting for input
     run = service.get_run(run_id)
     stage1_chat_visible = gr.update()  # No change by default
-    
+
     if run:
         # Only update chat visibility if stage 1 status changed
         for stage in run.stages:
@@ -467,7 +483,7 @@ def update_display_only(run_id):
             elif stage.stage == 1 and stage.status in [StageStatus.COMPLETE, StageStatus.FAILED]:
                 stage1_chat_visible = gr.update(visible=False)
                 break
-    
+
     # Update analytics dashboard visibility
     if stage4_complete:
         return header_text, display_text, gr.update(visible=True, open=True), stage1_chat_visible
@@ -479,32 +495,68 @@ def format_sql(sql_text: str) -> str:
     """Format SQL for display with basic syntax highlighting using HTML."""
     if not sql_text:
         return ""
-    
+
     # Add line numbers and basic formatting
-    lines = sql_text.strip().split('\n')
+    lines = sql_text.strip().split("\n")
     formatted_lines = []
-    
+
     for i, line in enumerate(lines, 1):
         # Basic keyword highlighting
         line_html = line
-        keywords = ['SELECT', 'FROM', 'WHERE', 'JOIN', 'LEFT JOIN', 'INNER JOIN', 'RIGHT JOIN',
-                   'GROUP BY', 'ORDER BY', 'HAVING', 'WITH', 'AS', 'DISTINCT', 'COUNT', 'SUM',
-                   'AVG', 'MIN', 'MAX', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'AND', 'OR',
-                   'IN', 'NOT', 'NULL', 'IS', 'LIKE', 'BETWEEN', 'UNION', 'UNION ALL']
-        
+        keywords = [
+            "SELECT",
+            "FROM",
+            "WHERE",
+            "JOIN",
+            "LEFT JOIN",
+            "INNER JOIN",
+            "RIGHT JOIN",
+            "GROUP BY",
+            "ORDER BY",
+            "HAVING",
+            "WITH",
+            "AS",
+            "DISTINCT",
+            "COUNT",
+            "SUM",
+            "AVG",
+            "MIN",
+            "MAX",
+            "CASE",
+            "WHEN",
+            "THEN",
+            "ELSE",
+            "END",
+            "AND",
+            "OR",
+            "IN",
+            "NOT",
+            "NULL",
+            "IS",
+            "LIKE",
+            "BETWEEN",
+            "UNION",
+            "UNION ALL",
+        ]
+
         for keyword in keywords:
             # Case-insensitive replacement but preserve original case for non-keywords
             import re
+
             line_html = re.sub(
-                r'\b(' + keyword + r')\b',
+                r"\b(" + keyword + r")\b",
                 r'<span style="color: #0066CC; font-weight: bold;">\1</span>',
                 line_html,
-                flags=re.IGNORECASE
+                flags=re.IGNORECASE,
             )
-        
+
         formatted_lines.append(f'<span style="color: #888;">{i:3d}|</span> {line_html}')
-    
-    return '<div style="font-family: monospace; white-space: pre; background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">' + '\n'.join(formatted_lines) + '</div>'
+
+    return (
+        '<div style="font-family: monospace; white-space: pre; background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">'
+        + "\n".join(formatted_lines)
+        + "</div>"
+    )
 
 
 def render_stage(stage_result, run) -> str:
@@ -545,7 +597,7 @@ def render_stage(stage_result, run) -> str:
             if run.stage1_path:
                 output.append("")
                 output.append("**Clinical Definition Complete**")
-                
+
                 # Show conversation log if available
                 if run.stage1_log_path:
                     log_content = get_stage1_log(run.run_id)
@@ -561,15 +613,13 @@ def render_stage(stage_result, run) -> str:
                         else:
                             output.extend(lines)
                         output.append("```")
-                
+
         elif stage_result.stage == 2:
             # Show concept sets found
             if stage_result.metrics.concepts_found > 0:
                 output.append("")
-                output.append(
-                    f"**Found {stage_result.metrics.concepts_found} OMOP concepts**"
-                )
-            
+                output.append(f"**Found {stage_result.metrics.concepts_found} OMOP concepts**")
+
             # Show log if available
             if run.stage2_log_path:
                 log_content = get_stage_log(run.run_id, 2)
@@ -586,24 +636,25 @@ def render_stage(stage_result, run) -> str:
                     else:
                         output.extend(lines)
                     output.append("```")
-                    
+
         elif stage_result.stage == 3:
             # Show SQL generated with FINAL validation status prominently
             output.append("")
-            
+
             # Show validation if available - THIS IS THE FINAL RESULT
             validation_shown = False
             if run.stage3_validation_path:
                 try:
                     import json
+
                     with open(run.stage3_validation_path) as f:
                         validation = json.load(f)
-                    
+
                     if validation.get("is_valid"):
                         output.append("## ✅ **SQL GENERATION SUCCESSFUL**")
                         output.append("")
                         output.append("**BigQuery Validation:** ✅ Passed (dry run successful)")
-                        
+
                         # Check if fixes were needed by looking at the log
                         fixes_needed = False
                         if run.stage3_log_path:
@@ -613,12 +664,16 @@ def render_stage(stage_result, run) -> str:
                                     fixes_needed = True
                             except Exception:
                                 pass
-                        
+
                         if fixes_needed:
-                            output.append("**Note:** SQL was automatically fixed after initial validation errors")
-                        
+                            output.append(
+                                "**Note:** SQL was automatically fixed after initial validation errors"
+                            )
+
                         if validation.get("estimated_cost_usd") is not None:
-                            output.append(f"- **Estimated query cost:** ${validation['estimated_cost_usd']:.4f}")
+                            output.append(
+                                f"- **Estimated query cost:** ${validation['estimated_cost_usd']:.4f}"
+                            )
                         if validation.get("total_bytes_processed"):
                             gb = validation["total_bytes_processed"] / (1024**3)
                             output.append(f"- **Data to process:** {gb:.2f} GB")
@@ -635,35 +690,37 @@ def render_stage(stage_result, run) -> str:
                         validation_shown = True
                 except Exception:
                     pass
-            
+
             if not validation_shown:
                 output.append("**BigQuery SQL Generated**")
-            
+
             # Show formatted SQL automatically
             if run.stage3_sql_path:
                 try:
                     with open(run.stage3_sql_path) as f:
                         sql = f.read()
-                    
+
                     output.append("")
                     output.append("**Generated SQL:**")
                     output.append("```sql")
-                    
+
                     # Show full SQL with line numbers (first 50 lines)
-                    lines = sql.split('\n')
+                    lines = sql.split("\n")
                     for i, line in enumerate(lines[:50], 1):
                         output.append(f"{i:3d} | {line}")
-                    
+
                     if len(lines) > 50:
                         output.append(f"... ({len(lines) - 50} more lines)")
-                    
+
                     output.append("```")
                     output.append(f"*Total: {len(lines)} lines, {len(sql)} characters*")
                     output.append("")
-                    output.append("💡 *Full formatted SQL with syntax highlighting available in 'Download Artifacts & Logs' → 'Stage 3 (SQL)' → 'Format SQL' button*")
+                    output.append(
+                        "💡 *Full formatted SQL with syntax highlighting available in 'Download Artifacts & Logs' → 'Stage 3 (SQL)' → 'Format SQL' button*"
+                    )
                 except Exception:
                     pass
-            
+
             # Show log summary (collapsed by default in user's mind - just show key info)
             if run.stage3_log_path:
                 log_content = get_stage_log(run.run_id, 3)
@@ -671,17 +728,21 @@ def render_stage(stage_result, run) -> str:
                     # Count validation attempts
                     attempts = log_content.count("Validating SQL (dry run)")
                     fixes = log_content.count("Attempting to fix SQL")
-                    
+
                     output.append("")
                     output.append("**Process Summary:**")
                     if attempts > 1:
                         output.append(f"- Generated SQL and validated in {attempts} iterations")
-                        output.append(f"- Applied {fixes} automatic fix{'es' if fixes != 1 else ''}")
+                        output.append(
+                            f"- Applied {fixes} automatic fix{'es' if fixes != 1 else ''}"
+                        )
                     else:
                         output.append("- Generated SQL and validated successfully on first attempt")
-                    
+
                     output.append("")
-                    output.append("*💡 View full generation log in 'Download Artifacts & Logs' section below for detailed fix history*")
+                    output.append(
+                        "*💡 View full generation log in 'Download Artifacts & Logs' section below for detailed fix history*"
+                    )
         elif stage_result.stage == 4:
             # Show analytics complete with link to dashboard
             output.append("")
@@ -690,13 +751,15 @@ def render_stage(stage_result, run) -> str:
             output.append("")
             output.append("📊 **View the interactive dashboard below** ⬇️")
             output.append("")
-            output.append("*The full analytics dashboard with visualizations, AI insights, and exports is available in the 'Analytics Dashboard' section below this summary.*")
+            output.append(
+                "*The full analytics dashboard with visualizations, AI insights, and exports is available in the 'Analytics Dashboard' section below this summary.*"
+            )
 
     elif stage_result.status == StageStatus.RUNNING:
         output.append("")
         if stage_result.stage == 1:
             output.append("*Running clarification (watching agent conversation...)*")
-            
+
             # Show live log if available
             log_content = get_stage1_log(run.run_id)
             if log_content:
@@ -713,7 +776,7 @@ def render_stage(stage_result, run) -> str:
                 output.append("```")
         elif stage_result.stage == 2:
             output.append("*Discovering OMOP concepts...*")
-            
+
             # Show live log if available
             log_content = get_stage_log(run.run_id, 2)
             if log_content:
@@ -731,7 +794,7 @@ def render_stage(stage_result, run) -> str:
                 output.append("```")
         elif stage_result.stage == 3:
             output.append("*Generating SQL...*")
-            
+
             # Show live log if available
             log_content = get_stage_log(run.run_id, 3)
             if log_content:
@@ -765,29 +828,31 @@ def clean_log_content(log_content: str, stage_num: int) -> str:
     """Remove redundant stage headers from log content."""
     if not log_content:
         return log_content
-    
+
     lines = log_content.strip().split("\n")
     cleaned_lines = []
     skip_header = True
-    
+
     for line in lines:
         # Skip the redundant header lines at the start
         if skip_header:
             # Skip lines that contain "Stage X:" or just "===" or "---"
-            if (f"Stage {stage_num}:" in line or 
-                line.strip().startswith("====") or 
-                line.strip().startswith("---") or
-                line.strip().startswith("Run ID:") or
-                "OMOP CONCEPT DISCOVERY" in line or
-                "SQL GENERATION" in line or
-                (line.startswith("Cohort Definition:") and len(line) > 100)):  # Very long cohort def line
+            if (
+                f"Stage {stage_num}:" in line
+                or line.strip().startswith("====")
+                or line.strip().startswith("---")
+                or line.strip().startswith("Run ID:")
+                or "OMOP CONCEPT DISCOVERY" in line
+                or "SQL GENERATION" in line
+                or (line.startswith("Cohort Definition:") and len(line) > 100)
+            ):  # Very long cohort def line
                 continue
             else:
                 # Found actual content, stop skipping
                 skip_header = False
-        
+
         cleaned_lines.append(line)
-    
+
     return "\n".join(cleaned_lines)
 
 
@@ -795,7 +860,7 @@ def get_stage1_log(run_id: str) -> str:
     """Get the Stage 1 conversation log if it exists."""
     if not run_id:
         return ""
-    
+
     try:
         content = service.storage.load_artifact(run_id, "stage1_log.txt")
         return content or ""
@@ -807,7 +872,7 @@ def get_stage_log(run_id: str, stage: int) -> str:
     """Get the log for a specific stage if it exists."""
     if not run_id:
         return ""
-    
+
     try:
         content = service.storage.load_artifact(run_id, f"stage{stage}_log.txt")
         return content or ""
@@ -845,87 +910,138 @@ def load_artifact(run_id: str, artifact_type: str) -> str:
 def load_stage4_dashboard(run_id: str) -> Tuple[str, str, str, str, Any, Any, Any, Any, Any, str]:
     """
     Load and prepare Stage 4 analytics dashboard.
-    
-    Returns: (summary_cards_html, quick_stats, quality_html, insights_md, 
-              gender_chart_df, age_chart_df, year_chart_df, monthly_chart_df, 
+
+    Returns: (summary_cards_html, quick_stats, quality_html, insights_md,
+              gender_chart_df, age_chart_df, year_chart_df, monthly_chart_df,
               characteristics_table_df, raw_json)
     """
     if not run_id:
         empty_df = pd.DataFrame()
-        return ("", "*No run selected*", "", "*No run selected*", 
-                empty_df, empty_df, empty_df, empty_df, empty_df, "")
-    
+        return (
+            "",
+            "*No run selected*",
+            "",
+            "*No run selected*",
+            empty_df,
+            empty_df,
+            empty_df,
+            empty_df,
+            empty_df,
+            "",
+        )
+
     run = service.get_run(run_id)
     if not run or not run.stage4_path:
         empty_df = pd.DataFrame()
-        return ("", "*Analytics not available yet*", "", "*Analytics not available yet*", 
-                empty_df, empty_df, empty_df, empty_df, empty_df, "")
-    
+        return (
+            "",
+            "*Analytics not available yet*",
+            "",
+            "*Analytics not available yet*",
+            empty_df,
+            empty_df,
+            empty_df,
+            empty_df,
+            empty_df,
+            "",
+        )
+
     try:
         # Load analytics JSON
         with open(run.stage4_path) as f:
             analytics = json.load(f)
-        
+
         if analytics.get("status") != "complete":
             empty_df = pd.DataFrame()
-            return ("", "*Analytics incomplete*", "", "*Analytics incomplete*", 
-                    empty_df, empty_df, empty_df, empty_df, empty_df, 
-                    json.dumps(analytics, indent=2))
-        
+            return (
+                "",
+                "*Analytics incomplete*",
+                "",
+                "*Analytics incomplete*",
+                empty_df,
+                empty_df,
+                empty_df,
+                empty_df,
+                empty_df,
+                json.dumps(analytics, indent=2),
+            )
+
         # Generate all dashboard components
         summary_html = generate_summary_cards_html(analytics)
         quality_html = generate_data_quality_html(analytics)
         # Get description from user_inputs if available
         cohort_description = ""
-        if hasattr(run, 'user_inputs') and run.user_inputs:
+        if hasattr(run, "user_inputs") and run.user_inputs:
             cohort_description = run.user_inputs.cohort_description
         insights = generate_ai_insights(analytics, cohort_description)
-        
+
         # Prepare chart data (use 'is None' to avoid DataFrame ambiguity)
         gender_df = prepare_gender_chart_data(analytics)
         if gender_df is None:
             gender_df = pd.DataFrame()
-        
+
         age_df = prepare_age_chart_data(analytics)
         if age_df is None:
             age_df = pd.DataFrame()
-        
+
         year_df = prepare_year_trend_data(analytics)
         if year_df is None:
             year_df = pd.DataFrame()
-        
+
         monthly_df = prepare_monthly_trend_data(analytics)
         if monthly_df is None:
             monthly_df = pd.DataFrame()
-        
+
         char_df = prepare_characteristics_table(analytics)
-        
+
         # Generate quick stats text
         results = analytics.get("results", {})
         cohort_size = 0
         if "cohort_size" in results and isinstance(results["cohort_size"], list):
             if results["cohort_size"]:
                 cohort_size = results["cohort_size"][0].get("n", 0)
-        
+
         quick_stats = f"**Total Patients:** {cohort_size:,}"
-        
+
         raw_json = json.dumps(analytics, indent=2)
-        
-        return (summary_html, quick_stats, quality_html, insights, 
-                gender_df, age_df, year_df, monthly_df, char_df, raw_json)
-    
+
+        return (
+            summary_html,
+            quick_stats,
+            quality_html,
+            insights,
+            gender_df,
+            age_df,
+            year_df,
+            monthly_df,
+            char_df,
+            raw_json,
+        )
+
     except Exception as e:
         empty_df = pd.DataFrame()
-        return ("", f"*Error loading dashboard: {str(e)}*", "", f"*Error: {str(e)}*", 
-                empty_df, empty_df, empty_df, empty_df, empty_df, "")
+        return (
+            "",
+            f"*Error loading dashboard: {str(e)}*",
+            "",
+            f"*Error: {str(e)}*",
+            empty_df,
+            empty_df,
+            empty_df,
+            empty_df,
+            empty_df,
+            "",
+        )
 
 
 # Build Gradio interface
 with gr.Blocks(
-    title="OMOP Cohort Builder", theme=gr.themes.Soft(), css="""
+    title="OMOP Cohort Builder",
+    theme=gr.themes.Soft(),
+    css="""
     .run-list { font-family: monospace; }
     .status-indicator { font-weight: bold; }
-"""
+""",
 ) as app:
     gr.Markdown("# 🧬 OMOP Cohort Builder")
 
@@ -958,9 +1074,7 @@ with gr.Blocks(
             with gr.Row():
                 delete_btn = gr.Button("🗑️ Delete", size="sm", variant="stop")
 
-            action_status = gr.Textbox(
-                label="Status", interactive=False, show_label=False
-            )
+            action_status = gr.Textbox(label="Status", interactive=False, show_label=False)
 
         # Right panel: Run details
         with gr.Column(scale=3):
@@ -969,55 +1083,63 @@ with gr.Blocks(
                 "⬅️ Select a run from the list to view details",
                 elem_classes=["run-display"],
             )
-            
+
             # Stage 1 Interactive Clarification Chat (only visible when waiting for input)
-            stage1_chat_accordion = gr.Accordion("💬 Stage 1: Clinical Clarification Chat", open=True, visible=False)
+            stage1_chat_accordion = gr.Accordion(
+                "💬 Stage 1: Clinical Clarification Chat", open=True, visible=False
+            )
             with stage1_chat_accordion:
                 gr.Markdown("Answer the questions below to refine your cohort definition:")
-                
+
                 stage1_chatbot = gr.Chatbot(
                     label="Clarification Conversation",
                     height=400,
-                    type="messages"  # Use messages format for better styling
+                    type="messages",  # Use messages format for better styling
                 )
-                
+
                 with gr.Row():
                     stage1_input = gr.Textbox(
                         placeholder="Type your answer here...",
                         show_label=False,
                         scale=4,
-                        container=False
+                        container=False,
                     )
                     stage1_send_btn = gr.Button("Send", size="sm", scale=1, variant="primary")
-            
+
             # Final cohort definition display (shown OUTSIDE accordion after completion)
             stage1_final_def = gr.Markdown(visible=False)
-            
+
             # Main run display (stages, progress, etc.) - WITHOUT header
             run_display = gr.Markdown(
                 "",
                 elem_classes=["run-display"],
             )
-            
+
             # Analytics Dashboard - Only visible when Stage 4 is complete
-            analytics_dashboard_accordion = gr.Accordion("📊 Analytics Dashboard", open=True, visible=False)
+            analytics_dashboard_accordion = gr.Accordion(
+                "📊 Analytics Dashboard", open=True, visible=False
+            )
             with analytics_dashboard_accordion:
                 with gr.Row():
                     gr.Markdown("### Interactive Cohort Analytics")
-                    refresh_dashboard_btn = gr.Button("🔄 Refresh", size="sm", scale=0, min_width=100)
-                
+                    refresh_dashboard_btn = gr.Button(
+                        "🔄 Refresh", size="sm", scale=0, min_width=100
+                    )
+
                 with gr.Tabs():
                     with gr.Tab("📈 Overview"):
                         # Summary cards
                         stage4_summary_cards_main = gr.HTML(label="Summary Metrics")
-                        
+
                         # Quick stats
-                        stage4_quick_stats_main = gr.Markdown(value="*Click 'Load Dashboard' button below*")
-                        
+                        stage4_quick_stats_main = gr.Markdown(
+                            value="*Click 'Load Dashboard' button below*"
+                        )
+
                         # Data quality indicators
                         gr.Markdown("#### Data Quality")
                         stage4_quality_main = gr.HTML(label="Quality Indicators")
-                    
+
                     with gr.Tab("👥 Demographics"):
                         with gr.Row():
                             with gr.Column():
@@ -1029,9 +1151,9 @@ with gr.Blocks(
                                     tooltip=["Gender", "Count", "Percentage"],
                                     y_title="Number of Patients",
                                     height=300,
-                                    show_label=False
+                                    show_label=False,
                                 )
-                            
+
                             with gr.Column():
                                 gr.Markdown("#### Age Distribution")
                                 stage4_age_chart_main = gr.BarPlot(
@@ -1041,16 +1163,16 @@ with gr.Blocks(
                                     tooltip=["Age Group", "Count", "Percentage"],
                                     y_title="Number of Patients",
                                     height=300,
-                                    show_label=False
+                                    show_label=False,
                                 )
-                        
+
                         gr.Markdown("#### Detailed Characteristics")
                         stage4_characteristics_table_main = gr.DataFrame(
                             headers=["Characteristic", "Count", "Percentage", "95% CI"],
                             label="Cohort Characteristics with Confidence Intervals",
-                            interactive=False
+                            interactive=False,
                         )
-                    
+
                     with gr.Tab("📅 Temporal Trends"):
                         with gr.Row():
                             with gr.Column():
@@ -1061,9 +1183,9 @@ with gr.Blocks(
                                     title="Patients by Index Year",
                                     tooltip=["Year", "Patients"],
                                     height=300,
-                                    show_label=False
+                                    show_label=False,
                                 )
-                            
+
                             with gr.Column():
                                 gr.Markdown("#### Monthly Trend")
                                 stage4_monthly_chart_main = gr.LinePlot(
@@ -1072,30 +1194,32 @@ with gr.Blocks(
                                     title="Monthly Enrollment Pattern",
                                     tooltip=["Month", "Patients"],
                                     height=300,
-                                    show_label=False
+                                    show_label=False,
                                 )
-                    
+
                     with gr.Tab("🔍 AI Insights"):
                         gr.Markdown("### AI-Powered Analysis")
                         stage4_insights_main = gr.Markdown(
                             value="*Click 'Load Dashboard' button below*"
                         )
-                    
+
                     with gr.Tab("💾 Export & Raw Data"):
                         gr.Markdown("#### Export Options")
-                        
+
                         with gr.Row():
-                            export_csv_btn_main = gr.Button("📥 Download CSV (Characteristics)", size="sm")
-                            export_json_btn_main = gr.Button("📥 Download JSON (Full Analytics)", size="sm")
-                        
+                            export_csv_btn_main = gr.Button(
+                                "📥 Download CSV (Characteristics)", size="sm"
+                            )
+                            export_json_btn_main = gr.Button(
+                                "📥 Download JSON (Full Analytics)", size="sm"
+                            )
+
                         stage4_csv_download_main = gr.File(label="CSV Download", visible=False)
                         stage4_json_download_main = gr.File(label="JSON Download", visible=False)
-                        
+
                         gr.Markdown("#### Raw JSON Data")
-                        stage4_output_main = gr.Code(
-                            language="json", interactive=False, lines=10
-                        )
-            
+                        stage4_output_main = gr.Code(language="json", interactive=False, lines=10)
+
             # Individual stage testing
             with gr.Accordion("🔬 Individual Stage Testing", open=False):
                 gr.Markdown("Run or re-run individual stages for debugging (requires existing run)")
@@ -1113,56 +1237,52 @@ with gr.Blocks(
                             interactive=False, lines=15, max_lines=30, show_label=False
                         )
                         load_stage1_log_btn = gr.Button("Load Stage 1 Conversation Log")
-                    
+
                     with gr.Tab("Stage 2 Discovery Log"):
                         stage2_log_output = gr.Textbox(
                             interactive=False, lines=15, max_lines=30, show_label=False
                         )
                         load_stage2_log_btn = gr.Button("Load Stage 2 Discovery Log")
-                    
+
                     with gr.Tab("Stage 3 SQL Log"):
                         stage3_log_output = gr.Textbox(
                             interactive=False, lines=15, max_lines=30, show_label=False
                         )
                         load_stage3_log_btn = gr.Button("Load Stage 3 SQL Generation Log")
-                    
+
                     with gr.Tab("Stage 1 (JSON)"):
-                        stage1_output = gr.Code(
-                            language="json", interactive=False, lines=10
-                        )
+                        stage1_output = gr.Code(language="json", interactive=False, lines=10)
                         load_stage1_btn = gr.Button("Load Stage 1 Output")
 
                     with gr.Tab("Stage 2 (JSON)"):
-                        stage2_output = gr.Code(
-                            language="json", interactive=False, lines=10
-                        )
+                        stage2_output = gr.Code(language="json", interactive=False, lines=10)
                         load_stage2_btn = gr.Button("Load Stage 2 Output")
 
                     with gr.Tab("Stage 3 (SQL)"):
-                        stage3_output = gr.Code(
-                            language="sql", interactive=False, lines=10
-                        )
+                        stage3_output = gr.Code(language="sql", interactive=False, lines=10)
                         load_stage3_btn = gr.Button("Load Stage 3 SQL")
-                        
+
                         gr.Markdown("### Formatted SQL Preview")
                         stage3_sql_formatted = gr.HTML(label="Formatted SQL")
                         format_sql_btn = gr.Button("🎨 Format SQL with Syntax Highlighting")
 
                     with gr.Tab("📊 Stage 4 Analytics Dashboard"):
                         gr.Markdown("### Interactive Cohort Analytics")
-                        
+
                         with gr.Tabs():
                             with gr.Tab("📈 Overview"):
                                 # Summary cards
                                 stage4_summary_cards = gr.HTML(label="Summary Metrics")
-                                
+
                                 # Quick stats
-                                stage4_quick_stats = gr.Markdown(value="*Load analytics to view dashboard*")
-                                
+                                stage4_quick_stats = gr.Markdown(
+                                    value="*Load analytics to view dashboard*"
+                                )
+
                                 # Data quality indicators
                                 gr.Markdown("#### Data Quality")
                                 stage4_quality = gr.HTML(label="Quality Indicators")
-                            
+
                             with gr.Tab("👥 Demographics"):
                                 with gr.Row():
                                     with gr.Column():
@@ -1174,9 +1294,9 @@ with gr.Blocks(
                                             tooltip=["Gender", "Count", "Percentage"],
                                             y_title="Number of Patients",
                                             height=300,
-                                            show_label=False
+                                            show_label=False,
                                         )
-                                    
+
                                     with gr.Column():
                                         gr.Markdown("#### Age Distribution")
                                         stage4_age_chart = gr.BarPlot(
@@ -1186,16 +1306,16 @@ with gr.Blocks(
                                             tooltip=["Age Group", "Count", "Percentage"],
                                             y_title="Number of Patients",
                                             height=300,
-                                            show_label=False
+                                            show_label=False,
                                         )
-                                
+
                                 gr.Markdown("#### Detailed Characteristics")
                                 stage4_characteristics_table = gr.DataFrame(
                                     headers=["Characteristic", "Count", "Percentage", "95% CI"],
                                     label="Cohort Characteristics with Confidence Intervals",
-                                    interactive=False
+                                    interactive=False,
                                 )
-                            
+
                             with gr.Tab("📅 Temporal Trends"):
                                 with gr.Row():
                                     with gr.Column():
@@ -1206,9 +1326,9 @@ with gr.Blocks(
                                             title="Patients by Index Year",
                                             tooltip=["Year", "Patients"],
                                             height=300,
-                                            show_label=False
+                                            show_label=False,
                                         )
-                                    
+
                                     with gr.Column():
                                         gr.Markdown("#### Monthly Trend")
                                         stage4_monthly_chart = gr.LinePlot(
@@ -1217,30 +1337,34 @@ with gr.Blocks(
                                             title="Monthly Enrollment Pattern",
                                             tooltip=["Month", "Patients"],
                                             height=300,
-                                            show_label=False
+                                            show_label=False,
                                         )
-                            
+
                             with gr.Tab("🔍 AI Insights"):
                                 gr.Markdown("### AI-Powered Analysis")
                                 stage4_insights = gr.Markdown(
                                     value="*Load analytics to generate insights*"
                                 )
-                            
+
                             with gr.Tab("💾 Export & Raw Data"):
                                 gr.Markdown("#### Export Options")
-                                
+
                                 with gr.Row():
-                                    export_csv_btn = gr.Button("📥 Download CSV (Characteristics)", size="sm")
-                                    export_json_btn = gr.Button("📥 Download JSON (Full Analytics)", size="sm")
-                                
+                                    export_csv_btn = gr.Button(
+                                        "📥 Download CSV (Characteristics)", size="sm"
+                                    )
+                                    export_json_btn = gr.Button(
+                                        "📥 Download JSON (Full Analytics)", size="sm"
+                                    )
+
                                 stage4_csv_download = gr.File(label="CSV Download", visible=False)
                                 stage4_json_download = gr.File(label="JSON Download", visible=False)
-                                
+
                                 gr.Markdown("#### Raw JSON Data")
                                 stage4_output = gr.Code(
                                     language="json", interactive=False, lines=10
                                 )
-                        
+
                         load_stage4_btn = gr.Button("🔄 Load/Refresh Dashboard", variant="primary")
 
     # New run modal
@@ -1288,34 +1412,30 @@ with gr.Blocks(
                     step=5,
                     label="Search Top K",
                 )
-                
+
                 gr.Markdown("### BigQuery Configuration (Optional)")
-                
+
                 bigquery_project = gr.Textbox(
                     label="BigQuery Project ID",
                     placeholder="Leave empty to use GOOGLE_CLOUD_PROJECT from .env",
-                    value=""
+                    value="",
                 )
-                
+
                 omop_dataset = gr.Textbox(
                     label="OMOP Dataset ID",
                     placeholder="e.g., your-project.your_omop_dataset",
-                    value=""
+                    value="",
                 )
-                
+
                 bigquery_location = gr.Textbox(
-                    label="BigQuery Location",
-                    placeholder="US",
-                    value="US"
+                    label="BigQuery Location", placeholder="US", value="US"
                 )
 
             with gr.Row():
                 create_run_btn = gr.Button("Create Run", variant="primary")
                 cancel_run_btn = gr.Button("Cancel")
 
-            create_status = gr.Textbox(
-                label="Status", interactive=False, show_label=False
-            )
+            create_status = gr.Textbox(label="Status", interactive=False, show_label=False)
 
     # Auto-refresh for running runs (every 2 minutes)
     refresh_timer = gr.Timer(value=3.0, active=True)  # Refresh every 3 seconds for live progress
@@ -1351,7 +1471,7 @@ with gr.Blocks(
             stage4_output_main,
         ],
     )
-    
+
     # Manual refresh button for analytics dashboard
     refresh_dashboard_btn.click(
         load_stage4_dashboard,
@@ -1408,19 +1528,33 @@ with gr.Blocks(
         inputs=selected_run_id,
         outputs=[action_status, stage1_chat_accordion, stage1_chatbot, stage1_input],
     )
-    
+
     # Send clarification message
     stage1_send_btn.click(
         send_clarification_message_handler,
         inputs=[selected_run_id, stage1_input, stage1_chatbot],
-        outputs=[stage1_chatbot, stage1_input, stage1_final_def, stage1_chat_accordion, run_header, run_display],
+        outputs=[
+            stage1_chatbot,
+            stage1_input,
+            stage1_final_def,
+            stage1_chat_accordion,
+            run_header,
+            run_display,
+        ],
     )
-    
+
     # Also support Enter key in textbox
     stage1_input.submit(
         send_clarification_message_handler,
         inputs=[selected_run_id, stage1_input, stage1_chatbot],
-        outputs=[stage1_chatbot, stage1_input, stage1_final_def, stage1_chat_accordion, run_header, run_display],
+        outputs=[
+            stage1_chatbot,
+            stage1_input,
+            stage1_final_def,
+            stage1_chat_accordion,
+            run_header,
+            run_display,
+        ],
     )
 
     # Delete run
@@ -1429,26 +1563,26 @@ with gr.Blocks(
         inputs=selected_run_id,
         outputs=[action_status, runs_table],
     )
-    
+
     # Individual stage testing
     test_stage1_btn.click(
         lambda run_id: test_individual_stage(run_id, 1),
         inputs=selected_run_id,
         outputs=test_stage_status,
     )
-    
+
     test_stage2_btn.click(
         lambda run_id: test_individual_stage(run_id, 2),
         inputs=selected_run_id,
         outputs=test_stage_status,
     )
-    
+
     test_stage3_btn.click(
         lambda run_id: test_individual_stage(run_id, 3),
         inputs=selected_run_id,
         outputs=test_stage_status,
     )
-    
+
     test_stage4_btn.click(
         lambda run_id: test_individual_stage(run_id, 4),
         inputs=selected_run_id,
@@ -1474,11 +1608,11 @@ with gr.Blocks(
         """Load a stage log file."""
         if not run_id:
             return "⚠️ No run selected"
-        
+
         run = service.get_run(run_id)
         if not run:
             return "⚠️ Run not found"
-        
+
         # Get the appropriate log path
         log_path = None
         if stage == 1 and run.stage1_log_path:
@@ -1487,36 +1621,36 @@ with gr.Blocks(
             log_path = run.stage2_log_path
         elif stage == 3 and run.stage3_log_path:
             log_path = run.stage3_log_path
-        
+
         if not log_path or not os.path.exists(log_path):
             return f"⚠️ Stage {stage} log not available yet"
-        
+
         try:
-            with open(log_path, 'r') as f:
+            with open(log_path, "r") as f:
                 content = f.read()
             return content if content else f"⚠️ Stage {stage} log is empty"
         except Exception as e:
             return f"❌ Error loading Stage {stage} log: {str(e)}"
-    
+
     # Load artifacts
     load_stage1_log_btn.click(
         lambda run_id: load_stage_log(run_id, 1),
         inputs=selected_run_id,
         outputs=stage1_log_output,
     )
-    
+
     load_stage2_log_btn.click(
         lambda run_id: load_stage_log(run_id, 2),
         inputs=selected_run_id,
         outputs=stage2_log_output,
     )
-    
+
     load_stage3_log_btn.click(
         lambda run_id: load_stage_log(run_id, 3),
         inputs=selected_run_id,
         outputs=stage3_log_output,
     )
-    
+
     load_stage1_btn.click(
         load_artifact,
         inputs=[selected_run_id, gr.State("stage1")],
@@ -1534,20 +1668,20 @@ with gr.Blocks(
         inputs=[selected_run_id, gr.State("sql")],
         outputs=stage3_output,
     )
-    
+
     # Format SQL
     def format_and_display_sql(run_id):
         artifact_path = service.storage.get_artifact_path(run_id, "query.sql")
         if not artifact_path or not os.path.exists(artifact_path):
             return "<p style='color: #888;'>No SQL available</p>"
-        
+
         with open(artifact_path) as f:
             sql_content = f.read()
-        
+
         if sql_content:
             return format_sql(sql_content)
         return "<p style='color: #888;'>No SQL available</p>"
-    
+
     format_sql_btn.click(
         format_and_display_sql,
         inputs=selected_run_id,
@@ -1555,18 +1689,19 @@ with gr.Blocks(
     )
 
     # Export buttons for main dashboard (no manual load button needed - auto-loads)
-    export_csv_btn_main.click(
-        lambda run_id: export_csv_handler(run_id),
-        inputs=selected_run_id,
-        outputs=stage4_csv_download_main,
-    )
-    
-    export_json_btn_main.click(
-        lambda run_id: export_json_handler(run_id),
-        inputs=selected_run_id,
-        outputs=stage4_json_download_main,
-    )
-    
+    # TODO: Implement export handlers
+    # export_csv_btn_main.click(
+    #     lambda run_id: export_csv_handler(run_id),
+    #     inputs=selected_run_id,
+    #     outputs=stage4_csv_download_main,
+    # )
+    #
+    # export_json_btn_main.click(
+    #     lambda run_id: export_json_handler(run_id),
+    #     inputs=selected_run_id,
+    #     outputs=stage4_json_download_main,
+    # )
+
     # Simple JSON loader for artifacts section
     load_stage4_btn.click(
         load_artifact,
@@ -1587,4 +1722,3 @@ with gr.Blocks(
 
 if __name__ == "__main__":
     app.launch(server_name="0.0.0.0", server_port=7860, share=False)
-
